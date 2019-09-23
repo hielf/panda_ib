@@ -1,4 +1,4 @@
-# 熊猫股票交易套件API文档
+# 熊猫IB API文档
 
 ### API说明
 * root_url: http://:8090/api
