@@ -7,5 +7,45 @@
 
 ## 交易类 trade_orders
 ### 下单
-* POST root_url/trade_orders/queue_order
-* params {capital_account: ['1', '2'], stock_code: '600000', order_type: 'sell', amount: 500, price: 11.58, rand_code: 1111, quota: 0}
+* POST root_url/trade_orders/order
+* params {order_type: 'BUY', amount: 500, price: 0.0, rand_code: 1111}
+* {
+    "status": 0,
+    "message": "下单成功"
+}
+
+### 查询持仓
+* GET root_url/trade_orders/positions
+* params {}
+* {
+    "status": 0,
+    "message": "success",
+    "data": {
+        "position": -1.0,
+        "currency": "HKD",
+        "contract_date": "20190927",
+        "symbol": "HSI"
+    }
+}
+
+### 查询资金
+* GET root_url/trade_orders/account_values
+* params {}
+* {
+    "status": 0,
+    "message": "success",
+    "data": {
+        "account_0": {
+            "value": "7959204.6464",
+            "currency": "BASE"
+        },
+        "account_1": {
+            "value": "10258.1055",
+            "currency": "HKD"
+        },
+        "account_2": {
+            "value": "1014032.03",
+            "currency": "USD"
+        }
+    }
+}
