@@ -12,7 +12,8 @@ include PyCall::Import
 module ContractsHelper
 
   def index_to_csv(index)
-    url = "http://212.64.71.254:3000/#{index}?and=(date.gte.2019-10-27T05:15:00,date.lte.2019-10-28T18:18:00)"
+    index = "usd_jpy"
+    url = "http://212.64.71.254:3000/#{index}?and=(date.gte.2019-10-07T05:15:00,date.lte.2019-11-06T18:18:00)"
     res = HTTParty.get url
     json = JSON.parse res.body
     csv = CSV.generate(headers: false) { |csv| json.map(&:to_a).each { |row| csv << row } }
