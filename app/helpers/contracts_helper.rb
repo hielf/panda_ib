@@ -92,8 +92,16 @@ module ContractsHelper
 
     PyCall.exec("pre_data = online_data.iloc[-2:-1][['open','high','low','close']]") # 倒数第二个bar作为数据预测基准, 因为当前bar还没有走完
     PyCall.exec("current_price = online_data.tail(1)['close']")
+    PyCall.exec("open_price = pre_data['open']")
+    PyCall.exec("high_price = pre_data['high']")
+    PyCall.exec("low_price = pre_data['low']")
+    PyCall.exec("close_price = pre_data['close']")
     PyCall.exec("hash = {}")
     PyCall.exec("hash['current_price'] = current_price[-1]")
+    PyCall.exec("hash['open'] = open_price[-1]")
+    PyCall.exec("hash['high'] = high_price[-1]")
+    PyCall.exec("hash['low'] = low_price[-1]")
+    PyCall.exec("hash['close'] = close_price[-1]")
     PyCall.exec("hash['reg_buy_open'] = reg_buy_open.predict(pre_data)[-1]")
     PyCall.exec("hash['reg_buy_break'] = reg_buy_break.predict(pre_data)[-1]")
     PyCall.exec("hash['reg_sale_open'] = reg_sale_open.predict(pre_data)[-1]")
@@ -110,7 +118,7 @@ module ContractsHelper
     location = Rails.root.to_s + "/tmp/" + file_name
     begin
       f = File.open(location, "r")
-      data = JSON.load file
+      data = JSON.load f
       f.close
     rescue Exception => ex
       Rails.logger.warn "#{ex.message}"
@@ -118,4 +126,32 @@ module ContractsHelper
 
     return data
   end
+
+  def check_position(data)
+    position = ib_positions
+    amount = 4
+    case position
+    when {} #empty
+      if data["current_price"] > data["reg_buy_open"]
+        ib_order('BUY', amount, 0)
+      elsif data["current_price"] < data["reg_buy_open"]
+        ib_order('SELL', amount, 0)
+      end
+    when !position["position"].nil? && position["position"] > 0 # buy
+      # 冲高回落, 平仓
+      if data['high'] > data["reg_buy_break"] && data["current_price"] < data["reg_buy_open"]
+        ib_order('SELL', position["position"].abs, 0)
+      # 移动平仓
+      elsif data["current_price"] <  data['close']
+        ib_order('SELL', position["position"].abs, 0)
+      end
+    when !position["position"].nil? && position["position"] < 0 # sell
+      if data['low'] > data["reg_buy_break"] && data["current_price"] > data["reg_buy_open"]
+        ib_order('BUY', position["position"].abs, 0)
+      elsif data["current_price"] > data['close']
+        ib_order('BUY', position["position"].abs, 0)
+      end
+    end
+  end
+
 end

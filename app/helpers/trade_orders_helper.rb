@@ -44,7 +44,6 @@ module TradeOrdersHelper
     begin
       ib = ib_connect
       order_status = false
-      PyCall.exec("from ib_insync import *")
       PyCall.exec("hsi = Future('HSI')")
       PyCall.exec("cds = ib.reqContractDetails(hsi)")
       PyCall.exec("contracts = [cd.contract for cd in cds]")
@@ -76,7 +75,6 @@ module TradeOrdersHelper
   def ib_positions
     begin
       ib = ib_connect
-      PyCall.exec("from ib_insync import *")
       PyCall.exec("pos = ib.positions()")
       PyCall.exec("list = {}")
       PyCall.exec("for po in pos: list.update({'position': po.position, 'currency': po.contract.currency, 'contract_date': po.contract.lastTradeDateOrContractMonth, 'symbol': po.contract.symbol})")
@@ -96,8 +94,7 @@ module TradeOrdersHelper
     # [v for v in ib.accountValues() if v.tag == 'NetLiquidationByCurrency' and v.currency == 'BASE']
     begin
       ib = ib_connect
-      PyCall.exec("from ib_insync import *")
-      PyCall.exec("list = [v for v in ib.accountValues() if v.tag == 'NetLiquidationByCurrency']")
+      PyCall.exec("list = [v for v in ib.accountValues()]")
 
       list = PyCall.eval("list").to_a
     rescue Exception => e
@@ -109,11 +106,52 @@ module TradeOrdersHelper
     data = {}
 
     if list
-      list.each_with_index do |value, index|
-        data["account_" + index.to_s] = {}
-        data["account_" + index.to_s]["value"] = value.value
-        data["account_" + index.to_s]["currency"] = value.currency
+      list.each_with_index do |l, index|
+        case l.tag
+        when "NetLiquidationByCurrency"
+          data["account_" + l.tag + "_" + l.currency] = {}
+          data["account_" + l.tag + "_" + l.currency]["value"] = l.value
+          data["account_" + l.tag + "_" + l.currency]["currency"] = l.currency
+        when "AvailableFunds"
+          data["account_" + l.tag + "_" + l.currency] = {}
+          data["account_" + l.tag + "_" + l.currency]["value"] = l.value
+          data["account_" + l.tag + "_" + l.currency]["currency"] = l.currency
+        end
       end
+    end
+
+    return data
+  end
+
+  def market_data(contract)
+    # contract = "hsi_5mins"
+    begin
+      ib = ib_connect
+      PyCall.exec("from sqlalchemy import create_engine")
+      PyCall.exec("import os,sys")
+      PyCall.exec("import psycopg2")
+      PyCall.exec("import sched, time")
+
+      PyCall.exec("contracts = [Index(symbol = 'HSI', exchange = 'HKFE')]")
+      PyCall.exec("contract = contracts[0]")
+      PyCall.exec("bars = ib.reqHistoricalData(contract, endDateTime='', durationStr='1 D', barSizeSetting='5 mins', whatToShow='TRADES', useRTH=True)")
+      PyCall.exec("tmp_table = '#{contract}' + '_tmp'")
+      PyCall.exec("table = '#{contract}'")
+      PyCall.exec("df = util.df(bars)")
+      PyCall.exec("engine = create_engine('postgresql+psycopg2://chesp:Chesp92J5@rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com:3432/panda_quant',echo=True,client_encoding='utf8')")
+      PyCall.exec("df.tail(2000).to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');")
+      PyCall.exec("conn = psycopg2.connect(host='rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com', dbname='panda_quant', user='chesp', password='Chesp92J5', port='3432')")
+      PyCall.exec("cur = conn.cursor()")
+      PyCall.exec("sql = 'insert into ' + table + ' select * from ' + tmp_table +  ' b where not exists (select 1 from ' + table + ' a where a.date = b.date);'")
+      PyCall.exec("cur.execute(sql, (10, 1000000, False, False))")
+      PyCall.exec("conn.commit()")
+      PyCall.exec("conn.close()")
+
+      # data = PyCall.eval("list").to_h
+    rescue Exception => e
+      error_message = e.value.to_s
+    ensure
+      ib_disconnect(ib)
     end
 
     return data
