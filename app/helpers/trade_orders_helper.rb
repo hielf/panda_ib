@@ -125,6 +125,7 @@ module TradeOrdersHelper
 
   def market_data(contract)
     # contract = "hsi_5mins"
+    result = true
     begin
       ib = ib_connect
       PyCall.exec("from sqlalchemy import create_engine")
@@ -150,11 +151,12 @@ module TradeOrdersHelper
       # data = PyCall.eval("list").to_h
     rescue Exception => e
       error_message = e.value.to_s
+      result = false
     ensure
       ib_disconnect(ib)
     end
 
-    return data
+    return result
   end
 
 end
