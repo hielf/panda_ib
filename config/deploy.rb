@@ -30,7 +30,7 @@ set :deploy_to, "/var/www/#{fetch(:application)}"
 append :linked_files, "config/database.yml", "config/secrets.yml", "config/application.yml"
 
 # Default value for linked_dirs is []
-append :linked_dirs, "log", "tmp/pids", "tmp/cache", "tmp/sockets", 'tmp/image', "public/system", "tmp/csv"
+append :linked_dirs, "log", "tmp/pids", "tmp/cache", "tmp/sockets", 'tmp/image', "tmp/csv"
 
 # Default value for default_env is {}
 # set :default_env, { path: "/opt/ruby/bin:$PATH" }

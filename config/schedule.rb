@@ -31,7 +31,7 @@
 #   rake "scan:onus"
 # end
 #
-# every 10.minutes do
-#   rake "scan:powers"
-# end
+every 1.minute do
+  rake "ib:hsi_5mins"
+end
 #
