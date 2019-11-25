@@ -8,7 +8,7 @@ Rails.application.routes.draw do
         post :order
         get :positions
         get :account_values
-        post :check_position
+        post :position_check
       end
     end
     match '*path', via: :all, to: 'root#route_not_found'

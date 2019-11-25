@@ -41,7 +41,7 @@ class Api::TradeOrdersController < Api::ApplicationController
     render_json(result)
   end
 
-  def check_position
+  def position_check
     result = [0, 'success']
     Rails.logger.warn "ib hsi_5mins: market_data start"
     contract = "hsi_5mins"
