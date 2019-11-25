@@ -1,14 +1,13 @@
 namespace :ib do
   task :hsi_5mins => :environment do
     Rails.logger.warn "ib hsi_5mins: requires"
-    require 'net/ping'
-    require 'pycall/import'
-    Rails.logger.warn "ib hsi_5mins: Import"
-    include PyCall::Import
+    require 'pycall'
     Rails.logger.warn "ib hsi_5mins: include"
     include TradeOrdersHelper
     include ContractsHelper
     Rails.logger.warn "ib hsi_5mins: start"
+
+    test(PyCall::PYTHON_VERSION)
 
     contract = "hsi_5mins"
     market_data(contract)

@@ -21,8 +21,6 @@ module TradeOrdersHelper
     port = ENV['tws_port'].to_i
     clientId = ENV['tws_clientid'].to_i
 
-    test(ip)
-
     begin
       PyCall.exec("from ib_insync import *")
       PyCall.exec("ib = IB()")
@@ -31,7 +29,6 @@ module TradeOrdersHelper
       error_message = e.value.to_s
     ensure
       ib = PyCall.eval("ib")
-      test(ib.to_s)
     end
 
     return ib
@@ -133,11 +130,9 @@ module TradeOrdersHelper
 
   def market_data(contract)
     # contract = "hsi_5mins"
-    test(contract)
     result = true
     begin
       ib = ib_connect
-      test("ib_connect")
       PyCall.exec("from sqlalchemy import create_engine")
       PyCall.exec("import os,sys")
       PyCall.exec("import psycopg2")
