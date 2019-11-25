@@ -87,6 +87,7 @@ module TradeOrdersHelper
 
       data = PyCall.eval("list").to_h
     rescue Exception => e
+      data = false
       error_message = e.value.to_s
     ensure
       ib_disconnect(ib)

@@ -131,14 +131,14 @@ module ContractsHelper
     position = ib_positions
     amount = 4
     order = ""
-    case position
-    when {} #empty
+
+    if position == {}
       if data["current_price"] > data["reg_buy_open"]
         order = "BUY"
       elsif data["current_price"] < data["reg_buy_open"]
         order = "SELL"
       end
-    when !position["position"].nil? && position["position"] > 0 # buy
+    elsif !position["position"].nil? && position["position"] > 0 # buy
       # 冲高回落, 平仓
       if data['high'] > data["reg_buy_break"] && data["current_price"] < data["reg_buy_open"]
         order = "SELL"
@@ -148,7 +148,7 @@ module ContractsHelper
         order = "SELL"
         amount = position["position"].abs
       end
-    when !position["position"].nil? && position["position"] < 0 # sell
+    elsif !position["position"].nil? && position["position"] < 0 # sell
       if data['low'] > data["reg_buy_break"] && data["current_price"] > data["reg_buy_open"]
         order = "BUY"
         amount = position["position"].abs
@@ -157,11 +157,14 @@ module ContractsHelper
         amount = position["position"].abs
       end
     end
+
     Rails.logger.warn "ib hsi_5mins order: #{order} #{amount.to_s}"
 
     if order != "" && amount != 0
       ib_order(order, amount, 0)
     end
+
+    return {"order": order, "amount": amount}
   end
 
 end
