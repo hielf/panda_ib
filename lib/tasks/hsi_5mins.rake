@@ -5,9 +5,10 @@ namespace :ib do
     require 'pycall/import'
     Rails.logger.warn "ib hsi_5mins: Import"
     include PyCall::Import
-    Rails.logger.warn "ib hsi_5mins: start"
+    Rails.logger.warn "ib hsi_5mins: include"
     include TradeOrdersHelper
     include ContractsHelper
+    Rails.logger.warn "ib hsi_5mins: start"
 
     contract = "hsi_5mins"
     market_data(contract)
