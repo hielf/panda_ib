@@ -128,6 +128,9 @@ module ContractsHelper
   end
 
   def check_position(data)
+    position = {}
+    amount = 4
+    order = ""
 
     3.times do
       position = ib_positions
@@ -139,9 +142,6 @@ module ContractsHelper
         next
       end
     end
-
-    amount = 4
-    order = ""
 
     if position == {}
       if data["current_price"] > data["reg_buy_open"]
@@ -180,6 +180,7 @@ module ContractsHelper
 
   def close_position
     order = ""
+    position = {}
     3.times do
       position = ib_positions
       if position == false
