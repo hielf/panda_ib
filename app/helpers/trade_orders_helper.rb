@@ -11,6 +11,10 @@ include PyCall::Import
 
 module TradeOrdersHelper
 
+  def test(str)
+    return str
+  end
+
   def ib_connect
     ip = ENV['tws_ip'] #PyCall.eval("str('127.0.0.1')")
     port = ENV['tws_port'].to_i
