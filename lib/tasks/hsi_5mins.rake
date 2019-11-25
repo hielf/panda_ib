@@ -13,7 +13,7 @@ namespace :ib do
       url = "http://127.0.0.1/api/trade_orders/position_check"
       res = HTTParty.post(url,
         headers: {"Content-Type" => "application/json"},
-        body: {:type => "close"}.to_json
+        body: {:type => "close"}.to_json)
     end
 
   end
