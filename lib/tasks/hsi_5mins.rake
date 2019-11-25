@@ -7,13 +7,13 @@ namespace :ib do
       url = "http://127.0.0.1/api/trade_orders/position_check"
       res = HTTParty.post(url,
         headers: {"Content-Type" => "application/json"},
-        body: {"type": "check"})
+        body: {"type": "check"}.to_json)
     else
       Rails.logger.warn "ib position_check: start close"
       url = "http://127.0.0.1/api/trade_orders/position_check"
       res = HTTParty.post(url,
         headers: {"Content-Type" => "application/json"},
-        body: {"type": "close"})
+        body: {"type": "close"}.to_json
     end
 
   end
