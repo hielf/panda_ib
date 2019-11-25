@@ -39,6 +39,25 @@ class Api::TradeOrdersController < Api::ApplicationController
     render_json(result)
   end
 
+  def check_position
+    result = [0, 'success']
+    Rails.logger.warn "ib hsi_5mins: market_data include"
+    include TradeOrdersHelper
+    include ContractsHelper
+    Rails.logger.warn "ib hsi_5mins: market_data start"
+    contract = "hsi_5mins"
+    market_data(contract)
+    Rails.logger.warn "ib hsi_5mins: market_data done"
+    file = index_to_csv(contract)
+    Rails.logger.warn "ib hsi_5mins: file done"
+    data = online_data(file)
+    Rails.logger.warn "ib hsi_5mins: data #{data.to_s}"
+    check_position(data)
+    Rails.logger.warn "ib hsi_5mins: check_position done"
+
+    render_json(result)
+  end
+
   private
 
   def trade_order_params

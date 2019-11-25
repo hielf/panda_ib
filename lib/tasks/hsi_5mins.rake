@@ -1,23 +1,9 @@
 namespace :ib do
   task :hsi_5mins => :environment do
-    Rails.logger.warn "ib hsi_5mins: requires"
-    require 'pycall'
-    Rails.logger.warn "ib hsi_5mins: include"
-    include TradeOrdersHelper
-    include ContractsHelper
-    Rails.logger.warn "ib hsi_5mins: start"
-
-    test(PyCall::PYTHON_VERSION)
-
-    contract = "hsi_5mins"
-    market_data(contract)
-    Rails.logger.warn "ib hsi_5mins: market_data done"
-    file = index_to_csv(contract)
-    Rails.logger.warn "ib hsi_5mins: file done"
-    data = online_data(file)
-    Rails.logger.warn "ib hsi_5mins: data #{data.to_s}"
-    check_position(data)
-    Rails.logger.warn "ib hsi_5mins: check_position done"
-
+    Rails.logger.warn "ib check_position: start"
+    url = "http://127.0.0.1/api/trade_orders/check_position"
+    res = HTTParty.post(url,
+      headers: {"Content-Type" => "application/json"},
+      body: {})
   end
 end
