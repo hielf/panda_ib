@@ -128,20 +128,20 @@ module ContractsHelper
   end
 
   def check_position(data)
-    position = {}
+
     amount = 4
     order = ""
-
-    3.times do
-      position = ib_positions
-      if position == false
-        Rails.logger.warn "ib position WRONG"
-        sleep 1
-        position = ib_positions
-      else
-        next
-      end
-    end
+    position = ib_positions
+    # 3.times do
+    #   position = ib_positions
+    #   if position == false
+    #     Rails.logger.warn "ib position WRONG"
+    #     sleep 1
+    #     position = ib_positions
+    #   else
+    #     next
+    #   end
+    # end
 
     if position == {}
       if data["current_price"] > data["reg_buy_open"]
@@ -180,17 +180,8 @@ module ContractsHelper
 
   def close_position
     order = ""
-    position = {}
-    3.times do
-      position = ib_positions
-      if position == false
-        Rails.logger.warn "ib position WRONG"
-        sleep 1
-        position = ib_positions
-      else
-        next
-      end
-    end
+    position = ib_positions
+    amount = 0
 
     if !position["position"].nil? && position["position"] > 0 # buy
       order = "SELL"
@@ -201,6 +192,11 @@ module ContractsHelper
     end
 
     Rails.logger.warn "ib close_position: #{order} #{amount.to_s}"
+
+    if order != "" && amount != 0
+      ib_order(order, amount, 0)
+    end
+
     return {"order": order, "amount": amount}
   end
 
