@@ -128,7 +128,18 @@ module ContractsHelper
   end
 
   def check_position(data)
-    position = ib_positions
+
+    3.times do
+      position = ib_positions
+      if position == false
+        Rails.logger.warn "ib position WRONG"
+        sleep 1
+        position = ib_positions
+      else
+        next
+      end
+    end
+
     amount = 4
     order = ""
 
@@ -158,12 +169,37 @@ module ContractsHelper
       end
     end
 
-    Rails.logger.warn "ib hsi_5mins order: #{order} #{amount.to_s}"
+    Rails.logger.warn "ib order: #{order} #{amount.to_s}"
 
     if order != "" && amount != 0
       ib_order(order, amount, 0)
     end
 
+    return {"order": order, "amount": amount}
+  end
+
+  def close_position
+    order = ""
+    3.times do
+      position = ib_positions
+      if position == false
+        Rails.logger.warn "ib position WRONG"
+        sleep 1
+        position = ib_positions
+      else
+        next
+      end
+    end
+
+    if !position["position"].nil? && position["position"] > 0 # buy
+      order = "SELL"
+      amount = position["position"].abs
+    elsif !position["position"].nil? && position["position"] < 0 # sell
+      order = "BUY"
+      amount = position["position"].abs
+    end
+
+    Rails.logger.warn "ib close_position: #{order} #{amount.to_s}"
     return {"order": order, "amount": amount}
   end
 

@@ -42,12 +42,18 @@ class Api::TradeOrdersController < Api::ApplicationController
   end
 
   def position_check
+    type = params[:type]
     result = [0, 'success']
     contract = "hsi_5mins"
     market_data(contract)
     file = index_to_csv(contract)
     data = online_data(file)
-    check_position(data)
+
+    if !type.nil? && type == "check"
+      check_position(data)
+    else
+      close_position
+    end
 
     render_json(result)
   end
