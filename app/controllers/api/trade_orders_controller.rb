@@ -1,5 +1,7 @@
 class Api::TradeOrdersController < Api::ApplicationController
   skip_before_action :authenticate_user!
+  include TradeOrdersHelper
+  include ContractsHelper
 
   def order
     m_requires! [:order_type, :amount, :price, :rand_code]
@@ -41,9 +43,6 @@ class Api::TradeOrdersController < Api::ApplicationController
 
   def check_position
     result = [0, 'success']
-    Rails.logger.warn "ib hsi_5mins: market_data include"
-    include TradeOrdersHelper
-    include ContractsHelper
     Rails.logger.warn "ib hsi_5mins: market_data start"
     contract = "hsi_5mins"
     market_data(contract)
