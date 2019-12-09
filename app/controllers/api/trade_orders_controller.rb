@@ -43,9 +43,10 @@ class Api::TradeOrdersController < Api::ApplicationController
 
   def position_check
     type = params[:type]
+    contract = params[:contract]
     result = [0, 'success']
-    contract = "hsi"
-    if market_data(contract)
+
+    if contract && market_data(contract)
       file = index_to_csv(contract)
       data = online_data(file)
     end

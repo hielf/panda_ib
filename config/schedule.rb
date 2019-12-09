@@ -32,6 +32,6 @@
 # end
 #
 every 1.minute do
-  rake "ib:hsi_5mins"
+  rake "ib:hsi"
 end
 #
