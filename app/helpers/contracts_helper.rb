@@ -7,7 +7,7 @@ module ContractsHelper
 
   def index_to_csv(index)
     # index = "hsi_5mins"
-    begin_time = Time.now - 1.month
+    begin_time = Time.now - 1.day
     end_time = Time.now
     url = "http://#{ENV["quant_db"]}:3000/#{index}?and=(date.gte.#{begin_time.strftime('%Y-%m-%dT%H:%M:%S')},date.lte.#{end_time.strftime('%Y-%m-%dT%H:%M:%S')})"
     res = HTTParty.get url
@@ -17,7 +17,7 @@ module ContractsHelper
     file = Rails.root.to_s + "/tmp/csv/#{index}.csv"
     CSV.open( file, 'w' ) do |writer|
       json.each do |c|
-        writer << [c["date"], c["open"], c["high"], c["low"], c["close"], c["volume"]]
+        writer << [c["date"], c["open"], c["high"], c["low"], c["close"], c["volume"], c["barCount"], c["average"]]
       end
     end
 
@@ -29,7 +29,8 @@ module ContractsHelper
     # PyCall.exec("")
     pandaAI = Rails.root.to_s + '/lib/python/ai/pandaAI'
     data = {}
-    PyCall.exec("dual_params={'resample': '05T', 'barNum': 1, 'file_path': '#{file}',  'check_date': '2019-09-26'}")
+    today = Date.today.strftime('%Y-%m-%d')
+    PyCall.exec("dual_params={'resample': '5T', 'step_n': 5, 'barNum': 1, 'file_path': '#{file}',  'check_date': '#{today}'}")
     PyCall.exec("import sys")
     PyCall.exec("sys.path.append('#{pandaAI}')")
     PyCall.exec("import robot")
@@ -55,7 +56,7 @@ module ContractsHelper
     PyCall.exec("from sklearn.preprocessing import StandardScaler")
     PyCall.exec("import talib as ta")#金融数据计算
 
-    PyCall.exec("df1 = pd.read_csv(dual_params['file_path'],  skiprows=1, header=None, sep=',', names=['dates', 'open', 'high', 'low', 'close','volume'])")
+    PyCall.exec("df1 = pd.read_csv(dual_params['file_path'],  skiprows=1, header=None, sep=',', names=['dates', 'open', 'high', 'low', 'close','volume','barCount','average'])")
     PyCall.exec("print(df1.info())")
 
     # 整理数据
@@ -64,22 +65,53 @@ module ContractsHelper
 
     #设置索引
     PyCall.exec("df2 = mm.set_index(df1,cname='dates')")
-    PyCall.exec("period_data = df2.resample(dual_params['resample']).last()")
-    # 分别对于开盘、收盘、最高价、最低价进行处理
-    PyCall.exec("period_data['open'] = df2['open'].resample(dual_params['resample']).first()")
-    # 处理最高价和最低价
-    PyCall.exec("period_data['high'] = df2['high'].resample(dual_params['resample']).max()")
-    # 最低价
-    PyCall.exec("period_data['low'] = df2['low'].resample(dual_params['resample']).min()")
-    # 成交量 这一周的每天成交量的和
-    PyCall.exec("period_data['volume'] = df2['volume'].resample(dual_params['resample']).sum()")
-    PyCall.exec("online_data = period_data.dropna(axis=0)") # 缺失值处理
-    PyCall.exec("online_data['dates2'] = online_data.index")
-    PyCall.exec("online_data['dates2'] = online_data['dates2'].apply(mdates.date2num)")
-
-    PyCall.exec("online_data = online_data.dropna(axis=0)") # 缺失值处理
+    PyCall.exec("df2.dropna(inplace=True)")
+    PyCall.exec("df2.sort_index(inplace=True)")
+    # PyCall.exec("n = len(df2)")
+    # PyCall.exec("period_data = df2.resample(dual_params['resample']).last()")
+    # # 分别对于开盘、收盘、最高价、最低价进行处理
+    # PyCall.exec("period_data['open'] = df2['open'].resample(dual_params['resample']).first()")
+    # # 处理最高价和最低价
+    # PyCall.exec("period_data['high'] = df2['high'].resample(dual_params['resample']).max()")
+    # # 最低价
+    # PyCall.exec("period_data['low'] = df2['low'].resample(dual_params['resample']).min()")
+    # # 成交量 这一周的每天成交量的和
+    # PyCall.exec("period_data['volume'] = df2['volume'].resample(dual_params['resample']).sum()")
+    # PyCall.exec("online_data = period_data.dropna(axis=0)") # 缺失值处理
+    # PyCall.exec("online_data['dates2'] = online_data.index")
+    # PyCall.exec("online_data['dates2'] = online_data['dates2'].apply(mdates.date2num)")
+    #
+    # PyCall.exec("online_data = online_data.dropna(axis=0)") # 缺失值处理
     # PyCall.exec("print (online_data.head())")
     # PyCall.exec("print (online_data.tail(1))")
+
+    PyCall.exec("old_row = []")
+    PyCall.exec("current_row = []")
+    PyCall.exec("profit_list = []")
+    PyCall.exec("step_n = 5")
+    PyCall.exec("i = step_n * 2")
+
+    PyCall.exec("n = len(df2)")
+    PyCall.exec("start_n = n - step_n - n % step_n")
+    PyCall.exec("end_n = n")
+
+    PyCall.exec("period_data = df2.iloc[start_n:end_n].resample(dual_params['resample']).last()")
+    # 分别对于开盘、收盘、最高价、最低价进行处理
+    PyCall.exec("period_data['open'] = df2.iloc[start_n:end_n]['open'].resample(dual_params['resample']).first()")
+    # 处理最高价和最低价
+    PyCall.exec("period_data['high'] = df2.iloc[start_n:end_n]['high'].resample(dual_params['resample']).max()")
+    # 最低价
+    PyCall.exec("period_data['low'] = df2.iloc[start_n:end_n]['low'].resample(dual_params['resample']).min()")
+    # 成交量 这一周的每天成交量的和
+    PyCall.exec("period_data['volume'] = df2.iloc[start_n:end_n]['volume'].resample(dual_params['resample']).sum()")
+    PyCall.exec("period_data.dropna(inplace=True)")
+
+    PyCall.exec("old_row = period_data.iloc[0]['open':'close']")
+    PyCall.exec("current_row = period_data.iloc[1]['open':'close']")
+    PyCall.exec("pre_data = pd.concat([old_row,current_row], axis=1)")
+    PyCall.exec("pre_data = pd.DataFrame(pre_data.values.T, index=pre_data.columns, columns=pre_data.index)")
+    PyCall.exec("old_price = old_row['close']")
+    PyCall.exec("current_price = current_row['close']")
 
     # 基于线性回归的模型加载
     PyCall.exec("from sklearn.linear_model import LinearRegression")
@@ -90,22 +122,27 @@ module ContractsHelper
     PyCall.exec("reg_sale_break = joblib.load('#{Rails.root.to_s}' + '/lib/python/ib/reg_sale_break.pkl')")
     PyCall.exec("scale = joblib.load('#{Rails.root.to_s}' + '/lib/python/ib/scale.pkl')")
 
-    PyCall.exec("pre_data = online_data.iloc[-2:-1][['open','high','low','close']]") # 倒数第二个bar作为数据预测基准, 因为当前bar还没有走完
-    PyCall.exec("current_price = online_data.tail(1)['close']")
-    PyCall.exec("open_price = pre_data['open']")
-    PyCall.exec("high_price = pre_data['high']")
-    PyCall.exec("low_price = pre_data['low']")
-    PyCall.exec("close_price = pre_data['close']")
+    # PyCall.exec("pre_data = online_data.iloc[-2:-1][['open','high','low','close']]") # 倒数第二个bar作为数据预测基准, 因为当前bar还没有走完
+    # PyCall.exec("current_price = online_data.tail(1)['close']")
+    # PyCall.exec("open_price = pre_data['open']")
+    # PyCall.exec("high_price = pre_data['high']")
+    # PyCall.exec("low_price = pre_data['low']")
+    # PyCall.exec("close_price = pre_data['close']"
+    PyCall.exec("print (current_row)")
+
     PyCall.exec("hash = {}")
-    PyCall.exec("hash['current_price'] = current_price[-1]")
-    PyCall.exec("hash['open'] = open_price[-1]")
-    PyCall.exec("hash['high'] = high_price[-1]")
-    PyCall.exec("hash['low'] = low_price[-1]")
-    PyCall.exec("hash['close'] = close_price[-1]")
-    PyCall.exec("hash['reg_buy_open'] = reg_buy_open.predict(pre_data)[-1]")
-    PyCall.exec("hash['reg_buy_break'] = reg_buy_break.predict(pre_data)[-1]")
-    PyCall.exec("hash['reg_sale_open'] = reg_sale_open.predict(pre_data)[-1]")
-    PyCall.exec("hash['reg_sale_break'] = reg_sale_break.predict(pre_data)[-1]")
+    PyCall.exec("hash['current_open'] = current_row['open']")
+    PyCall.exec("hash['current_close'] = current_row['close']")
+    PyCall.exec("hash['current_high'] = current_row['high']")
+    PyCall.exec("hash['current_low'] = current_row['low']")
+    PyCall.exec("hash['prev_open'] = old_row['open']")
+    PyCall.exec("hash['prev_close'] = old_row['close']")
+    PyCall.exec("hash['prev_high'] = old_row['high']")
+    PyCall.exec("hash['prev_low'] = old_row['low']")
+    PyCall.exec("hash['reg_buy_open'] = reg_buy_open.predict(pre_data)[0]")
+    PyCall.exec("hash['reg_buy_break'] = reg_buy_break.predict(pre_data)[0]")
+    PyCall.exec("hash['reg_sale_open'] = reg_sale_open.predict(pre_data)[0]")
+    PyCall.exec("hash['reg_sale_break'] = reg_sale_break.predict(pre_data)[0]")
 
     PyCall.exec("import json")
     PyCall.exec("print (hash)")
@@ -128,6 +165,10 @@ module ContractsHelper
   end
 
   def check_position(data)
+    # {"current_open"=>26520.14, "current_close"=>26515.06, "current_high"=>26525.11, "current_low"=>26508.94,
+    # "prev_open"=>26530.69, "prev_close"=>26519.39, "prev_high"=>26536.75, "prev_low"=>26514.3,
+    # "reg_buy_open"=>26547.974999999995, "reg_buy_break"=>26559.200000000008, "reg_sale_open"=>26503.075,
+    # "reg_sale_break"=>26491.85}
 
     amount = 4
     order = ""
@@ -144,26 +185,26 @@ module ContractsHelper
     # end
 
     if position == {}
-      if data["current_price"] > data["reg_buy_open"]
+      if data["current_close"] > data["reg_buy_open"]
         order = "BUY"
-      elsif data["current_price"] < data["reg_buy_open"]
+      elsif data["current_close"] < data["reg_sale_open"]
         order = "SELL"
       end
     elsif !position["position"].nil? && position["position"] > 0 # buy
       # 冲高回落, 平仓
-      if data['high'] > data["reg_buy_break"] && data["current_price"] < data["reg_buy_open"]
+      if data['current_high'] > data["reg_buy_break"] && data["current_close"] < data["reg_buy_open"]
         order = "SELL"
         amount = position["position"].abs
       # 移动平仓
-      elsif data["current_price"] <  data['close']
+      elsif data["current_close"] <  data['prev_close']
         order = "SELL"
         amount = position["position"].abs
       end
     elsif !position["position"].nil? && position["position"] < 0 # sell
-      if data['low'] > data["reg_buy_break"] && data["current_price"] > data["reg_buy_open"]
+      if data['current_low'] < data["reg_sale_break"] && data["current_close"] > data["reg_sale_open"]
         order = "BUY"
         amount = position["position"].abs
-      elsif data["current_price"] > data['close']
+      elsif data["current_close"] > data['prev_close']
         order = "BUY"
         amount = position["position"].abs
       end
