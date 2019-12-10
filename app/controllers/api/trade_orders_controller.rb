@@ -51,7 +51,7 @@ class Api::TradeOrdersController < Api::ApplicationController
       data = online_data(file)
     end
 
-    if !type.nil? && type == "check"
+    if !type.nil? && type == "check" && data
       check_position(data)
     else
       close_position

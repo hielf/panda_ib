@@ -183,37 +183,38 @@ module ContractsHelper
     #     next
     #   end
     # end
-
-    if position == {}
-      if data["current_close"] > data["reg_buy_open"]
-        order = "BUY"
-      elsif data["current_close"] < data["reg_sale_open"]
-        order = "SELL"
+    if position
+      if position == {}
+        if data["current_close"] > data["reg_buy_open"]
+          order = "BUY"
+        elsif data["current_close"] < data["reg_sale_open"]
+          order = "SELL"
+        end
+      elsif !position["position"].nil? && position["position"] > 0 # buy
+        # 冲高回落, 平仓
+        if data['current_high'] > data["reg_buy_break"] && data["current_close"] < data["reg_buy_open"]
+          order = "SELL"
+          amount = position["position"].abs
+        # 移动平仓
+        elsif data["current_close"] <  data['prev_close']
+          order = "SELL"
+          amount = position["position"].abs
+        end
+      elsif !position["position"].nil? && position["position"] < 0 # sell
+        if data['current_low'] < data["reg_sale_break"] && data["current_close"] > data["reg_sale_open"]
+          order = "BUY"
+          amount = position["position"].abs
+        elsif data["current_close"] > data['prev_close']
+          order = "BUY"
+          amount = position["position"].abs
+        end
       end
-    elsif !position["position"].nil? && position["position"] > 0 # buy
-      # 冲高回落, 平仓
-      if data['current_high'] > data["reg_buy_break"] && data["current_close"] < data["reg_buy_open"]
-        order = "SELL"
-        amount = position["position"].abs
-      # 移动平仓
-      elsif data["current_close"] <  data['prev_close']
-        order = "SELL"
-        amount = position["position"].abs
-      end
-    elsif !position["position"].nil? && position["position"] < 0 # sell
-      if data['current_low'] < data["reg_sale_break"] && data["current_close"] > data["reg_sale_open"]
-        order = "BUY"
-        amount = position["position"].abs
-      elsif data["current_close"] > data['prev_close']
-        order = "BUY"
-        amount = position["position"].abs
-      end
-    end
+      
+      Rails.logger.warn "ib order: #{order} #{amount.to_s}"
 
-    Rails.logger.warn "ib order: #{order} #{amount.to_s}"
-
-    if order != "" && amount != 0
-      ib_order(order, amount, 0)
+      if order != "" && amount != 0
+        ib_order(order, amount, 0)
+      end
     end
 
     return {"order": order, "amount": amount}
