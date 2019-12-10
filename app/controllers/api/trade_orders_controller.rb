@@ -46,6 +46,7 @@ class Api::TradeOrdersController < Api::ApplicationController
     contract = params[:contract]
     result = [0, 'success']
 
+    Rails.logger.warn "contract & type: #{contract}, #{type}"
     if contract && market_data(contract)
       file = index_to_csv(contract)
       data = online_data(file)

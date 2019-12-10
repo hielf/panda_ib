@@ -19,7 +19,7 @@ module TradeOrdersHelper
     begin
       PyCall.exec("from ib_insync import *")
       PyCall.exec("ib = IB()")
-      PyCall.exec("ib.connect('#{ip}', #{port}, clientId=#{clientId})")
+      PyCall.exec("ib.connect('#{ip}', #{port}, clientId=#{clientId}), 5")
     rescue Exception => e
       error_message = e.value.to_s
     ensure
