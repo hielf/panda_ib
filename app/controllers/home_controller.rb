@@ -1,6 +1,6 @@
 class HomeController < ApplicationController
   def index
-
+    render json: {code: 200, message: 'success'}
   end
 
   def route_not_found

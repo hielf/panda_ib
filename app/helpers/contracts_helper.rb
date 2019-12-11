@@ -7,8 +7,8 @@ module ContractsHelper
 
   def index_to_csv(index)
     # index = "hsi_5mins"
-    begin_time = Time.now - 1.day
-    end_time = Time.now
+    begin_time = Time.zone.now - 1.day
+    end_time = Time.zone.now
     url = "http://#{ENV["quant_db"]}:3000/#{index}?and=(date.gte.#{begin_time.strftime('%Y-%m-%dT%H:%M:%S')},date.lte.#{end_time.strftime('%Y-%m-%dT%H:%M:%S')})"
     res = HTTParty.get url
     json = JSON.parse res.body
@@ -92,8 +92,11 @@ module ContractsHelper
     PyCall.exec("i = step_n * 2")
 
     PyCall.exec("n = len(df2)")
+    # PyCall.exec("print(n)")
     PyCall.exec("start_n = n - step_n - n % step_n")
     PyCall.exec("end_n = n")
+    # PyCall.exec("print(start_n, n)")
+    PyCall.exec("print(df1)")
 
     PyCall.exec("period_data = df2.iloc[start_n:end_n].resample(dual_params['resample']).last()")
     # 分别对于开盘、收盘、最高价、最低价进行处理
