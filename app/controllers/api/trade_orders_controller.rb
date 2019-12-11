@@ -41,13 +41,23 @@ class Api::TradeOrdersController < Api::ApplicationController
     render_json(result)
   end
 
+  def contract_data
+    contract = params[:contract]
+    result = [1, 'failed']
+    if contract
+      data = helpers.market_data(contract)
+      result = [0, 'success'] if data
+    end
+    render_json(result)
+  end
+
   def position_check
     type = params[:type]
     contract = params[:contract]
     result = [0, 'success']
 
     Rails.logger.warn "contract & type: #{contract}, #{type}"
-    if contract && market_data(contract)
+    if contract
       file = index_to_csv(contract)
       data = online_data(file)
     end

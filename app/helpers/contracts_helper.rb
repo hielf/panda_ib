@@ -173,6 +173,9 @@ module ContractsHelper
     amount = 4
     order = ""
     position = ib_positions
+
+    Rails.logger.warn "ib position: #{position}"
+
     # 3.times do
     #   position = ib_positions
     #   if position == false
@@ -209,8 +212,9 @@ module ContractsHelper
           amount = position["position"].abs
         end
       end
-      
-      Rails.logger.warn "ib order: #{order} #{amount.to_s}"
+
+      Rails.logger.warn "ib position: #{position}"
+      Rails.logger.warn "ib order: #{order == "" ? "NO" : order} #{amount.to_s}"
 
       if order != "" && amount != 0
         ib_order(order, amount, 0)

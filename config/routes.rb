@@ -8,6 +8,7 @@ Rails.application.routes.draw do
         post :order
         get :positions
         get :account_values
+        get :contract_data
         post :position_check
       end
     end
