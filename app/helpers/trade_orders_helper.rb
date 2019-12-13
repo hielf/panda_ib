@@ -36,6 +36,7 @@ module TradeOrdersHelper
       error_message = e.value.to_s
     ensure
       system (`pkill -9 python`) if Rails.env == "production"
+      sleep(1)
     end
 
     return true
