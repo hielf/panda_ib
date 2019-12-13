@@ -30,7 +30,13 @@ module TradeOrdersHelper
   end
 
   def ib_disconnect(ib)
-    PyCall.exec("ib.disconnect()")
+    begin
+      PyCall.exec("ib.disconnect()")
+    rescue Exception => e
+      error_message = e.value.to_s
+    ensure
+      system (`ps aux | grep python | grep -v "grep python" | awk '{print $2}' | xargs kill -9`)
+    end
 
     return true
   end
