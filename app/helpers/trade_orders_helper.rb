@@ -35,7 +35,7 @@ module TradeOrdersHelper
     rescue Exception => e
       error_message = e.value.to_s
     ensure
-      system (`ps aux | grep python | grep -v "grep python" | awk '{print $2}' | xargs kill -9`)
+      system (`pkill -9 python`) if Rails.env == "production"
     end
 
     return true
