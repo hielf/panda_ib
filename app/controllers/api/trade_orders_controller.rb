@@ -51,6 +51,23 @@ class Api::TradeOrdersController < Api::ApplicationController
     render_json(result)
   end
 
+  def trades_data
+    result = [1, 'failed']
+    data = ib_trades
+    if !data.empty?
+      data.sort_by { |h| -h[:time] }.reverse.each do |d|
+        trade = Trade.find_or_initialize_by(exec_id: d[:exec_id])
+        trade.update(perm_id: d[:perm_id], action: d[:action], symbol: d[:symbol],
+          last_trade_date_or_contract_month: d[:last_trade_date_or_contract_month],
+          currency: d[:currency], shares: d[:shares], price: d[:price], time: Time.at(d[:time]),
+          commission: d[:commission], realized_pnl: d[:realized_pnl])
+      end
+
+      result = [0, 'success', data]
+    end
+    render_json(result)
+  end
+
   def position_check
     type = params[:type]
     contract = params[:contract]

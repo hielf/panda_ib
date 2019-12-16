@@ -8,6 +8,7 @@ include PyCall::Import
 # pyimport 'json'
 # pyimport 'math'
 # pyfrom 'ib_insync', import: :IB
+pyfrom 'datetime', import: :timezone
 
 module TradeOrdersHelper
 
@@ -36,8 +37,8 @@ module TradeOrdersHelper
     rescue Exception => e
       error_message = e.value.to_s
     ensure
-      system (`pkill -9 python`) if Rails.env == "production"
-      sleep(1)
+      # system (`pkill -9 python`) if Rails.env == "production"
+      sleep(0.5)
     end
 
     return true
@@ -89,6 +90,37 @@ module TradeOrdersHelper
       # PyCall.exec("for po in pos: list.update(symbol: po.symbol, contract_date: po.lastTradeDateOrContractMonth, currency: po.currency, position: po.position)")
 
       data = PyCall.eval("list").to_h
+    rescue Exception => e
+      data = false
+      error_message = e.value.to_s
+    ensure
+      ib_disconnect(ib)
+    end
+
+    return data
+  end
+
+  def ib_trades
+    data = []
+    begin
+      ib = ib_connect
+      PyCall.exec("trades = ib.trades()")
+      PyCall.exec("print(trades)")
+      PyCall.exec("array = []")
+      PyCall.exec("list = {}")
+      PyCall.exec("for t in trades: array.append(dict({'permId': t.order.permId, 'action': t.order.action, 'symbol': t.contract.symbol, 'lastTradeDateOrContractMonth': t.contract.lastTradeDateOrContractMonth, 'currency': t.contract.currency, 'fills': t.fills}))")
+      a = PyCall.eval("array")
+
+      a.each do |d|
+        d['fills'].each do |f|
+          data << {"perm_id": d['permId'], "action": d['action'], "symbol": d['symbol'],
+            "last_trade_date_or_contract_month": d['lastTradeDateOrContractMonth'],
+            "currency": d['currency'], "shares": f.execution.shares, "price": f.execution.price,
+            "time": f.execution.time.timestamp(), "commission": f.commissionReport.commission,
+            "realized_pnl": f.commissionReport.realizedPNL, "exec_id": f.commissionReport.execId}
+        end
+      end
+
     rescue Exception => e
       data = false
       error_message = e.value.to_s

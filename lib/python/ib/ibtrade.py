@@ -34,4 +34,10 @@ for po in pos:
 
 [v for v in ib.accountValues() if v.tag == 'NetLiquidationByCurrency' and v.currency == 'BASE']
 
+trades = ib.trades()
+for t in trades:
+    [t.contract.symbol, t.contract.lastTradeDateOrContractMonth, t.contract.currency]
+    for f in t.fills:
+        [f.execution.shares, f.execution.price, f.execution.time, f.commissionReport.commission, f.commissionReport.realizedPNL]
+
 ib.disconnect()
