@@ -25,6 +25,10 @@ namespace :ib do
           body: {:type => "close", :contract=> contract}.to_json)
         p [res.code, res.body]
       end
+
+      url = "http://127.0.0.1/api/trade_orders/trades_data"
+      res = HTTParty.get(url)
+      Rails.logger.warn "ib trades_data: #{res.code}"
     end
 
   end

@@ -10,6 +10,7 @@ Rails.application.routes.draw do
         get :account_values
         get :contract_data
         post :position_check
+        get :trades_data
       end
     end
     match '*path', via: :all, to: 'root#route_not_found'
