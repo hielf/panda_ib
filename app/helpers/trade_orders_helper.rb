@@ -184,7 +184,7 @@ module TradeOrdersHelper
 
       PyCall.exec("contracts = [Index(symbol = 'HSI', exchange = 'HKFE')]")
       PyCall.exec("contract = contracts[0]")
-      PyCall.exec("bars = ib.reqHistoricalData(contract, endDateTime='', durationStr='1 D', barSizeSetting='#{bar_size}', whatToShow='TRADES', useRTH=True)")
+      PyCall.exec("bars = ib.reqHistoricalData(contract, endDateTime='', durationStr='7200 S', barSizeSetting='#{bar_size}', whatToShow='TRADES', useRTH=True)")
       PyCall.exec("tmp_table = '#{contract}' + '_tmp'")
       PyCall.exec("table = '#{contract}'")
       PyCall.exec("df = util.df(bars)")
