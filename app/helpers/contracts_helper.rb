@@ -9,7 +9,7 @@ module ContractsHelper
     # index = "hsi_5mins"
     begin_time = Time.zone.now - 1.day
     end_time = Time.zone.now
-    url = "http://#{ENV["quant_db"]}:3000/#{index}?and=(date.gte.#{begin_time.strftime('%Y-%m-%dT%H:%M:%S')},date.lte.#{end_time.strftime('%Y-%m-%dT%H:%M:%S')})"
+    url = "http://#{ENV["market_db"]}:3000/#{index}?and=(date.gte.#{begin_time.strftime('%Y-%m-%dT%H:%M:%S')},date.lte.#{end_time.strftime('%Y-%m-%dT%H:%M:%S')})"
     res = HTTParty.get url
     json = JSON.parse res.body
     csv = CSV.generate(headers: false) { |csv| json.map(&:to_a).each { |row| csv << row } }
