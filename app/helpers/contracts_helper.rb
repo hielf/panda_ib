@@ -250,4 +250,20 @@ module ContractsHelper
     return {"order": order, "amount": amount}
   end
 
+  def trades_to_csv(contract)
+    # contract = "hsi_5mins"
+
+    json = Trade.all.as_json
+    # csv = CSV.generate(headers: false) { |csv| json.map(&:to_a).each { |row| csv << row } }
+
+    file = Rails.root.to_s + "/tmp/csv/trades_#{contract}.csv"
+    CSV.open( file, 'w' ) do |writer|
+      writer << ["TIME", "ACTION", "SYMBOL", "CURRENCY", "SHARES", "PRICE", "COMMISSION", "PNL"]
+      json.each do |c|
+        writer << [(c["time"] - 8.hours).strftime("%Y%m%d %H:%M:%S"), c["action"], c["symbol"] + "-" + c["last_trade_date_or_contract_month"], c["currency"], c["shares"], c["price"], c["commission"], c["realized_pnl"]]
+      end
+    end
+
+    return file
+  end
 end
