@@ -26,6 +26,7 @@ module ContractsHelper
 
 
   def online_data(file)
+    Rails.logger.warn "ib data file: #{file}"
     # PyCall.exec("")
     pandaAI = Rails.root.to_s + '/lib/python/ai/pandaAI'
     data = {}
