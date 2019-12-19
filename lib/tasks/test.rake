@@ -3,6 +3,6 @@ namespace :ib do
 
     Rails.logger.warn "ib test: start"
     contract = "hsi"
-    TradersJob.perform_later contract
+    TradersJob.perform_now contract
   end
 end

@@ -34,7 +34,6 @@
 every 1.minute do
   # rake "ib:hsi"
   # rake "ib:test"
-  contract = "hsi"
-  runner "TradersJob.perform_later #{contract}"
+  runner "TradersJob.perform_later(hsi)"
 end
 #
