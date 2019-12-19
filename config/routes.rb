@@ -11,6 +11,7 @@ Rails.application.routes.draw do
         get :contract_data
         post :position_check
         get :trades_data
+        get :test
       end
     end
     match '*path', via: :all, to: 'root#route_not_found'

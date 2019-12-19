@@ -3,6 +3,13 @@ class Api::TradeOrdersController < Api::ApplicationController
   include TradeOrdersHelper
   include ContractsHelper
 
+  def test
+    contract = "hsi"
+    result = [0, '成功']
+    TradersJob.perform_now contract
+    render_json(result)
+  end
+
   def order
     m_requires! [:order_type, :amount, :price, :rand_code]
     result = [0, '下单成功']
