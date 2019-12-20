@@ -33,15 +33,21 @@ module TradeOrdersHelper
 
   def ib_disconnect(ib)
     begin
-      PyCall.exec("ib.disconnect()")
+      ib.disconnect()
     rescue Exception => e
       error_message = e.value.to_s
     ensure
       # system (`pkill -9 python`) if Rails.env == "production"
+      status = case ib.isConnected()
+      when false
+        true
+      when true
+        false
+      end
       sleep(0.5)
     end
 
-    return true
+    return status
   end
 
   def ib_order(order_type, amount, price)
