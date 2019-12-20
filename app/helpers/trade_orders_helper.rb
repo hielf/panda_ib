@@ -32,18 +32,14 @@ module TradeOrdersHelper
   end
 
   def ib_disconnect(ib)
+    status = false
     begin
       ib.disconnect()
     rescue Exception => e
       error_message = e.value.to_s
     ensure
       # system (`pkill -9 python`) if Rails.env == "production"
-      status = case ib.isConnected()
-      when false
-        true
-      when true
-        false
-      end
+      status = true if ib && ib.isConnected() == false
       sleep(0.5)
     end
 
