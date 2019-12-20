@@ -27,7 +27,6 @@ class TradersJob < ApplicationJob
 
   private
   def around_check
-    yield
     data = ApplicationController.helpers.ib_trades
     if !data.empty?
       data.sort_by { |h| -h[:time] }.reverse.each do |d|
