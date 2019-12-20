@@ -217,7 +217,6 @@ module ContractsHelper
         end
       end
 
-      Rails.logger.warn "ib position: #{position}"
       Rails.logger.warn "ib data: #{data}"
       Rails.logger.warn "ib order: #{order == "" ? "NO" : order} #{amount.to_s}"
 
