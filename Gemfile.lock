@@ -1,3 +1,12 @@
+GIT
+  remote: https://github.com/seuros/capistrano-puma.git
+  revision: 87bfd747bd43a19b5d214e0272b76fb723cf1f5f
+  specs:
+    capistrano3-puma (4.0.0)
+      capistrano (~> 3.7)
+      capistrano-bundler
+      puma (~> 4.0)
+
 GEM
   remote: https://gems.ruby-china.com/
   specs:
@@ -62,10 +71,6 @@ GEM
     capistrano-rvm (0.1.2)
       capistrano (~> 3.0)
       sshkit (~> 1.2)
-    capistrano3-puma (3.1.1)
-      capistrano (~> 3.7)
-      capistrano-bundler
-      puma (~> 3.4)
     chronic (0.10.2)
     coffee-rails (4.2.2)
       coffee-script (>= 2.2.0)
@@ -141,7 +146,8 @@ GEM
     parallel (1.17.0)
     polyamorous (2.3.0)
       activerecord (>= 5.0)
-    puma (3.12.1)
+    puma (4.3.1)
+      nio4r (~> 2.0)
     pycall (1.2.1)
     rack (2.0.7)
     rack-cors (1.0.3)
@@ -272,7 +278,7 @@ DEPENDENCIES
   capistrano-bundler
   capistrano-rails
   capistrano-rvm
-  capistrano3-puma
+  capistrano3-puma!
   coffee-rails (~> 4.2)
   database_cleaner
   factory_bot_rails
@@ -284,7 +290,7 @@ DEPENDENCIES
   mysql2
   net-ping
   parallel
-  puma (~> 3.7)
+  puma (~> 4.0)
   pycall
   rack-cors
   rails (~> 5.2.3)

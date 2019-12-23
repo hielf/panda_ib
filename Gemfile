@@ -14,7 +14,7 @@ gem 'mysql2'
 # gem 'pg'
 
 # Use Puma as the app server
-gem 'puma', '~> 3.7'
+gem 'puma', '~> 4.0'
 # Use SCSS for stylesheets
 gem 'sass-rails', '~> 5.0'
 # Use Uglifier as compressor for JavaScript assets
@@ -60,7 +60,7 @@ group :development do
   gem 'capistrano-rvm', require: false
   gem 'capistrano-rails', require: false
   gem 'capistrano-bundler', require: false
-  gem 'capistrano3-puma', require: false
+  gem 'capistrano3-puma', github: "seuros/capistrano-puma", require: false
 end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
