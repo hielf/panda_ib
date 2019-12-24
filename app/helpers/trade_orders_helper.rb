@@ -183,7 +183,7 @@ module TradeOrdersHelper
       ib = ib_connect
       PyCall.exec("from sqlalchemy import create_engine")
       PyCall.exec("import os,sys")
-      PyCall.exec("import psycopg2")
+      # PyCall.exec("import psycopg2")
       PyCall.exec("import sched, time")
 
       PyCall.exec("contracts = [Index(symbol = 'HSI', exchange = 'HKFE')]")
