@@ -231,6 +231,8 @@ module TradeOrdersHelper
 
         sql = 'insert into ' + table + ' select * from ' + tmp_table +  ' b where not exists (select 1 from ' + table + ' a where a.date = b.date);'
         res  = conn.exec(sql)
+        
+        Rails.logger.warn "market_data success: #{Time.zone.now}"
       rescue Exception => e
         error_message = e.value.to_s
         result = false
@@ -238,7 +240,7 @@ module TradeOrdersHelper
         conn.close()
       end
     end
-    Rails.logger.warn "market_data success: #{Time.zone.now}"
+
     return result
   end
 

@@ -8,7 +8,8 @@ import sched, time
 
 ib = IB()
 # ib.connect('127.0.0.1', 7496, clientId=100)
-ib.connect('129.226.51.237', 7497, clientId=101)
+# ib.connect('129.226.51.237', 7497, clientId=101)
+ib.connect(host='129.226.51.237', port=7497, clientId=101, timeout=10, readonly=False)
 
 # contracts = [Forex('USDJPY'), Forex('EURUSD'), Index(symbol = "HSI", exchange = "HKFE")]
 contracts = [Forex('USDJPY'), Forex('EURUSD'), Forex('EURJPY'), Forex('EURGBP'), Forex('GBPJPY')]
