@@ -215,7 +215,7 @@ module TradeOrdersHelper
       ib_disconnect(ib)
     end
 
-    if list.nil? || result = false
+    if list.nil? || result == false
       result = false
     else
       begin
@@ -231,7 +231,7 @@ module TradeOrdersHelper
 
         sql = 'insert into ' + table + ' select * from ' + tmp_table +  ' b where not exists (select 1 from ' + table + ' a where a.date = b.date);'
         res  = conn.exec(sql)
-        
+
         Rails.logger.warn "market_data success: #{Time.zone.now}"
       rescue Exception => e
         error_message = e.value.to_s
