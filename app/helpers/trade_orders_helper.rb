@@ -179,39 +179,43 @@ module TradeOrdersHelper
     end
     result = true
     list = nil
+    Rails.logger.warn "market_data start: #{Time.zone.now}"
     begin
       ib = ib_connect
-      PyCall.exec("from sqlalchemy import create_engine")
-      PyCall.exec("import os,sys")
+      # PyCall.exec("from sqlalchemy import create_engine")
+      # PyCall.exec("import os,sys")
       # PyCall.exec("import psycopg2")
-      PyCall.exec("import sched, time")
+      # PyCall.exec("import sched, time")
+      if ib.isConnected()
+        PyCall.exec("contracts = [Index(symbol = 'HSI', exchange = 'HKFE')]")
+        PyCall.exec("contract = contracts[0]")
+        PyCall.exec("bars = ib.reqHistoricalData(contract, endDateTime='', durationStr='7200 S', barSizeSetting='#{bar_size}', whatToShow='TRADES', useRTH=True)")
+        # PyCall.exec("tmp_table = '#{contract}' + '_tmp'")
+        # PyCall.exec("table = '#{contract}'")
+        PyCall.exec("df = util.df(bars)")
 
-      PyCall.exec("contracts = [Index(symbol = 'HSI', exchange = 'HKFE')]")
-      PyCall.exec("contract = contracts[0]")
-      PyCall.exec("bars = ib.reqHistoricalData(contract, endDateTime='', durationStr='7200 S', barSizeSetting='#{bar_size}', whatToShow='TRADES', useRTH=True)")
-      # PyCall.exec("tmp_table = '#{contract}' + '_tmp'")
-      # PyCall.exec("table = '#{contract}'")
-      PyCall.exec("df = util.df(bars)")
-      #
-      # PyCall.exec("engine = create_engine('postgresql+psycopg2://chesp:Chesp92J5@rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com:3432/panda_quant',echo=True,client_encoding='utf8')")
-      # PyCall.exec("df.tail(2000).to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');")
-      # PyCall.exec("conn = psycopg2.connect(host='rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com', dbname='panda_quant', user='chesp', password='Chesp92J5', port='3432')")
-      # PyCall.exec("cur = conn.cursor()")
-      # PyCall.exec("sql = 'insert into ' + table + ' select * from ' + tmp_table +  ' b where not exists (select 1 from ' + table + ' a where a.date = b.date);'")
-      # PyCall.exec("cur.execute(sql, (10, 1000000, False, False))")
-      # PyCall.exec("conn.commit()")
-      # PyCall.exec("conn.close()")
+        list = PyCall.eval("df")
+        #
+        # PyCall.exec("engine = create_engine('postgresql+psycopg2://chesp:Chesp92J5@rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com:3432/panda_quant',echo=True,client_encoding='utf8')")
+        # PyCall.exec("df.tail(2000).to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');")
+        # PyCall.exec("conn = psycopg2.connect(host='rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com', dbname='panda_quant', user='chesp', password='Chesp92J5', port='3432')")
+        # PyCall.exec("cur = conn.cursor()")
+        # PyCall.exec("sql = 'insert into ' + table + ' select * from ' + tmp_table +  ' b where not exists (select 1 from ' + table + ' a where a.date = b.date);'")
+        # PyCall.exec("cur.execute(sql, (10, 1000000, False, False))")
+        # PyCall.exec("conn.commit()")
+        # PyCall.exec("conn.close()")
 
-      # data = PyCall.eval("list").to_h
+        # data = PyCall.eval("list").to_h
+      end
     rescue Exception => e
       error_message = e.value.to_s
       result = false
+      Rails.logger.warn "market_data error: #{Time.zone.now}"
     ensure
-      list = PyCall.eval("df")
       ib_disconnect(ib)
     end
 
-    if list.nil?
+    if list.nil? || result = false
       result = false
     else
       begin
@@ -234,7 +238,7 @@ module TradeOrdersHelper
         conn.close()
       end
     end
-
+    Rails.logger.warn "market_data success: #{Time.zone.now}"
     return result
   end
 
