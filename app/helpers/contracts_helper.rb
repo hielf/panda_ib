@@ -277,7 +277,7 @@ module ContractsHelper
     CSV.open( file, 'w' ) do |writer|
       writer << ["TIME", "ACTION", "SYMBOL", "CURRENCY", "SHARES", "PRICE", "COMMISSION", "PNL"]
       json.each do |c|
-        writer << [(c["time"] - 8.hours).strftime("%Y%m%d %H:%M:%S"), c["action"], c["symbol"] + "-" + c["last_trade_date_or_contract_month"], c["currency"], c["shares"], c["price"], c["commission"], c["realized_pnl"]]
+        writer << [(c["time"]).strftime("%Y%m%d %H:%M:%S"), c["action"], c["symbol"] + "-" + c["last_trade_date_or_contract_month"], c["currency"], c["shares"], c["price"], c["commission"], c["realized_pnl"]]
       end
     end
 
