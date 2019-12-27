@@ -9,7 +9,7 @@ class TradersJob < ApplicationJob
 
   def perform(*args)
     contract = args[0]
-    Rails.logger.warn "ib start: #{contract}, #{Time.zone.now}"
+    Rails.logger.warn "ib job start: #{contract}, #{Time.zone.now}"
     market_data = ApplicationController.helpers.market_data(contract)
     if market_data
       file = ApplicationController.helpers.index_to_csv(contract)
