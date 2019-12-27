@@ -1,6 +1,8 @@
 namespace :ib do
   task :test => :environment do
 
+    require 'pycall/libpython'
+
     Rails.logger.warn "ib test: start"
     # url = "http://127.0.0.1/api/trade_orders/test"
     # res = HTTParty.get(url)
