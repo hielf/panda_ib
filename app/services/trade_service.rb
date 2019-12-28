@@ -7,7 +7,7 @@ class TradeService
   end
 
   def check
-    include PyCall::Import
+    # include PyCall::Import
     Rails.logger.warn "ib service start: #{@contract}, #{Time.zone.now}"
 
     # contract = "hsi_5mins"
