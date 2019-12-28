@@ -3,7 +3,7 @@ namespace :ib do
 
     Rails.logger.warn "ib test: start"
 
-    exec 'PYCALL_DEBUG_FIND_LIBPYTHON=1 ruby -rpycall -ePyCall.builtins'
+    # exec 'PYCALL_DEBUG_FIND_LIBPYTHON=1 ruby -rpycall -ePyCall.builtins'
     # url = "http://127.0.0.1/api/trade_orders/test"
     # res = HTTParty.get(url)
 
