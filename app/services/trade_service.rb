@@ -1,6 +1,5 @@
 require 'net/ping'
 require 'pycall/import'
-include PyCall::Import
 
 class TradeService
   def initialize(params)
@@ -8,6 +7,7 @@ class TradeService
   end
 
   def check
+    include PyCall::Import
     Rails.logger.warn "ib service start: #{@contract}, #{Time.zone.now}"
 
     # contract = "hsi_5mins"
@@ -23,7 +23,21 @@ class TradeService
     list = nil
     Rails.logger.warn "market_data start: #{Time.zone.now}"
     begin
-      ib = ib_connect
+      ip = ENV['tws_ip'] #PyCall.eval("str('127.0.0.1')")
+      port = ENV['tws_port'].to_i
+      clientId = ENV['tws_clientid'].to_i
+
+      begin
+        PyCall.exec("from ib_insync import *")
+        PyCall.exec("ib = IB()")
+        # PyCall.exec("ib.connect('#{ip}', #{port}, clientId=#{clientId}), 5")
+        PyCall.exec("ib.connect(host='#{ip}', port=#{port}, clientId=#{clientId}, timeout=5, readonly=False)")
+      rescue Exception => e
+        error_message = e.value.to_s
+        Rails.logger.warn "ib_connect failed: #{error_message}"
+      ensure
+        ib = PyCall.eval("ib")
+      end
       # PyCall.exec("from sqlalchemy import create_engine")
       # PyCall.exec("import os,sys")
       # PyCall.exec("import psycopg2")
