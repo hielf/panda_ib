@@ -210,9 +210,9 @@ module TradeOrdersHelper
         # data = PyCall.eval("list").to_h
       end
     rescue Exception => e
-      error_message = e.value.to_s
+      error_message = e
       result = false
-      Rails.logger.warn "market_data error: #{Time.zone.now}"
+      Rails.logger.warn "market_data error: #{error_message}, #{Time.zone.now}"
     ensure
       ib_disconnect(ib)
     end
