@@ -37,12 +37,12 @@ module TradeOrdersHelper
     begin
       ib.disconnect()
     rescue Exception => e
-      error_message = e.value.to_s
+      error_message = e
     ensure
       # system (`pkill -9 python`) if Rails.env == "production"
       status = true if ib && ib.isConnected() == false
       sleep(0.5)
-    end
+    end if
 
     return status
   end
