@@ -37,7 +37,7 @@ module TradeOrdersHelper
     begin
       ib.disconnect()
     rescue Exception => e
-      error_message = e
+      Rails.logger.warn "ib_disconnect failed: #{error_message}"
     ensure
       # system (`pkill -9 python`) if Rails.env == "production"
       status = true if ib && ib.isConnected() == false
