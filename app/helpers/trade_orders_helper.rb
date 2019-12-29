@@ -78,7 +78,7 @@ module TradeOrdersHelper
         order_status = true
       end
     rescue Exception => e
-      error_message = e.value.to_s
+      error_message = e
     ensure
       ib_disconnect(ib)
     end
@@ -97,7 +97,7 @@ module TradeOrdersHelper
       data = PyCall.eval("list").to_h
     rescue Exception => e
       data = false
-      error_message = e.value.to_s
+      error_message = e
     ensure
       ib_disconnect(ib)
     end
@@ -128,7 +128,7 @@ module TradeOrdersHelper
 
     rescue Exception => e
       data = false
-      error_message = e.value.to_s
+      error_message = e
     ensure
       ib_disconnect(ib)
     end
@@ -144,7 +144,7 @@ module TradeOrdersHelper
 
       list = PyCall.eval("list").to_a
     rescue Exception => e
-      error_message = e.value.to_s
+      error_message = e
     ensure
       ib_disconnect(ib)
     end
@@ -236,7 +236,7 @@ module TradeOrdersHelper
 
         Rails.logger.warn "market_data success: #{Time.zone.now}"
       rescue Exception => e
-        error_message = e.value.to_s
+        error_message = e
         result = false
       ensure
         conn.close()
