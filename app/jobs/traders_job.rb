@@ -28,7 +28,7 @@ class TradersJob < ApplicationJob
   private
   def around_check
     data = ApplicationController.helpers.ib_trades
-    if !data.empty?
+    if data && !data.empty?
       Rails.logger.warn "ib trades data: #{data}"
       data.sort_by { |h| -h[:time] }.reverse.each do |d|
         trade = Trade.find_or_initialize_by(exec_id: d[:exec_id])
