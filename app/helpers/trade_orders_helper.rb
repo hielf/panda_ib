@@ -23,7 +23,7 @@ module TradeOrdersHelper
       # PyCall.exec("ib.connect('#{ip}', #{port}, clientId=#{clientId}), 5")
       PyCall.exec("ib.connect(host='#{ip}', port=#{port}, clientId=#{clientId}, timeout=5, readonly=False)")
     rescue Exception => e
-      error_message = e.value.to_s
+      error_message = e
       Rails.logger.warn "ib_connect failed: #{error_message}"
     ensure
       ib = PyCall.eval("ib")
@@ -37,6 +37,7 @@ module TradeOrdersHelper
     begin
       ib.disconnect()
     rescue Exception => e
+      error_message = e
       Rails.logger.warn "ib_disconnect failed: #{error_message}"
     ensure
       # system (`pkill -9 python`) if Rails.env == "production"
