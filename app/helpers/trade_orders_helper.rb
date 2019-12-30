@@ -1,8 +1,8 @@
 #export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
 require 'net/ping'
 require 'pycall'
-require 'pycall/init'
-require 'pycall/libpython'
+# require 'pycall/init'
+# require 'pycall/libpython'
 # include PyCall::Import
 
 # pyimport 'ib_insync'
