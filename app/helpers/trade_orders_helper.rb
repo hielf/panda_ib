@@ -45,7 +45,7 @@ module TradeOrdersHelper
       Rails.logger.warn "ib: #{ib.to_s}"
       # system (`pkill -9 python`) if Rails.env == "production"
       status = true if ib && ib.isConnected() == false
-      sleep(0.5)
+      sleep(2)
     end
 
     return status
