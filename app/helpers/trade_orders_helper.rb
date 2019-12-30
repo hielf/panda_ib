@@ -23,7 +23,7 @@ module TradeOrdersHelper
       PyCall.exec("from ib_insync import *")
       PyCall.exec("ib = IB()")
       # PyCall.exec("ib.connect('#{ip}', #{port}, clientId=#{clientId}), 5")
-      PyCall.exec("ib.connect(host='#{ip}', port=#{port}, clientId=#{clientId}, timeout=5, readonly=False)")
+      PyCall.exec("ib.connect(host='#{ip}', port=#{port}, clientId=#{clientId}, timeout=10, readonly=False)")
     rescue Exception => e
       error_message = e
       Rails.logger.warn "ib_connect failed: #{error_message}"
@@ -58,7 +58,7 @@ module TradeOrdersHelper
     # price = 0
 
     begin
-      ib = ib_connect
+      # ib = ib_connect
       order_status = false
       PyCall.exec("hsi = Future('HSI')")
       PyCall.exec("cds = ib.reqContractDetails(hsi)")
@@ -81,8 +81,8 @@ module TradeOrdersHelper
       end
     rescue Exception => e
       error_message = e
-    ensure
-      ib_disconnect(ib)
+    # ensure
+    #   ib_disconnect(ib)
     end
 
     return order_status
@@ -90,7 +90,7 @@ module TradeOrdersHelper
 
   def ib_positions
     begin
-      ib = ib_connect
+      # ib = ib_connect
       PyCall.exec("pos = ib.positions()")
       PyCall.exec("list = {}")
       PyCall.exec("for po in pos: list.update({'position': po.position, 'currency': po.contract.currency, 'contract_date': po.contract.lastTradeDateOrContractMonth, 'symbol': po.contract.symbol})")
@@ -100,8 +100,8 @@ module TradeOrdersHelper
     rescue Exception => e
       data = false
       error_message = e
-    ensure
-      ib_disconnect(ib)
+    # ensure
+    #   ib_disconnect(ib)
     end
 
     return data
@@ -110,7 +110,7 @@ module TradeOrdersHelper
   def ib_trades
     data = []
     begin
-      ib = ib_connect
+      # ib = ib_connect
       PyCall.exec("trades = ib.trades()")
       PyCall.exec("print(trades)")
       PyCall.exec("array = []")
@@ -131,8 +131,8 @@ module TradeOrdersHelper
     rescue Exception => e
       data = false
       error_message = e
-    ensure
-      ib_disconnect(ib)
+    # ensure
+    #   ib_disconnect(ib)
     end
 
     return data
@@ -141,14 +141,14 @@ module TradeOrdersHelper
   def ib_account_values
     # [v for v in ib.accountValues() if v.tag == 'NetLiquidationByCurrency' and v.currency == 'BASE']
     begin
-      ib = ib_connect
+      # ib = ib_connect
       PyCall.exec("list = [v for v in ib.accountValues()]")
 
       list = PyCall.eval("list").to_a
     rescue Exception => e
       error_message = e
-    ensure
-      ib_disconnect(ib)
+    # ensure
+    #   ib_disconnect(ib)
     end
 
     data = {}
@@ -185,7 +185,7 @@ module TradeOrdersHelper
     list = nil
     Rails.logger.warn "market_data start: #{Time.zone.now}"
     begin
-      ib = ib_connect
+      # ib = ib_connect
       # PyCall.exec("from sqlalchemy import create_engine")
       # PyCall.exec("import os,sys")
       # PyCall.exec("import psycopg2")
@@ -215,8 +215,8 @@ module TradeOrdersHelper
       error_message = e
       result = false
       Rails.logger.warn "market_data error: #{error_message}, #{Time.zone.now}"
-    ensure
-      ib_disconnect(ib)
+    # ensure
+      # ib_disconnect(ib)
     end
 
     if list.nil? || result == false
