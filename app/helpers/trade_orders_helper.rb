@@ -1,6 +1,7 @@
 #export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
 require 'net/ping'
 require 'pycall'
+# require 'pycall/import'
 # require 'pycall/init'
 # require 'pycall/libpython'
 # include PyCall::Import
@@ -23,7 +24,7 @@ module TradeOrdersHelper
       PyCall.exec("from ib_insync import *")
       PyCall.exec("ib = IB()")
       # PyCall.exec("ib.connect('#{ip}', #{port}, clientId=#{clientId}), 5")
-      PyCall.exec("ib.connect(host='#{ip}', port=#{port}, clientId=#{clientId}, timeout=10, readonly=False)")
+      PyCall.exec("try: ib.connect(host='#{ip}', port=#{port}, clientId=#{clientId}, timeout=10, readonly=False)\nexcept: print ('ib connect error')")
     rescue Exception => e
       error_message = e
       Rails.logger.warn "ib_connect failed: #{error_message}"
@@ -45,7 +46,7 @@ module TradeOrdersHelper
       Rails.logger.warn "ib disconnection: #{ib.to_s}"
       # system (`pkill -9 python`) if Rails.env == "production"
       status = true if ib && ib.isConnected() == false
-      sleep(2)
+      # sleep(2)
     end
 
     return status
