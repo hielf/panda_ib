@@ -47,7 +47,9 @@ CONFIG_ROOT = File.dirname(__FILE__)
       w.name = app_name + "-" + env
       w.group = app_name
       assets = (env == "production") ? "rake assets:precompile --trace RAILS_ENV=production && " : ""
-      w.start = "cd #{app_root} && #{assets}puma -e #{env}"
+      cmd = "/usr/local/rvm/bin/rvm default do bundle exec puma -C /var/www/#{app_name}/shared/puma.rb --daemon"
+      # w.start = "cd #{app_root} && #{assets}puma -e #{env}"
+      w.start = "cd #{app_root} && #{assets}pumactl -P shared/tmp/pids/puma.pid start"
       w.restart = "cd #{app_root} && #{assets}pumactl -P shared/tmp/pids/puma.pid restart"
       w.stop = "cd #{app_root} && pumactl -P shared/tmp/pids/puma.pid stop"
       w.pid_file = "#{app_root}/shared/tmp/pids/puma.pid"
