@@ -95,6 +95,7 @@ GEM
       thor (~> 0.14)
     globalid (0.4.2)
       activesupport (>= 4.2.0)
+    god (0.13.7)
     httparty (0.17.0)
       mime-types (~> 3.0)
       multi_xml (>= 0.5.2)
@@ -284,6 +285,7 @@ DEPENDENCIES
   database_cleaner
   factory_bot_rails
   figaro
+  god
   httparty
   jbuilder (~> 2.5)
   kaminari
