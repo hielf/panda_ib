@@ -239,6 +239,7 @@ module ContractsHelper
 
       if order != "" && amount != 0
         ib_order(order, amount, 0)
+        EventLog.create(content: "#{order} #{amount.to_s} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}")
       end
     end
 
