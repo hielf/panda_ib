@@ -2,7 +2,7 @@ CONFIG_ROOT = File.dirname(__FILE__)
 
 ["panda_ib"].each do |app_name|
 
-  app_root = "#{CONFIG_ROOT}/#{app_name}"
+  app_root = "#{CONFIG_ROOT}"
 
   def generic_monitoring(w, options = {})
 
@@ -48,11 +48,11 @@ CONFIG_ROOT = File.dirname(__FILE__)
       w.group = app_name
       assets = (env == "production") ? "rake assets:precompile --trace RAILS_ENV=production && " : ""
       w.start = "cd #{app_root} && #{assets}puma -e #{env}"
-      w.restart = "cd #{app_root} && #{assets}pumactl -P tmp/pids/puma.pid restart"
-      w.stop = "cd #{app_root} && pumactl -P tmp/pids/puma.pid stop"
-      w.pid_file = "#{app_root}/tmp/pids/puma.pid"
+      w.restart = "cd #{app_root} && #{assets}pumactl -P shared/tmp/pids/puma.pid restart"
+      w.stop = "cd #{app_root} && pumactl -P shared/tmp/pids/puma.pid stop"
+      w.pid_file = "#{app_root}/shared/tmp/pids/puma.pid"
 
-      w.log = "#{app_root}/log/god.log"
+      w.log = "#{app_root}/shared/log/god.log"
 
       w.behavior(:clean_pid_file)
 
