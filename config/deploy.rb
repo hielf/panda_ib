@@ -4,8 +4,8 @@ lock "~> 3.11.0"
 set :repo_url, "git@github.com:hielf/panda_ib.git"
 set :application, "panda_ib"
 # set :user, "deploy"
-set :puma_threads, [1, 1]
-set :puma_workers, 1
+set :puma_threads, [4, 16]
+set :puma_workers, 0
 set :rails_env, 'production'
 # set :rvm_ruby_version, '2.4.0@panda_ib'
 
