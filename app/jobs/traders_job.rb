@@ -33,7 +33,8 @@ class TradersJob < ApplicationJob
     data = ApplicationController.helpers.ib_trades
     ApplicationController.helpers.ib_disconnect(@ib)
     if data && !data.empty?
-      Rails.logger.warn "ib trades data: #{data}"
+      # Rails.logger.warn "ib trades data: #{data}"
+      Rails.logger.warn "ib trades got: #{Time.zone.now}"
       data.sort_by { |h| -h[:time] }.reverse.each do |d|
         trade = Trade.find_or_initialize_by(exec_id: d[:exec_id])
         trade.update(perm_id: d[:perm_id], action: d[:action], symbol: d[:symbol],
@@ -42,7 +43,6 @@ class TradersJob < ApplicationJob
           commission: d[:commission], realized_pnl: d[:realized_pnl])
       end
     end
-    Rails.logger.warn "ib trades got: #{Time.zone.now}"
   end
 
 end
