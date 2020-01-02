@@ -12,16 +12,24 @@ module ContractsHelper
     url = "http://#{ENV["market_db"]}:3000/#{contract}?and=(date.gte.#{begin_time.strftime('%Y-%m-%dT%H:%M:%S')},date.lte.#{end_time.strftime('%Y-%m-%dT%H:%M:%S')})"
     res = HTTParty.get url
     json = JSON.parse res.body
-    csv = CSV.generate(headers: false) { |csv| json.map(&:to_a).each { |row| csv << row } }
+    begin
+      latest_time = strftime_time(json.last["date"].to_datetime + 2.minutes)
+      if latest_time >= strftime_time(end_time)
+        csv = CSV.generate(headers: false) { |csv| json.map(&:to_a).each { |row| csv << row } }
 
-    file = Rails.root.to_s + "/tmp/csv/#{contract}.csv"
-    CSV.open( file, 'w' ) do |writer|
-      json.each do |c|
-        writer << [c["date"], c["open"], c["high"], c["low"], c["close"], c["volume"], c["barCount"], c["average"]]
+        file = Rails.root.to_s + "/tmp/csv/#{contract}.csv"
+        CSV.open( file, 'w' ) do |writer|
+          json.each do |c|
+            writer << [c["date"], c["open"], c["high"], c["low"], c["close"], c["volume"], c["barCount"], c["average"]]
+          end
+        end
+        return file
+      else
+        return false
       end
+    rescue Exception => e
+      Rails.logger.warn "index_to_csv failed: #{e}"
     end
-
-    return file
   end
 
 

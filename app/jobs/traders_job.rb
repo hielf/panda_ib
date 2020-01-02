@@ -15,7 +15,7 @@ class TradersJob < ApplicationJob
       market_data = ApplicationController.helpers.market_data(contract)
       if market_data
         file = ApplicationController.helpers.index_to_csv(contract)
-        data = ApplicationController.helpers.online_data(file)
+        data = ApplicationController.helpers.online_data(file) if file
         if data && !data.empty?
           current_time = Time.zone.now.strftime('%H:%M')
           if (current_time > "09:15" && current_time < "12:00") || (current_time > "13:00" && current_time < "15:30")
