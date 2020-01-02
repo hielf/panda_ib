@@ -2,7 +2,7 @@ CONFIG_ROOT = File.dirname(__FILE__)
 
 ["panda_ib"].each do |app_name|
 
-  app_root = "#{CONFIG_ROOT}"
+  app_root = "/var/www/panda_ib"
 
   def generic_monitoring(w, options = {})
 
@@ -47,18 +47,18 @@ CONFIG_ROOT = File.dirname(__FILE__)
       w.name = app_name + "-" + env
       w.group = app_name
       assets = (env == "production") ? "rake assets:precompile --trace RAILS_ENV=production && " : ""
-      cmd = "/usr/local/rvm/bin/rvm default do bundle exec puma -C /var/www/#{app_name}/shared/puma.rb --daemon"
+      # cmd = "/usr/local/rvm/bin/rvm default do bundle exec puma -C /var/www/#{app_name}/shared/puma.rb --daemon"
       # w.start = "cd #{app_root} && #{assets}puma -e #{env}"
-      w.start = "cd #{app_root} && #{assets}pumactl -P shared/tmp/pids/puma.pid start"
-      w.restart = "cd #{app_root} && #{assets}pumactl -P shared/tmp/pids/puma.pid restart"
-      w.stop = "cd #{app_root} && pumactl -P shared/tmp/pids/puma.pid stop"
+      w.start = "cd #{app_root}/current && RAILS_ENV=production bundle exec pumactl -S /var/www/panda_ib/shared/tmp/pids/puma.state -F /var/www/#{app_name}/shared/puma.rb start"
+      w.restart = "cd #{app_root}/current && RAILS_ENV=production bundle exec pumactl -S /var/www/panda_ib/shared/tmp/pids/puma.state -F /var/www/#{app_name}/shared/puma.rb restart"
+      w.stop = "cd #{app_root}/current && RAILS_ENV=production bundle exec pumactl -S /var/www/panda_ib/shared/tmp/pids/puma.state -F /var/www/#{app_name}/shared/puma.rb stop"
       w.pid_file = "#{app_root}/shared/tmp/pids/puma.pid"
 
       w.log = "#{app_root}/shared/log/god.log"
 
       w.behavior(:clean_pid_file)
 
-      generic_monitoring(w, :cpu_limit => 80.percent, :memory_limit => 200.megabytes)
+      generic_monitoring(w, :cpu_limit => 80.percent, :memory_limit => 500.megabytes)
     end
   end
 end
