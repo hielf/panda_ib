@@ -18,17 +18,21 @@ module TradeOrdersHelper
   def ib_connect
     ip = ENV['tws_ip'] #PyCall.eval("str('127.0.0.1')")
     port = ENV['tws_port'].to_i
-    clientId = ENV['tws_clientid'].to_i
+    clientId = ENV['tws_clientid'].to_i #master client id
+    clientId = rand(1..500)
 
     begin
       PyCall.exec("from ib_insync import *")
+      PyCall.exec("ib_status = ''")
       PyCall.exec("ib = IB()")
       # PyCall.exec("ib.connect('#{ip}', #{port}, clientId=#{clientId}), 5")
-      PyCall.exec("try: ib.connect(host='#{ip}', port=#{port}, clientId=#{clientId}, timeout=10, readonly=False)\nexcept: print ('ib connect error')")
+      PyCall.exec("try: ib.connect(host='#{ip}', port=#{port}, clientId=#{clientId}, timeout=10, readonly=False)\nexcept Exception as e: ib_status = str(e)")
     rescue Exception => e
       error_message = e
       Rails.logger.warn "ib_connect failed: #{error_message}"
     ensure
+      ib_status = PyCall.eval("ib_status")
+      Rails.logger.warn "ib_connect failed: #{ib_status}" if !ib_status.empty?
       ib = PyCall.eval("ib")
     end
 
