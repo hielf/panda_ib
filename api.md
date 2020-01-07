@@ -1,7 +1,7 @@
 # 熊猫IB API文档
 
 ### API说明
-* root_url: http://:8090/api
+* root_url: http://host:8090/api
 * Need Auth: no
 * HEADERS Content-Type: application/x-www-form-urlencoded
 
