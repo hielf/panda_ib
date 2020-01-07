@@ -8,7 +8,7 @@
 ## 交易类 trade_orders
 ### 下单
 * POST root_url/trade_orders/order
-* params {order_type: 'BUY', amount: 500, price: 0.0, rand_code: 1111}
+* params {order_type: 'BUY', amount: 500, price: 5.0, rand_code: 1111}
 * {
     "status": 0,
     "message": "下单成功"
