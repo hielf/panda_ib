@@ -62,7 +62,7 @@ def get_index_1min(date_time):
         conn.commit()
         conn.close()
 
-        s.enter(60, 1, get_index_5min, (date_time,))
+        s.enter(60, 1, get_index_1min, (date_time,))
 
 def get_index_5min(date_time):
     for contract in contracts:
