@@ -27,10 +27,6 @@
 #   command "cd /var/www/panda_ib-frontend/ && pm2 start server/app.js"
 # end
 
-# every 20.minutes do
-#   rake "scan:onus"
-# end
-
 # every :reboot do
 #  command "cd /var/www/panda_ib && god -c config.god"
 # end
@@ -38,6 +34,10 @@
 every 1.minute do
   # rake "ib:hsi"
   rake "ib:test"
-  # runner 'TradersJob.perform_later'
+end
+
+every 1.day do
+  command "cat /dev/null > /var/www/panda_ib/current/log/puma.error.log"
+  command "cat /dev/null > /var/www/panda_ib/current/log/puma.access.log"
 end
 #
