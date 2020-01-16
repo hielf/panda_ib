@@ -10,8 +10,8 @@ module ContractsHelper
     # 1200 bars
     begin_time = EventLog.maximum(:created_at).nil? ? Time.zone.now - 4.days : (EventLog.maximum(:created_at) - 4.days).beginning_of_day
     end_time = Time.zone.now
-    url = "http://#{ENV["market_db"]}:3000/#{contract}?and=(date.gte.#{begin_time.strftime('%Y-%m-%dT%H:%M:%S')},date.lte.#{end_time.strftime('%Y-%m-%dT%H:%M:%S')})"
-    # url = "http://#{ENV["market_db"]}:3000/hsi_last_1200)"
+    # url = "http://#{ENV["market_db"]}:3000/#{contract}?and=(date.gte.#{begin_time.strftime('%Y-%m-%dT%H:%M:%S')},date.lte.#{end_time.strftime('%Y-%m-%dT%H:%M:%S')})"
+    url = "http://#{ENV["market_db"]}:3000/#{contract}_last_1200"
     res = HTTParty.get url
     json = JSON.parse res.body
     begin
@@ -35,10 +35,9 @@ module ContractsHelper
   end
 
 
-  def online_data(file)
+  def online_data(file, version)
     Rails.logger.warn "online_data start: #{Time.zone.now}"
     # PyCall.exec("")
-    pandaAI = Rails.root.to_s + '/lib/python/ai/pandaAI'
     data = {}
     today = Date.today.strftime('%Y-%m-%d')
     file_name = "data.json"
@@ -52,6 +51,28 @@ module ContractsHelper
     rescue Errno::ENOENT
     end
 
+    case version
+    when "V4"
+      predict_v4(file)
+    when "V5"
+      predict_v5(file)
+    end
+
+    begin
+      f = File.open(destination, "r")
+      data = JSON.load f
+      f.close
+      Rails.logger.warn "online_data success: #{Time.zone.now}"
+    rescue Exception => ex
+      # Rails.logger.warn "#{ex.message}"
+      Rails.logger.warn "online_data no file error: #{Time.zone.now}"
+    end
+
+    return data
+  end
+
+  def predict_v4(file)
+    pandaAI = Rails.root.to_s + '/lib/python/ai/pandaAI'
     begin
       PyCall.exec("dual_params={'resample': '5T', 'step_n': 5, 'barNum': 1, 'file_path': '#{file}',  'check_date': '#{today}'}")
       PyCall.exec("import sys")
@@ -183,18 +204,101 @@ module ContractsHelper
     rescue Exception => ex
       Rails.logger.warn "#{ex.message}"
     end
+  end
 
+  def predict_v5(file)
+    pandaAI = Rails.root.to_s + '/lib/python/ai/pandaAI'
     begin
-      f = File.open(destination, "r")
-      data = JSON.load f
-      f.close
-      Rails.logger.warn "online_data success: #{Time.zone.now}"
-    rescue Exception => ex
-      # Rails.logger.warn "#{ex.message}"
-      Rails.logger.warn "online_data no file error: #{Time.zone.now}"
-    end
+      PyCall.exec("dual_params={'resample': '6T', 'barNum': 10, 'file_path': '#{file}',  'rolling_window': 6}")
+      PyCall.exec("import pandas as pd")
+      PyCall.exec("import numpy as np")
+      PyCall.exec("import sys")
+      PyCall.exec("sys.path.append('#{pandaAI}')")
+      PyCall.exec("import pandaAI.robotV2 as robot")
+      PyCall.exec("import imp")
+      PyCall.exec("imp.reload(robot)")
+      PyCall.exec("import sklearn")
+      PyCall.exec("import sklearn.metrics as me")
+      PyCall.exec("from sklearn.ensemble import RandomForestClassifier")
+      PyCall.exec("from sklearn.ensemble import RandomForestRegressor")
+      PyCall.exec("from sklearn.externals import joblib")
+      PyCall.exec("from matplotlib.pylab import date2num")
+      PyCall.exec("import datetime ")
+      PyCall.exec("from sklearn.metrics import log_loss, f1_score, mean_absolute_error,mean_squared_error,r2_score,accuracy_score,roc_auc_score, balanced_accuracy_score")
 
-    return data
+      PyCall.exec("frequency = [0,28]")
+      PyCall.exec("feature_params = {'atr': frequency, 'rsi': frequency, 'cci': frequency}")
+      PyCall.exec("df0 = pd.read_csv(dual_params['file_path'],  skiprows=1, header=None, sep=',', names=['dates', 'open', 'high', 'low', 'close','volume', 'barcount','avg'])")
+
+      PyCall.exec("import matplotlib.dates as mdates")
+      PyCall.exec("df6 = df0")
+      PyCall.exec("n = len(df6)")
+      PyCall.exec("cname = 'dates'")
+      PyCall.exec("df6.loc[:, cname] = pd.to_datetime(df6[cname])")
+      PyCall.exec("df6.set_index(cname, inplace=True)")
+      PyCall.exec("df6.sort_index(inplace=True)")
+      PyCall.exec("df6.loc[:, 'dates2'] = df6.index")
+      PyCall.exec("df6.loc[:, 'dates2'] = df6['dates2'].apply(mdates.date2num)")
+      PyCall.exec("df6['hour'] = pd.to_datetime(df6['dates2']).dt.hour")
+      PyCall.exec("df6['minute'] = pd.to_datetime(df6['dates2']).dt.minute")
+      PyCall.exec("step_n = 5") # bar 的 period 间隔
+      PyCall.exec("i = step_n") # 第一个old bar
+      PyCall.exec("cols= ['open',	'high',	'low',	'close',	'volume',	'barcount',	'avg',	'dates2' ]")
+      PyCall.exec("df6 = df6.ix[:, cols]")
+      PyCall.exec("df2_index = list(df6.index)")
+      PyCall.exec("mm2 = robot.MM()")
+      PyCall.exec("flist =  mm2.input_features(feature_params)")
+      PyCall.exec("mm2.format_data(df6, dual_params)") # resample k线
+      PyCall.exec("mm2.data_set = mm2.generate_datetime_feature(mm2.data_set)") # 创建时间特征
+      PyCall.exec("mm2.generate_features(flist)")
+      PyCall.exec("df7 = mm2.generate_exfeature_rolling(int(dual_params['rolling_window']), mm2.features)")
+      PyCall.exec("df7['buy_base_price']= df7['buy_base_price'].shift()")
+      PyCall.exec("df7['sale_base_price']= df7['sale_base_price'].shift()")
+      PyCall.exec("df7['buy_high_price']= df7['buy_high_price'].shift()")
+      PyCall.exec("df7['sale_low_price']= df7['sale_low_price'].shift()")
+      PyCall.exec("df7['atr_rsi'] = df7['RSI_0'] / (1+df7['ATR_0'])")
+      PyCall.exec("df7['cci_atr'] = df7['ATR_0'] / (1+df7['CCI_0'])")
+      PyCall.exec("df7['atr_rsi28'] = df7['RSI_28'] / (1+df7['ATR_0'])")
+      PyCall.exec("df7['cci28_atr28'] = df7['ATR_28'] / (1+df7['CCI_28'])")
+      PyCall.exec("df7['atr_rsi1'] = df7['atr_rsi'].shift(1)")
+      PyCall.exec("df7['atr_rsi2'] = df7['atr_rsi'].shift(2)")
+      PyCall.exec("df7['atr_rsi3'] = df7['atr_rsi'].shift(3)")
+      PyCall.exec("df7['hh_close'] = df7['hh']/df7['close']")
+      PyCall.exec("df7['hh_close2'] = df7['hh']/df7['close'].shift(2)")
+      PyCall.exec("df7['hh_close3'] = df7['hh']/df7['close'].shift(4)")
+      PyCall.exec("df7['hh_1'] = df7['hh'].shift(1)")
+      PyCall.exec("df7['hh_1_close'] = df7['hh_1']/df7['close']")
+      PyCall.exec("df7['hh_1_close_1'] = df7['hh_1']/df7['close'].shift()")
+      PyCall.exec("df7['hh_2'] = df7['hh'].shift(2)")
+      PyCall.exec("df7['hh2_close'] = df7['hh_2']/df7['close']")
+      PyCall.exec("df7['hh2_close_1'] = df7['hh_2']/df7['close'].shift()")
+      PyCall.exec("df7['ll_close'] = df7['ll']/df7['close']")
+      PyCall.exec("df7['ll_close2'] = df7['ll']/df7['close'].shift(2)")
+      PyCall.exec("df7['ll_close3'] = df7['ll']/df7['close'].shift(4)")
+      PyCall.exec("df7['ll_1'] = df7['ll'].shift(1)")
+      PyCall.exec("df7['ll_1_close'] = df7['ll_1']/df7['close']")
+      PyCall.exec("df7['ll_1_close_1'] = df7['ll_1']/df7['close'].shift()")
+      PyCall.exec("df7['ll_2'] = df7['ll'].shift(2)")
+      PyCall.exec("df7['ll-2_close'] = df7['ll_2']/df7['close']")
+      PyCall.exec("df7['ll_2_close_1'] = df7['ll_2']/df7['close'].shift()")
+      PyCall.exec("df7.drop(['datetime'],axis=1, inplace=True)")
+      PyCall.exec("df7.dropna(inplace=True)")
+      PyCall.exec("df7_index = list(df7.index)")
+
+      PyCall.exec("rf = joblib.load('rf.pkl')")
+      PyCall.exec("clf2 = joblib.load('clf2.pkl')")
+
+      PyCall.exec("ver_X = df7.tail(6)")
+      PyCall.exec("pred_y = rf.predict_proba(ver_X)[:,1]")
+      PyCall.exec("pred_y2 = clf2.predict_proba(ver_X)[:,1]")
+      PyCall.exec("dict_action = pred_y[-2]")
+      PyCall.exec("dict_action2 = pred_y2[-2]")
+      PyCall.exec("print(pred_y, pred_y2, dict_action, dict_action2)")
+
+
+    rescue Exception => ex
+      Rails.logger.warn "#{ex.message}"
+    end
   end
 
   def check_position(data)
