@@ -39,7 +39,6 @@ module ContractsHelper
     Rails.logger.warn "online_data start: #{Time.zone.now}"
     # PyCall.exec("")
     data = {}
-    today = Date.today.strftime('%Y-%m-%d')
     file_name = "data.json"
     destination = Rails.root.to_s + "/tmp/" + file_name
 
@@ -51,12 +50,19 @@ module ContractsHelper
     rescue Errno::ENOENT
     end
 
-    case version
+    case version.upcase
     when "V4"
-      predict_v4(file)
+      hash = predict_v4(file)
     when "V5"
-      predict_v5(file)
+      hash = predict_v5(file)
     end
+
+    PyCall.exec("import json")
+    # PyCall.exec("print (hash)")
+    PyCall.exec("destination='#{destination}'")
+    PyCall.exec("saveFile = open(destination, 'w')")
+    PyCall.exec("saveFile.write(json.dumps(#{hash}))")
+    PyCall.exec("saveFile.close()")
 
     begin
       f = File.open(destination, "r")
@@ -73,6 +79,7 @@ module ContractsHelper
 
   def predict_v4(file)
     pandaAI = Rails.root.to_s + '/lib/python/ai/pandaAI'
+    today = Date.today.strftime('%Y-%m-%d')
     begin
       PyCall.exec("dual_params={'resample': '5T', 'step_n': 5, 'barNum': 1, 'file_path': '#{file}',  'check_date': '#{today}'}")
       PyCall.exec("import sys")
@@ -192,18 +199,12 @@ module ContractsHelper
           PyCall.exec("hash['reg_buy_break'] = reg_buy_break.predict(pre_data)[0]")
           PyCall.exec("hash['reg_sale_open'] = reg_sale_open.predict(pre_data)[0]")
           PyCall.exec("hash['reg_sale_break'] = reg_sale_break.predict(pre_data)[0]")
-
-          PyCall.exec("import json")
-          # PyCall.exec("print (hash)")
-          PyCall.exec("destination='#{destination}'")
-          PyCall.exec("saveFile = open(destination, 'w')")
-          PyCall.exec("saveFile.write(json.dumps(hash))")
-          PyCall.exec("saveFile.close()")
         end
       end
     rescue Exception => ex
       Rails.logger.warn "#{ex.message}"
     end
+    return PyCall.eval("hash")
   end
 
   def predict_v5(file)
@@ -214,7 +215,7 @@ module ContractsHelper
       PyCall.exec("import numpy as np")
       PyCall.exec("import sys")
       PyCall.exec("sys.path.append('#{pandaAI}')")
-      PyCall.exec("import pandaAI.robotV2 as robot")
+      PyCall.exec("import robotV2 as robot")
       PyCall.exec("import imp")
       PyCall.exec("imp.reload(robot)")
       PyCall.exec("import sklearn")
@@ -285,81 +286,132 @@ module ContractsHelper
       PyCall.exec("df7.dropna(inplace=True)")
       PyCall.exec("df7_index = list(df7.index)")
 
-      PyCall.exec("rf = joblib.load('rf.pkl')")
-      PyCall.exec("clf2 = joblib.load('clf2.pkl')")
+      PyCall.exec("rf = joblib.load('#{Rails.root.to_s}' + '/lib/python/ib/rf.pkl')")
+      PyCall.exec("clf2 = joblib.load('#{Rails.root.to_s}' + '/lib/python/ib/clf2.pkl')")
 
       PyCall.exec("ver_X = df7.tail(6)")
       PyCall.exec("pred_y = rf.predict_proba(ver_X)[:,1]")
       PyCall.exec("pred_y2 = clf2.predict_proba(ver_X)[:,1]")
       PyCall.exec("dict_action = pred_y[-2]")
       PyCall.exec("dict_action2 = pred_y2[-2]")
-      PyCall.exec("print(pred_y, pred_y2, dict_action, dict_action2)")
 
+      PyCall.exec("hash = {}")
+      PyCall.exec("hash['dict_action'] = dict_action")
+      PyCall.exec("hash['dict_action2'] = dict_action2")
+      PyCall.exec("hash['condition1'] = ver_X.iloc[-2]['close'] + ver_X.iloc[-2]['ATR_0_1']")
+      PyCall.exec("hash['condition2'] = ver_X.iloc[-2]['close'] - ver_X.iloc[-2]['ATR_0_1']/2")
+      PyCall.exec("hash['condition3'] = ver_X.iloc[-2]['close'] - ver_X.iloc[-2]['ATR_0_1']")
+      PyCall.exec("hash['open_1'] = ver_X.iloc[-1]['open']")
+      PyCall.exec("hash['open_2'] = ver_X.iloc[-2]['open']")
+      PyCall.exec("hash['close_1'] = ver_X.iloc[-1]['close']")
+      PyCall.exec("hash['close_2'] = ver_X.iloc[-2]['close']")
+      PyCall.exec("hash['high_1'] = ver_X.iloc[-1]['high']")
+      PyCall.exec("hash['high_2'] = ver_X.iloc[-2]['high']")
+      PyCall.exec("hash['low_1'] = ver_X.iloc[-1]['low']")
+      PyCall.exec("hash['low_2'] = ver_X.iloc[-2]['low']")
+      PyCall.exec("hash['buy_high_price_2'] = ver_X.iloc[-2]['buy_high_price']")
+      PyCall.exec("hash['buy_base_price_2'] = ver_X.iloc[-2]['buy_base_price']")
+      # PyCall.exec("print(pred_y, pred_y2, dict_action, dict_action2)")
 
     rescue Exception => ex
       Rails.logger.warn "#{ex.message}"
     end
+    return PyCall.eval("hash")
   end
 
-  def check_position(data)
-    # {"current_open"=>26520.14, "current_close"=>26515.06, "current_high"=>26525.11, "current_low"=>26508.94,
-    # "prev_open"=>26530.69, "prev_close"=>26519.39, "prev_high"=>26536.75, "prev_low"=>26514.3,
-    # "reg_buy_open"=>26547.974999999995, "reg_buy_break"=>26559.200000000008, "reg_sale_open"=>26503.075,
-    # "reg_sale_break"=>26491.85}
-
-    amount = 4
-    order = ""
+  def check_position(data, version)
     position = ib_positions
-
     Rails.logger.warn "ib position: #{position}"
-
-    # 3.times do
-    #   position = ib_positions
-    #   if position == false
-    #     Rails.logger.warn "ib position WRONG"
-    #     sleep 1
-    #     position = ib_positions
-    #   else
-    #     next
-    #   end
-    # end
     if position
-      if position == {}
-        if data["current_close"] > data["reg_buy_open"]
-          order = "BUY"
-        elsif data["current_close"] < data["reg_sale_open"]
-          order = "SELL"
-        end
-      elsif !position["position"].nil? && position["position"] > 0 # buy
-        # 冲高回落, 平仓
-        if data['current_high'] > data["reg_buy_break"] && data["current_close"] < data["reg_buy_open"]
-          order = "SELL"
-          amount = position["position"].abs
-        # 移动平仓
-        elsif data["current_close"] <  data['prev_close']
-          order = "SELL"
-          amount = position["position"].abs
-        end
-      elsif !position["position"].nil? && position["position"] < 0 # sell
-        if data['current_low'] < data["reg_sale_break"] && data["current_close"] > data["reg_sale_open"]
-          order = "BUY"
-          amount = position["position"].abs
-        elsif data["current_close"] > data['prev_close']
-          order = "BUY"
-          amount = position["position"].abs
-        end
+      case version.upcase
+      when "V4"
+        order, amount = check_v4(data, position)
+      when "V5"
+        order, amount = check_v5(data, position)
       end
 
-      Rails.logger.warn "ib data: #{data}"
-      Rails.logger.warn "ib order: #{order == "" ? "NO" : order} #{amount.to_s}"
+      Rails.logger.warn "ib data #{version}: #{data}"
+      Rails.logger.warn "ib order #{version}: #{order == "" ? "NO" : order} #{amount.to_s}"
 
       if order != "" && amount != 0
         ib_order(order, amount, 0)
-        EventLog.create(content: "#{order} #{amount.to_s} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}")
+        EventLog.create(content: "#{order} #{version} #{amount.to_s} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}")
       end
     end
 
     return {"order": order, "amount": amount}
+  end
+
+  def check_v4(data, position)
+    # {"current_open"=>26520.14, "current_close"=>26515.06, "current_high"=>26525.11, "current_low"=>26508.94,
+    # "prev_open"=>26530.69, "prev_close"=>26519.39, "prev_high"=>26536.75, "prev_low"=>26514.3,
+    # "reg_buy_open"=>26547.974999999995, "reg_buy_break"=>26559.200000000008, "reg_sale_open"=>26503.075,
+    # "reg_sale_break"=>26491.85}
+    amount = 2
+    order = ""
+    if position == {}
+      if data["current_close"].to_f > data["reg_buy_open"].to_f
+        order = "BUY"
+      elsif data["current_close"].to_f < data["reg_sale_open"].to_f
+        order = "SELL"
+      end
+    elsif !position["position"].nil? && position["position"].to_f > 0 # buy
+      # 冲高回落, 平仓
+      if data['current_high'].to_f > data["reg_buy_break"].to_f && data["current_close"].to_f < data["reg_buy_open"].to_f
+        order = "SELL"
+        amount = position["position"].abs
+      # 移动平仓
+      elsif data["current_close"].to_f <  data['prev_close'].to_f
+        order = "SELL"
+        amount = position["position"].abs
+      end
+    elsif !position["position"].nil? && position["position"].to_f < 0 # sell
+      if data['current_low'].to_f < data["reg_sale_break"].to_f && data["current_close"].to_f > data["reg_sale_open"].to_f
+        order = "BUY"
+        amount = position["position"].abs
+      elsif data["current_close"].to_f > data['prev_close'].to_f
+        order = "BUY"
+        amount = position["position"].abs
+      end
+    end
+    return order, amount
+  end
+
+  def check_v5(data, position)
+    # {"condition1"=>28766.18518420852, "condition2"=>28731.092407895743, "condition3"=>28719.394815791482,
+    # "open_1"=>28739.61, "open_2"=>28726.08, "close_1"=>28753.79, "close_2"=>28742.79, "high_1"=>28764.47,
+    # "high_2"=>28747.62, "low_1"=>28738.35, "low_2"=>28724.34, "buy_high_price_2"=>28787.559999999998,
+    # "buy_base_price_2"=>28761.175}
+    amount = 2
+    order = ""
+
+    # 确认condition2: ver_X.iloc[-2]['close'] - ver_X.iloc[-2]['ATR_0_1']/2
+    if position == {}
+      # 从低到高冲击
+      if data['close_1'].to_f > data["condition1"].to_f && data['dict_action'].to_f > 0.5 #原版有2个条件： (ver_X.iloc[-1]['high'] > ver_X.iloc[-2]['ATR_0_1']+ ver_X.iloc[-2]['close']) and (ver_X.iloc[-1]['open'] < ver_X.iloc[-2]['ATR_0_1']+ ver_X.iloc[-2]['close'])
+        order = "BUY"
+      # 移动平仓
+      elsif data['close_1'].to_f > data['buy_base_price_2'].to_f && data['dict_action2'].to_f > 0.5
+        order = "SELL"
+      end
+    elsif !position["position"].nil? && position["position"].to_f > 0 # buy
+      if data['close_2'].to_f > data['condition1'].to_f && data['close_1'].to_f < data['condition1'].to_f #冲高回落
+        order = "SELL"
+        amount = position["position"].abs
+      elsif data['close_1'].to_f < data['condition2'].to_f && data['open_1'].to_f > data['condition2'].to_f #移动平仓
+        order = "SELL"
+        amount = position["position"].abs
+      end
+    elsif !position["position"].nil? && position["position"].to_f < 0 # sell
+      if data['low_2'].to_f < data['condition3'].to_f && data['high_1'].to_f > data['condition3'].to_f
+        order = "BUY"
+        amount = position["position"].abs
+      elsif data['high_1'].to_f > data['condition1'].to_f && data['open_1'].to_f  < data['condition1'].to_f
+        order = "BUY"
+        amount = position["position"].abs
+      end
+    end
+    return order, amount
   end
 
   def close_position
