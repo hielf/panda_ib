@@ -347,7 +347,7 @@ module ContractsHelper
     # "prev_open"=>26530.69, "prev_close"=>26519.39, "prev_high"=>26536.75, "prev_low"=>26514.3,
     # "reg_buy_open"=>26547.974999999995, "reg_buy_break"=>26559.200000000008, "reg_sale_open"=>26503.075,
     # "reg_sale_break"=>26491.85}
-    amount = 2
+    amount = 4
     order = ""
     if position == {}
       if data["current_close"].to_f > data["reg_buy_open"].to_f
@@ -382,7 +382,7 @@ module ContractsHelper
     # "open_1"=>28739.61, "open_2"=>28726.08, "close_1"=>28753.79, "close_2"=>28742.79, "high_1"=>28764.47,
     # "high_2"=>28747.62, "low_1"=>28738.35, "low_2"=>28724.34, "buy_high_price_2"=>28787.559999999998,
     # "buy_base_price_2"=>28761.175}
-    amount = 2
+    amount = 4
     order = ""
 
     # 确认condition2: ver_X.iloc[-2]['close'] - ver_X.iloc[-2]['ATR_0_1']/2
