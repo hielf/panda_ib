@@ -15,7 +15,7 @@ class TradersJob < ApplicationJob
       market_data = ApplicationController.helpers.market_data(contract)
       if market_data
         file = ApplicationController.helpers.index_to_csv(contract)
-        versions = ["V4", "V5"]
+        versions = ["V5"]
         versions.each do |version|
           data = ApplicationController.helpers.online_data(file, version) if file
           if data && !data.empty?
