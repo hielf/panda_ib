@@ -39,16 +39,16 @@ module ContractsHelper
     Rails.logger.warn "online_data start: #{Time.zone.now}"
     # PyCall.exec("")
     data = {}
-    file_name = "data.json"
-    destination = Rails.root.to_s + "/tmp/" + file_name
-
-    begin
-      File.open(destination, 'r') do |f|
-        # do something with file
-        File.delete(f)
-      end
-    rescue Errno::ENOENT
-    end
+    # file_name = "data.json"
+    # destination = Rails.root.to_s + "/tmp/" + file_name
+    #
+    # begin
+    #   File.open(destination, 'r') do |f|
+    #     # do something with file
+    #     File.delete(f)
+    #   end
+    # rescue Errno::ENOENT
+    # end
 
     case version.upcase
     when "V4"
@@ -57,22 +57,24 @@ module ContractsHelper
       hash = predict_v5(file)
     end
 
-    PyCall.exec("import json")
-    # PyCall.exec("print (hash)")
-    PyCall.exec("destination='#{destination}'")
-    PyCall.exec("saveFile = open(destination, 'w')")
-    PyCall.exec("saveFile.write(json.dumps(#{hash}))")
-    PyCall.exec("saveFile.close()")
+    # PyCall.exec("import json")
+    # # PyCall.exec("print (hash)")
+    # PyCall.exec("destination='#{destination}'")
+    # PyCall.exec("saveFile = open(destination, 'w')")
+    # PyCall.exec("saveFile.write(json.dumps(#{hash}))")
+    # PyCall.exec("saveFile.close()")
+    #
+    # begin
+    #   f = File.open(destination, "r")
+    #   data = JSON.load f
+    #   f.close
+    #   Rails.logger.warn "online_data success: #{Time.zone.now}"
+    # rescue Exception => ex
+    #   # Rails.logger.warn "#{ex.message}"
+    #   Rails.logger.warn "online_data no file error: #{Time.zone.now}"
+    # end
 
-    begin
-      f = File.open(destination, "r")
-      data = JSON.load f
-      f.close
-      Rails.logger.warn "online_data success: #{Time.zone.now}"
-    rescue Exception => ex
-      # Rails.logger.warn "#{ex.message}"
-      Rails.logger.warn "online_data no file error: #{Time.zone.now}"
-    end
+    data = hash.to_h
 
     return data
   end
