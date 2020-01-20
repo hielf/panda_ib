@@ -246,7 +246,7 @@ module ContractsHelper
       PyCall.exec("i = step_n") # 第一个old bar
       PyCall.exec("cols= ['open',	'high',	'low',	'close',	'volume',	'barcount',	'avg',	'dates2' ]")
       PyCall.exec("df6 = df6.ix[:, cols]")
-      PyCall.exec("df2_index = list(df6.index)")
+      # PyCall.exec("df2_index = list(df6.index)")
       PyCall.exec("mm2 = robot.MM()")
       PyCall.exec("flist =  mm2.input_features(feature_params)")
       PyCall.exec("mm2.format_data(df6, dual_params)") # resample k线
