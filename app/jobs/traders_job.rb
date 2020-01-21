@@ -20,7 +20,7 @@ class TradersJob < ApplicationJob
           data = ApplicationController.helpers.online_data(file, version) if file
           if data && !data.empty?
             current_time = Time.zone.now.strftime('%H:%M')
-            if (current_time > "09:35" && current_time < "12:00") || (current_time > "13:00" && current_time < "15:30")
+            if (current_time > "09:35" && current_time < "15:30")
               ApplicationController.helpers.check_position(data, version)
             else
               ApplicationController.helpers.close_position
