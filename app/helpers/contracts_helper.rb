@@ -404,10 +404,10 @@ module ContractsHelper
         amount = position["position"].abs
       end
     elsif !position["position"].nil? && position["position"].to_f < 0 # sell
-      if data['low_2'].to_f < data['condition3'].to_f && data['high_1'].to_f > data['condition3'].to_f #冲高回落
+      if data['low_2'].to_f < data['condition3'].to_f && data['close_1'].to_f > data['condition3'].to_f #冲高回落
         order = "BUY"
         amount = position["position"].abs
-      elsif data['high_1'].to_f > data['condition1'].to_f && data['open_1'].to_f  < data['condition1'].to_f # 移动平仓
+      elsif data['close_1'].to_f > data['condition1'].to_f && data['open_1'].to_f  < data['condition1'].to_f # 移动平仓
         order = "BUY"
         amount = position["position"].abs
       end
