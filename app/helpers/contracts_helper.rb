@@ -224,7 +224,7 @@ module ContractsHelper
       PyCall.exec("import sklearn.metrics as me")
       PyCall.exec("from sklearn.ensemble import RandomForestClassifier")
       PyCall.exec("from sklearn.ensemble import RandomForestRegressor")
-      PyCall.exec("from sklearn.externals import joblib")
+      PyCall.exec("import joblib")
       PyCall.exec("from matplotlib.pylab import date2num")
       PyCall.exec("import datetime ")
       PyCall.exec("from sklearn.metrics import log_loss, f1_score, mean_absolute_error,mean_squared_error,r2_score,accuracy_score,roc_auc_score, balanced_accuracy_score")
