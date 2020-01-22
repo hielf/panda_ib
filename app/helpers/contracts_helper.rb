@@ -234,7 +234,7 @@ module ContractsHelper
       PyCall.exec("df0 = pd.read_csv(dual_params['file_path'],  skiprows=1, header=None, sep=',', names=['dates', 'open', 'high', 'low', 'close','volume', 'barcount','avg'])")
 
       PyCall.exec("import matplotlib.dates as mdates")
-      PyCall.exec("df6 = df0")
+      PyCall.exec("df6 = df0.copy()")
       PyCall.exec("n = len(df6)")
       PyCall.exec("cname = 'dates'")
       PyCall.exec("df6.loc[:, cname] = pd.to_datetime(df6[cname])")
