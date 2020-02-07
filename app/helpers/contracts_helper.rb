@@ -15,7 +15,7 @@ module ContractsHelper
     res = HTTParty.get url
     json = JSON.parse res.body
     begin
-      latest_time = strftime_time(json.last["date"].to_datetime + 2.minutes)
+      latest_time = strftime_time(json.last["date"].to_datetime + 5.minutes)
       if latest_time >= strftime_time(end_time)
         csv = CSV.generate(headers: false) { |csv| json.map(&:to_a).each { |row| csv << row } }
 
