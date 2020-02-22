@@ -204,7 +204,7 @@ module TradeOrdersHelper
       PyCall.exec("table = '#{contract}'")
       PyCall.exec("df = util.df(bars)")
 
-      list = PyCall.eval("df")
+      # list = PyCall.eval("df")
       #
       PyCall.exec("engine = create_engine('postgresql+psycopg2://chesp:Chesp92J5@rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com:3432/panda_quant',echo=True,client_encoding='utf8')")
       PyCall.exec("df.tail(2000).to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');")
