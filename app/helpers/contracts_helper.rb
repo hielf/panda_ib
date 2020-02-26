@@ -7,11 +7,9 @@ module ContractsHelper
 
   def index_to_csv(contract)
     # contract = "hsi_5mins"
-    # 1200 bars
-    begin_time = EventLog.maximum(:created_at).nil? ? Time.zone.now - 4.days : (EventLog.maximum(:created_at) - 4.days).beginning_of_day
+    begin_time = EventLog.maximum(:created_at).nil? ? Time.zone.now - 1.day : EventLog.maximum(:created_at).beginning_of_day
     end_time = Time.zone.now
     url = "http://#{ENV["market_db"]}:3000/#{contract}?and=(date.gte.#{begin_time.strftime('%Y-%m-%dT%H:%M:%S')},date.lte.#{end_time.strftime('%Y-%m-%dT%H:%M:%S')})"
-    # url = "http://#{ENV["market_db"]}:3000/hsi_last_1200)"
     res = HTTParty.get url
     json = JSON.parse res.body
     begin

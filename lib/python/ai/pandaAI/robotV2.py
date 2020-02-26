@@ -46,20 +46,12 @@ def num_config(x):
         if x < -10 :
             return -3
   
-
+    
 class MM(object):
-    
-    _train_X , _test_X,  _ver_X, _train_Y, _test_Y, _ver_Y = [],[],[],[],[],[]
-    
-    
     
     from sklearn.externals import joblib # 模型处理
     data_set =[]
-    
-    def __del__(self):
-      class_name = self.__class__.__name__
-      print(class_name, "销毁")
-        
+
     def format_data(self, df2, dual_params):
 
         period_data = df2.resample(dual_params['resample']).last()
@@ -113,46 +105,34 @@ class MM(object):
         return df
 
     def input_features(self, params={}):
-        
         # art_1, rsi_1, ma_5, wma_5, cci_1, macd_1, aroon_1, willr_1, adx_1, adxr_1, roc_1
         feature_list = []
         for item in params.keys():
             for v in params[item]:
                 feature_list.append( "{0}_{1:.0f}".format(item,v))
-
-    
+               
         self.features = feature_list
         
-        return self.features
-    
-    def input_features_gp(self, flist, period):
-        feature_list = []
-        for item in flist:
-            for v in period:
-                feature_list.append( "{0}_{1:.0f}".format(item,v))
-    
-        self.features = feature_list
-        print(feature_list)
+        #print(list(self.features))
+
         return self.features
     
     def generate_features(self, features):
         np_close = np.array(self.data_set['close'])
         np_high = np.array(self.data_set['high'])
         np_low = np.array(self.data_set['low'])
-        default_v = 0 
         
         for item in list(features):
             #feature name + period
-            
 
             ff = item.split('_')
             fname = ff[0]
             period = int(ff[1])
             t_period = 0
          
-            if fname == 'atr':
+            if fname == 'art':
                 t_period = period
-                if period == default_v:
+                if period == 1:
                     period = 14
                     
                 art = ta.ATR(np_high, np_low, np_close, timeperiod=period)
@@ -160,35 +140,35 @@ class MM(object):
             
             if fname == 'rsi':
                 t_period = period
-                if period == default_v:
+                if period == 1:
                     period = 10
                 rsi = ta.RSI(np_close, timeperiod=period)
                 self.data_set['RSI_'+str(t_period)] = rsi
                 
             if fname == 'ma':
                 t_period = period
-                if period == default_v:
+                if period == 1:
                     period = 25
                 values = ta.MA(np_close, timeperiod=period)
                 self.data_set[ fname.upper() + '_' +str(t_period)] = values
             
             if fname == 'ema':
                 t_period = period
-                if period == default_v:
+                if period == 1:
                     period = 25
                 values = ta.EMA(np_close, timeperiod=period)
                 self.data_set[ fname.upper() + '_' +str(t_period)] = values   
                 
             if fname == 'wma':
                 t_period = period
-                if period == default_v:
+                if period == 1:
                     period = 25
                 values = ta.WMA(np_close, timeperiod=period)
                 self.data_set[ fname.upper() + '_' +str(t_period)] = values
             
             if fname == 'cci':
                 t_period = period
-                if period == default_v:
+                if period == 1:
                     period = 14
                 values = ta.CCI(np_high, np_low, np_close, timeperiod=period)
                 self.data_set[ fname.upper() + '_' +str(t_period)] = values
@@ -202,14 +182,14 @@ class MM(object):
                 
             if fname == 'aroon':
                 t_period = period
-                if period == default_v:
+                if period == 1:
                     period = 14
                 aroondown, aroonup = ta.AROON(np_high, np_low, timeperiod=period)
                 self.data_set['AROON_'+str(t_period)] = aroonup - aroondown
             
             if fname == 'willr':
                 t_period = period
-                if period == default_v:
+                if period == 1:
                     period = 14
                 real = ta.WILLR(np_high, np_low, np_close, timeperiod=period)
                 self.data_set[ fname.upper() + '_' +str(t_period)] = real
@@ -223,14 +203,14 @@ class MM(object):
             
             if fname == 'adxr':
                 t_period = period
-                if period == default_v:
+                if period == 1:
                     period = 14
                 real = ta.ADXR(np_high, np_low, np_close, timeperiod=period)
                 self.data_set[ fname.upper() + '_' +str(t_period)] = real
             
             if fname == 'roc':
                 t_period = period
-                if period == default_v:
+                if period == 1:
                     period = 10
                 real = ta.ROC(np_close, timeperiod=period)
                 self.data_set[ fname.upper() + '_' +str(t_period)] = real
@@ -310,6 +290,52 @@ class MM(object):
     
         return df2
     
+    def model_fit(self, clf, test_X, test_Y, is_scale=True, kind='xgb', is_best=True):
+        if(is_scale == True):
+            print('数据归一化处理')
+            X = preprocessing.scale(test_X)
+        else:
+            print('数据未处理')
+            X = test_X
+            
+        if kind == 'xgb':
+            if is_best:
+                pred_y = clf.predict(X,ntree_limit=clf.best_ntree_limit)
+            else:
+                pred_y = clf.predict(X)
+        if kind == 'rf':
+            pred_y = clf.predict(X)
+
+        print('neg_log_loss:', log_loss(test_Y,pred_y))
+        print('mean_absolute_error:', mean_absolute_error(test_Y,pred_y))
+        print('roc_auc_score:',roc_auc_score(test_Y,pred_y))
+        print("Accuracy: %.2f%%" % (accuracy_score(test_Y, pred_y) * 100.0))
+        
+        print("F1: %.2f%%" % (f1_score(test_Y, pred_y, average='micro')* 100.0))
+        
+        # 分类报告
+        print(me.classification_report(test_Y, pred_y))
+        
+        # 预测值和真实值的关系
+        results = me.confusion_matrix(test_Y, pred_y) 
+        print('Confusion Matrix :')
+        print(results)
+        plt.clf()
+        plt.imshow(results, interpolation='nearest', cmap=plt.cm.Wistia)
+        classNames = ['Negative','Positive']
+        plt.title('Versicolor or Not Versicolor Confusion Matrix - Test Data')
+        plt.ylabel('True label')
+        plt.xlabel('Predicted label')
+        tick_marks = np.arange(len(classNames))
+        plt.xticks(tick_marks, classNames, rotation=45)
+        plt.yticks(tick_marks, classNames)
+        s = [['TN','FP'], ['FN', 'TP']]
+        for i in range(2):
+            for j in range(2):
+                plt.text(j,i, str(s[i][j])+" = "+str(results[i][j]))
+        plt.show()
+        
+        return results
 
     def model_save(self, clf, model_name="train_model.m"):
         from sklearn.externals import joblib
@@ -399,164 +425,3 @@ class MM(object):
         plt.ylabel('True label')
         plt.xlabel('Predicted label\naccuracy={:0.4f}; misclass={:0.4f}'.format(accuracy, misclass))
         plt.show()
-        
-    
-    def train_model(self, xlist, data_set):
-        import xgboost as xgt
-        from sklearn import preprocessing 
-        
-        data_len, self._train_X, self._test_X,  self._ver_X, self._train_Y, self._test_Y, self._ver_Y = self._split_dataX(data_set, 0.8, 'label1')
-        #data_len, train_X, test_X,  ver_X, train_Y2, test_Y2, ver_Y2 = self._split_dataX(data_set, 0.8, 'label2')
-        
-        
-        '''
-        'xgboost': {  
-                'max_depth': 24, # 2 ** 6 = 64
-                'n_estimators': 501,  # 2 ** 9 = 512
-                'scale_pos_weight': 0, # y=1 比例, 需要每次都算
-                'lambda':5, # 2 * 3 = 8
-                'subsample': 0.9, # 2 * 4 = 1/16  
-                'colsample_bytree':0.75, # 2 * 4 = 1/16 
-                'min_child_weight':12, # 2 * 4 = 16 
-            },
-        '''
-        params =  {  
-                    'max_depth': xlist['max_depth'], 
-                    'n_estimators': xlist['n_estimators'], 
-                    'scale_pos_weight': 1 , #round(self._train_X['close'].count()/ self._train_Y.sum()),
-                    'lambda':xlist['lambda'],
-                    'subsample': xlist['subsample'],
-                    'colsample_bytree':xlist['colsample_bytree'],
-                    'min_child_weight':xlist['min_child_weight'],
-                }
-        model = xgt.XGBClassifier(  n_jobs = -1, eval_metric=['auc'], 
-                                    objective = 'binary:logistic', seed= 1024,
-                                    **params)
-        
-        
-        scaler = preprocessing.StandardScaler().fit(self._train_X)
-        scaler.transform(self._train_X)
-        
-        point = 0
-        if self._train_Y.sum() < 20 or round((self._train_X['close'].count() -  self._train_Y.sum())/self._train_Y.sum()) == 0:
-            clf, scaler, point = 0,0, -99
-            
-        else:
-            clf = model.fit(scaler.transform(self._train_X), self._train_Y,
-                        eval_set=[(scaler.transform(self._test_X), self._test_Y)],
-                        early_stopping_rounds=100)
-            print('clf.best_score:',clf.best_score, ' clf.best_iteration:', clf.best_iteration, 'clf.best_ntree_limit:',clf.best_ntree_limit)
-
-
-
-            pred_y = clf.predict(scaler.transform(self._test_X),ntree_limit=clf.best_ntree_limit)
-
-            print('roc_auc_score:',roc_auc_score(self._test_Y,pred_y))
-            print("Accuracy: %.2f%%" % (accuracy_score(self._test_Y, pred_y) * 100.0))
-            print("F1: %.2f%%" % (f1_score(self._test_Y, pred_y, average='micro')* 100.0))
-
-            # 分类报告
-            print(me.classification_report(self._test_Y, pred_y))
-
-            self._scaler = scaler
-            self._clf = clf
-        
-        return clf, scaler, point
-        
-    def _split_dataX(self, data_x, split_rate=0.8, set_Y = 'label1'):
-        print('===========data shape: ',data_x.shape)
-        train_rate = split_rate
-
-        # #参数n_components为降维后的维数
-        # LDA(n_components=2).fit_transform(iris.data, iris.target)
-
-        data_len = round(data_x.shape[0]*train_rate)
-        test_len = round(data_len * 0.2)
-        train_len = data_len - test_len
-
-        train_X = data_x[:train_len].loc[:,'open':"flag1"]
-        test_X= data_x[train_len:data_len].loc[:,'open':"flag1"]
-        ver_X = data_x[data_len:].loc[:,'open':"flag1"]
-
-        train_X.drop(['flag1'],axis=1, inplace=True)
-        test_X.drop(['flag1'],axis=1, inplace=True)
-        ver_X.drop(['flag1'],axis=1, inplace=True)
-
-        train_Y = data_x[:train_len][set_Y]
-        test_Y = data_x[train_len:data_len][set_Y]
-        ver_Y = data_x[data_len:][set_Y]
-
-
-        return data_len, train_X, test_X,  ver_X, train_Y, test_Y, ver_Y
-    
-    def backtest(self, clf, data_set):
-        data_len, self._train_X, self._test_X,  self._ver_X, self._train_Y, self._test_Y, self._ver_Y = self._split_dataX(data_set, 0.1, 'label1')
-        
-        df7 = self._ver_X
-        
-        df7_index = list(df7.index)
-        scaler = self._scaler
-        profit_buy = 0
-        position_state_sale = 'empty'
-        position_state_buy = 'empty'
-        profit_buy = 0
-        profit_sale = 0
-        profit_sum = 0
-        profit_list_buy = np.zeros(1) 
-        profit_list_sale = np.zeros(1) 
-        plist = np.zeros(1) 
-        position_price_buy = 0
-        position_price_sale = 0
-        m = 0
-        
-        for i in range(65, len(df7)):
-            if i % 180 == 0:
-                #pass
-                print(profit_buy, df7_index[i])
-
-            ver_X = df7.iloc[i-64:i].loc[:,'open':]
-            pred_y = clf.predict(scaler.transform(ver_X),ntree_limit=clf.best_ntree_limit)
-            dict_action = pred_y[-1]
-
-            if position_state_buy == 'buy' and dict_action ==0:
-                if ver_X.iloc[-1]['close']  < ver_X.iloc[-2]['close']:
-                    profit_buy = (ver_X.iloc[-1]['close'] - position_price_buy)
-                    #profit_sum = (ver_X.iloc[-1]['close'] - position_price_buy)
-                    position_state_buy = 'empty'
-                    m +=1
-                    #print( 'close buy at: {0}, {1}'.format(ver_X.iloc[-1]['close'], ver_X.iloc[-2]['close']), i, m, profit_buy)
-
-                    profit_list_buy= np.append(profit_list_buy, profit_buy)
-                    profit_buy = 0
-                    #plist = np.append(plist, profit_sum)
-
-            if position_state_buy == 'empty' and dict_action ==1:
-                position_price_buy = ver_X.iloc[-1]['close']
-                position_state_buy = 'buy'
-                #print( ', open buy at: {:.2f}'.format(position_price_buy))
-
-        
-        return profit_list_buy
-#             #sale
-#             if position_state_sale == 'sale' and dict_action2 ==0:
-#                 if ver_X.iloc[-1]['close']  > ver_X.iloc[-2]['close']:
-#                     profit_sale = ( position_price_sale - ver_X.iloc[-1]['close'])
-#                     profit_sum  = ( position_price_sale - ver_X.iloc[-1]['close'])
-#                     position_state_sale = 'empty'
-#                     m +=1
-#                     print( 'close sale at: {0}, {1}'.format(ver_X.iloc[-1]['close'], ver_X.iloc[-2]['close']), i, m, profit_sale, position_price_sale)
-
-#                     #profit_list_sale.append(profit_sale)
-#                     #plist.append(profit_sum)
-#                     profit_list_sale = np.append(profit_list_sale, profit_sale)
-#                     plist = np.append(plist, profit_sum)
-#                     print(plist)
-
-
-#             if position_state_sale == 'empty' and dict_action2 ==1:
-#                 if ver_X.iloc[-1]['low'] < ver_X.iloc[-2]['sale_base_price']:
-#                     position_price_sale = ver_X.iloc[-2]['sale_base_price'] - (ver_X.iloc[-2]['sale_base_price'] - ver_X.iloc[-1]['low'])/2 
-#                     position_state_sale = 'sale'
-#                     #op_record = [current_price , 'open', 'buy', 0]
-#                     print( ', open sale at: {:.2f}'.format(position_price_sale), ver_X.iloc[-2]['sale_base_price'])
-
