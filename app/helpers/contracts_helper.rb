@@ -87,7 +87,7 @@ module ContractsHelper
       PyCall.exec("import sys")
       PyCall.exec("sys.path.append('#{pandaAI}')")
       PyCall.exec("import robot")
-      PyCall.exec("import importlib as imp")
+      PyCall.exec("import imp")
       PyCall.exec("imp.reload(robot)")
       PyCall.exec("import pandas as pd")
       PyCall.exec("import numpy as np")
@@ -218,7 +218,7 @@ module ContractsHelper
       PyCall.exec("import sys")
       PyCall.exec("sys.path.append('#{pandaAI}')")
       PyCall.exec("import robotV2 as robot")
-      PyCall.exec("import importlib as imp")
+      PyCall.exec("import imp")
       PyCall.exec("imp.reload(robot)")
       PyCall.exec("import sklearn")
       PyCall.exec("import sklearn.metrics as me")
@@ -247,7 +247,7 @@ module ContractsHelper
       # PyCall.exec("step_n = 5") # bar 的 period 间隔
       # PyCall.exec("i = step_n") # 第一个old bar
       PyCall.exec("cols= ['open',	'high',	'low',	'close',	'volume',	'barcount',	'avg',	'dates2' ]")
-      PyCall.exec("df6 = df6.loc[:, cols]")
+      PyCall.exec("df6 = df6.ix[:, cols]")
       # PyCall.exec("df2_index = list(df6.index)")
       PyCall.exec("mm2 = robot.MM()")
       PyCall.exec("flist =  mm2.input_features(feature_params)")
