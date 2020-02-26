@@ -395,15 +395,15 @@ module ContractsHelper
       elsif data['close_1'].to_f < data["condition3"].to_f &&  data['dict_action2'].to_f > 0.5
         order = "SELL"
       end
-    elsif !position["position"].nil? && position["position"].to_f > 0 && data['dict_action'].to_f < 0.5 # buy
-      if data['high_2'].to_f > data['condition1'].to_f && data['close_1'].to_f < data['condition1'].to_f #冲高回落
+    elsif !position["position"].nil? && position["position"].to_f > 0 # buy
+      if data['close_2'].to_f > data['condition1'].to_f && data['close_1'].to_f < data['condition1'].to_f #冲高回落
         order = "SELL"
         amount = position["position"].abs
       elsif data['close_1'].to_f < data['condition3'].to_f && data['open_1'].to_f > data['condition3'].to_f #移动平仓
         order = "SELL"
         amount = position["position"].abs
       end
-    elsif !position["position"].nil? && position["position"].to_f < 0 && data['dict_action2'].to_f < 0.5 # sell
+    elsif !position["position"].nil? && position["position"].to_f < 0 # sell
       if data['low_2'].to_f < data['condition3'].to_f && data['close_1'].to_f > data['condition3'].to_f #冲高回落
         order = "BUY"
         amount = position["position"].abs
