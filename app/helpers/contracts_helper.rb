@@ -453,4 +453,13 @@ module ContractsHelper
 
     return file
   end
+
+  def test_trade
+    1000.times do
+      current_time = Time.zone.now.strftime('%H:%M')
+      TradersJob.perform_now contract
+      sleep 56
+    end
+  end
+
 end

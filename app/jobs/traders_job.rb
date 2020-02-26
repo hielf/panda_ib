@@ -12,7 +12,13 @@ class TradersJob < ApplicationJob
     Rails.logger.warn "ib job start: #{contract}, #{Time.zone.now}"
     @ib = ApplicationController.helpers.ib_connect
     if @ib.isConnected()
-      market_data = ApplicationController.helpers.market_data(contract)
+
+      if ENV['is_getting_market'] == "true"
+        market_data = ApplicationController.helpers.market_data(contract)
+      else
+        market_data = true
+      end
+
       if market_data
         file = ApplicationController.helpers.index_to_csv(contract)
         versions = ["V4"]
