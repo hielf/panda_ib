@@ -83,9 +83,22 @@ class Api::TradeOrdersController < Api::ApplicationController
   end
 
   def position_check
+    type = params[:type]
     contract = params[:contract]
-    result = [0, '成功']
-    TradersJob.perform_now contract
+    result = [0, 'success']
+
+    Rails.logger.warn "contract & type: #{contract}, #{type}"
+    if contract
+      file = index_to_csv(contract)
+      data = online_data(file)
+    end
+
+    if !type.nil? && type == "check" && data
+      check_position(data)
+    else
+      close_position
+    end
+
     render_json(result)
   end
 
