@@ -282,7 +282,6 @@ DEPENDENCIES
   capistrano-rvm
   capistrano3-puma!
   coffee-rails (~> 4.2)
-  concurrent-ruby
   database_cleaner
   factory_bot_rails
   figaro
