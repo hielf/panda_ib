@@ -5,23 +5,26 @@ import numpy as np
 import sklearn
 import sklearn.metrics as me
 from sklearn import preprocessing
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier as RM
+from sklearn.model_selection import train_test_split # 数据集划分
+from sklearn.ensemble import RandomForestClassifier as RM#随机森林分类模型
 import xgboost as xgb
 import seaborn as sns
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt #可视化模块
 import matplotlib.dates as mdates
 
 from sklearn.metrics import log_loss, f1_score, mean_absolute_error,mean_squared_error,r2_score,accuracy_score,roc_auc_score, balanced_accuracy_score
 
 def num_config(x):
+    #[-40,+40] 分布差
     classification='binary'
     if(classification == 'binary'):
+
         if x>0:
             return 1
         else:
             return 0
     else:
+
         if x >= -2 and x <= 2:
             return 0
 
@@ -45,31 +48,48 @@ def num_config(x):
 
 
 class MM(object):
+
     _train_X , _test_X,  _ver_X, _train_Y, _test_Y, _ver_Y = [],[],[],[],[],[]
 
-    import joblib
+
+
+    import joblib # 模型处理
     data_set =[]
 
     def __del__(self):
       class_name = self.__class__.__name__
-      print(class_name, "destroy")
+      print(class_name, "销毁")
 
     def format_data(self, df2, dual_params):
+
         period_data = df2.resample(dual_params['resample']).last()
+        # 分别对于开盘、收盘、最高价、最低价进行处理
         period_data.loc[:,'open'] = df2['open'].resample(dual_params['resample']).first()
+        # 处理最高价和最低价
         period_data.loc[:,'high'] = df2['high'].resample(dual_params['resample']).max()
+        # 最低价
         period_data.loc[:,'low'] = df2['low'].resample(dual_params['resample']).min()
+        # 成交量 这一周的每天成交量的和
         period_data.loc[:,'barcount'] = df2['barcount'].resample(dual_params['resample']).sum()
+
+        # 缺失值处理
         df3 = period_data.dropna(axis=0)
+
+        # 增加特征
+        # 上下轨数据
         df3.loc[:,'hh'] = df3['high'].rolling(dual_params['barNum']).max()
         df3.loc[:,'ll'] = df3['low'].rolling(dual_params['barNum']).min()
+
         df3.loc[:,'h_avg'] = df3['high'].rolling(dual_params['barNum']).mean()
         df3.loc[:,'l_avg'] = df3['low'].rolling(dual_params['barNum']).mean()
         df3.loc[:,'c_avg'] = df3['close'].rolling(dual_params['barNum']).mean()
+
         df3.loc[:,'buy_base_price'] = (df3['hh'] - df3['ll'])/2 + df3['high']
         df3.loc[:,'buy_high_price'] = (df3['hh'] - df3['ll']) + df3['high']
+
         df3.loc[:,'sale_base_price'] =  df3['low'] - (df3['hh'] - df3['ll'])/2
         df3.loc[:,'sale_low_price'] =  df3['low'] - (df3['hh'] - df3['ll'])
+
         df3.dropna(inplace=True)
         self.data_set = df3
         print('self.data_set......')
@@ -93,11 +113,16 @@ class MM(object):
         return df
 
     def input_features(self, params={}):
+
+        # art_1, rsi_1, ma_5, wma_5, cci_1, macd_1, aroon_1, willr_1, adx_1, adxr_1, roc_1
         feature_list = []
         for item in params.keys():
             for v in params[item]:
                 feature_list.append( "{0}_{1:.0f}".format(item,v))
+
+
         self.features = feature_list
+
         return self.features
 
     def input_features_gp(self, flist, period):
@@ -105,6 +130,7 @@ class MM(object):
         for item in flist:
             for v in period:
                 feature_list.append( "{0}_{1:.0f}".format(item,v))
+
         self.features = feature_list
         print(feature_list)
         return self.features
@@ -114,86 +140,105 @@ class MM(object):
         np_high = np.array(self.data_set['high'])
         np_low = np.array(self.data_set['low'])
         default_v = 0
+
         for item in list(features):
+            #feature name + period
+
+
             ff = item.split('_')
             fname = ff[0]
             period = int(ff[1])
             t_period = 0
+
             if fname == 'atr':
                 t_period = period
                 if period == default_v:
                     period = 14
+
                 art = ta.ATR(np_high, np_low, np_close, timeperiod=period)
                 self.data_set[ fname.upper() + '_' +str(t_period)] = art
+
             if fname == 'rsi':
                 t_period = period
                 if period == default_v:
                     period = 10
                 rsi = ta.RSI(np_close, timeperiod=period)
                 self.data_set['RSI_'+str(t_period)] = rsi
+
             if fname == 'ma':
                 t_period = period
                 if period == default_v:
                     period = 25
                 values = ta.MA(np_close, timeperiod=period)
                 self.data_set[ fname.upper() + '_' +str(t_period)] = values
+
             if fname == 'ema':
                 t_period = period
                 if period == default_v:
                     period = 25
                 values = ta.EMA(np_close, timeperiod=period)
                 self.data_set[ fname.upper() + '_' +str(t_period)] = values
+
             if fname == 'wma':
                 t_period = period
                 if period == default_v:
                     period = 25
                 values = ta.WMA(np_close, timeperiod=period)
                 self.data_set[ fname.upper() + '_' +str(t_period)] = values
+
             if fname == 'cci':
                 t_period = period
                 if period == default_v:
                     period = 14
                 values = ta.CCI(np_high, np_low, np_close, timeperiod=period)
                 self.data_set[ fname.upper() + '_' +str(t_period)] = values
+
             if fname == 'macd':
                 t_period = period
                 dif, dea, macd = ta.MACD(np_close, fastperiod=(12*period), slowperiod=(26*period), signalperiod=(9*period))
                 self.data_set['DIF_'+str(t_period)] = dif
                 self.data_set['DEA_'+str(t_period)] = dea
                 self.data_set['MACD_'+str(t_period)] = macd
+
             if fname == 'aroon':
                 t_period = period
                 if period == default_v:
                     period = 14
                 aroondown, aroonup = ta.AROON(np_high, np_low, timeperiod=period)
                 self.data_set['AROON_'+str(t_period)] = aroonup - aroondown
+
             if fname == 'willr':
                 t_period = period
                 if period == default_v:
                     period = 14
                 real = ta.WILLR(np_high, np_low, np_close, timeperiod=period)
                 self.data_set[ fname.upper() + '_' +str(t_period)] = real
+
             if fname == 'adx':
                 t_period = period
                 if period == 1:
                     period = 14
                 real = ta.ADX(np_high, np_low, np_close, timeperiod=period)
                 self.data_set[ fname.upper() + '_' +str(t_period)] = real
+
             if fname == 'adxr':
                 t_period = period
                 if period == default_v:
                     period = 14
                 real = ta.ADXR(np_high, np_low, np_close, timeperiod=period)
                 self.data_set[ fname.upper() + '_' +str(t_period)] = real
+
             if fname == 'roc':
                 t_period = period
                 if period == default_v:
                     period = 10
                 real = ta.ROC(np_close, timeperiod=period)
                 self.data_set[ fname.upper() + '_' +str(t_period)] = real
+
         return self.data_set
 
     def generate_exfeature_diff(self, mmdf, f_list):
+        # 相减
         df = mmdf.copy()
         cols = []
         for item in f_list:
@@ -201,8 +246,11 @@ class MM(object):
             fname2= item[1]
             df[fname1.upper()+'-'+fname2.upper()] = (df[fname1.upper()] - df[fname2.upper()])/df[fname1.upper()]
             cols.append(fname1.upper()+'-'+fname2.upper())
+
         print(cols)
+
         return df
+
 
     def generate_exfeature_rolling(self, period, feature_list, step=1):
         features = []
@@ -211,15 +259,21 @@ class MM(object):
             for i in range(1, period):
                 mmdf[item.upper() + '_' + str(i)] = mmdf[item.upper()].shift(i*step)
                 features.append(item.upper() + '_' + str(i))
+            #print(features)
         self.data_set = mmdf
         return mmdf
 
 
     def set_label(self, df, window=15, point=20, target='close', pip_grid=1000, predict_type='close'):
+        # point 是预期获得的盈利
+        # predict_type = [close|max|min]
+
         df2 = df.copy()
         df2['label_close'] =df2['CLOSE']
         print('before set label:', df2.shape)
+
         config_col = "(t+1)-(t)"
+
         if predict_type == 'close'.upper():
             df2["(t+1)-(t)"] = (df2[target.upper()].shift(-1*window) - df2[target.upper()]) * pip_grid - point
         else:
@@ -228,19 +282,38 @@ class MM(object):
             print(label_command)
             df2[f"label_{predict_type}"] = eval(label_command)
             df2[f"(t+1)-label_{predict_type}"] = (df2[f'label_{predict_type}'].shift(-1*window) - df2[target.upper()]) * pip_grid - point
+
         df2['label_close'] =df2['CLOSE']
         print(df2.tail())
+
         df2 = df2.dropna()
+
+#         def function(a, b, c):
+#             max_point =  max(a,b) - c
+
+#             return max_point
+
+#         df2["(t+1)-label_std"] = df2.apply(lambda x: function(x["(t+1)-label_max"], x["(t+1)-label_min"], point),
+#                                                  axis = 1)
+
+
         df2['label'] = df2[config_col].map(num_config)
         print('after set label:', df2.shape)
+
+
+
         import seaborn as sns
         plt.figure(figsize=(12, 6))
         sns.distplot(df2[config_col])
         plt.show()
+
+
         return df2
+
 
     def model_save(self, clf, model_name="train_model.m"):
         import joblib
+        # # 模型保存
         notice = joblib.dump(clf, model_name)
         print(notice)
 
@@ -394,6 +467,9 @@ class MM(object):
         print('===========data shape: ',data_x.shape)
         train_rate = split_rate
 
+        # #参数n_components为降维后的维数
+        # LDA(n_components=2).fit_transform(iris.data, iris.target)
+
         data_len = round(data_x.shape[0]*train_rate)
         test_len = round(data_len * 0.2)
         train_len = data_len - test_len
@@ -409,6 +485,7 @@ class MM(object):
         train_Y = data_x[:train_len][set_Y]
         test_Y = data_x[train_len:data_len][set_Y]
         ver_Y = data_x[data_len:][set_Y]
+
 
         return data_len, train_X, test_X,  ver_X, train_Y, test_Y, ver_Y
 
