@@ -455,6 +455,7 @@ module ContractsHelper
   end
 
   def test_trade
+    contract = "hsi"
     1000.times do
       current_time = Time.zone.now.strftime('%H:%M')
       TradersJob.perform_now contract
