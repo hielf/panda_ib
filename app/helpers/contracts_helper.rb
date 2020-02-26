@@ -174,11 +174,11 @@ module ContractsHelper
           # 基于线性回归的模型加载
           PyCall.exec("from sklearn.linear_model import LinearRegression")
           PyCall.exec("from sklearn.externals import joblib")
-          PyCall.exec("reg_buy_open = joblib.load('#{Rails.root.to_s}' + '/lib/python/ai/reg_buy_open.pkl')")
-          PyCall.exec("reg_buy_break = joblib.load('#{Rails.root.to_s}' + '/lib/python/ai/reg_buy_break.pkl')")
-          PyCall.exec("reg_sale_open = joblib.load('#{Rails.root.to_s}' + '/lib/python/ai/reg_sale_open.pkl')")
-          PyCall.exec("reg_sale_break = joblib.load('#{Rails.root.to_s}' + '/lib/python/ai/reg_sale_break.pkl')")
-          PyCall.exec("scale = joblib.load('#{Rails.root.to_s}' + '/lib/python/ai/scale.pkl')")
+          PyCall.exec("reg_buy_open = joblib.load('#{Rails.root.to_s}' + '/lib/python/ib/reg_buy_open.pkl')")
+          PyCall.exec("reg_buy_break = joblib.load('#{Rails.root.to_s}' + '/lib/python/ib/reg_buy_break.pkl')")
+          PyCall.exec("reg_sale_open = joblib.load('#{Rails.root.to_s}' + '/lib/python/ib/reg_sale_open.pkl')")
+          PyCall.exec("reg_sale_break = joblib.load('#{Rails.root.to_s}' + '/lib/python/ib/reg_sale_break.pkl')")
+          PyCall.exec("scale = joblib.load('#{Rails.root.to_s}' + '/lib/python/ib/scale.pkl')")
 
           # PyCall.exec("pre_data = online_data.iloc[-2:-1][['open','high','low','close']]") # 倒数第二个bar作为数据预测基准, 因为当前bar还没有走完
           # PyCall.exec("current_price = online_data.tail(1)['close']")
@@ -288,8 +288,8 @@ module ContractsHelper
       PyCall.exec("df7.dropna(inplace=True)")
       # PyCall.exec("df7_index = list(df7.index)")
 
-      PyCall.exec("rf = joblib.load('#{Rails.root.to_s}' + '/lib/python/ai/rf.pkl')")
-      PyCall.exec("clf2 = joblib.load('#{Rails.root.to_s}' + '/lib/python/ai/clf2.pkl')")
+      PyCall.exec("rf = joblib.load('#{Rails.root.to_s}' + '/lib/python/ib/rf.pkl')")
+      PyCall.exec("clf2 = joblib.load('#{Rails.root.to_s}' + '/lib/python/ib/clf2.pkl')")
 
       PyCall.exec("ver_X = df7.tail(6)")
       PyCall.exec("pred_y = rf.predict_proba(ver_X)[:,1]")

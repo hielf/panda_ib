@@ -38,4 +38,3 @@ public/js/config.js
 config/wechat_menu.yml
 lib/python/easytrader/*.json
 lib/python/.proc
-lib/python/ai/data/hsi2019.csv
