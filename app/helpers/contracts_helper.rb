@@ -387,27 +387,28 @@ module ContractsHelper
     amount = 4
     order = ""
 
+    # 确认condition2: ver_X.iloc[-2]['close'] - ver_X.iloc[-2]['ATR_0_1']/2
     if position == {}
       # 从低到高冲击
-      if data['close_1'].to_f > data["condition1"].to_f && data['dict_action'].to_f > 0.5
+      if data['close_1'].to_f > data["condition1"].to_f && data['dict_action'].to_f > 0.5 #原版有2个条件： (ver_X.iloc[-1]['high'] > ver_X.iloc[-2]['ATR_0_1']+ ver_X.iloc[-2]['close']) and (ver_X.iloc[-1]['open'] < ver_X.iloc[-2]['ATR_0_1']+ ver_X.iloc[-2]['close'])
         order = "BUY"
       # 移动平仓
-      elsif data['close_1'].to_f < data["condition3"].to_f &&  data['dict_action2'].to_f > 0.5
+      elsif data['close_1'].to_f > data['buy_base_price_2'].to_f && data['dict_action2'].to_f > 0.5
         order = "SELL"
       end
     elsif !position["position"].nil? && position["position"].to_f > 0 # buy
       if data['close_2'].to_f > data['condition1'].to_f && data['close_1'].to_f < data['condition1'].to_f #冲高回落
         order = "SELL"
         amount = position["position"].abs
-      elsif data['close_1'].to_f < data['condition3'].to_f && data['open_1'].to_f > data['condition3'].to_f #移动平仓
+      elsif data['close_1'].to_f < data['condition2'].to_f && data['open_1'].to_f > data['condition2'].to_f #移动平仓
         order = "SELL"
         amount = position["position"].abs
       end
     elsif !position["position"].nil? && position["position"].to_f < 0 # sell
-      if data['low_2'].to_f < data['condition3'].to_f && data['high_1'].to_f > data['condition3'].to_f #冲高回落
+      if data['low_2'].to_f < data['condition3'].to_f && data['high_1'].to_f > data['condition3'].to_f
         order = "BUY"
         amount = position["position"].abs
-      elsif data['high_1'].to_f > data['condition1'].to_f && data['open_1'].to_f  < data['condition1'].to_f # 移动平仓
+      elsif data['high_1'].to_f > data['condition1'].to_f && data['open_1'].to_f  < data['condition1'].to_f
         order = "BUY"
         amount = position["position"].abs
       end
