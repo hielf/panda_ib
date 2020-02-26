@@ -191,29 +191,28 @@ module TradeOrdersHelper
     Rails.logger.warn "market_data start: #{Time.zone.now}"
     begin
       # ib = ib_connect
-      PyCall.exec("from ib_insync import *")
-      PyCall.exec("from sqlalchemy import create_engine")
-      PyCall.exec("import os,sys")
-      PyCall.exec("import psycopg2")
-      PyCall.exec("import sched, time")
+      # PyCall.exec("from sqlalchemy import create_engine")
+      # PyCall.exec("import os,sys")
+      # PyCall.exec("import psycopg2")
+      # PyCall.exec("import sched, time")
       # if ib.isConnected()
       PyCall.exec("contracts = [Index(symbol = 'HSI', exchange = 'HKFE')]")
       PyCall.exec("contract = contracts[0]")
       PyCall.exec("bars = ib.reqHistoricalData(contract, endDateTime='', durationStr='7200 S', barSizeSetting='#{bar_size}', whatToShow='TRADES', useRTH=True)")
-      PyCall.exec("tmp_table = '#{contract}' + '_tmp'")
-      PyCall.exec("table = '#{contract}'")
+      # PyCall.exec("tmp_table = '#{contract}' + '_tmp'")
+      # PyCall.exec("table = '#{contract}'")
       PyCall.exec("df = util.df(bars)")
 
       list = PyCall.eval("df")
       #
-      PyCall.exec("engine = create_engine('postgresql+psycopg2://chesp:Chesp92J5@rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com:3432/panda_quant',echo=True,client_encoding='utf8')")
-      PyCall.exec("df.tail(2000).to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');")
-      PyCall.exec("conn = psycopg2.connect(host='rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com', dbname='panda_quant', user='chesp', password='Chesp92J5', port='3432')")
-      PyCall.exec("cur = conn.cursor()")
-      PyCall.exec("sql = 'insert into ' + table + ' select * from ' + tmp_table +  ' b where not exists (select 1 from ' + table + ' a where a.date = b.date);'")
-      PyCall.exec("cur.execute(sql, (10, 1000000, False, False))")
-      PyCall.exec("conn.commit()")
-      PyCall.exec("conn.close()")
+      # PyCall.exec("engine = create_engine('postgresql+psycopg2://chesp:Chesp92J5@rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com:3432/panda_quant',echo=True,client_encoding='utf8')")
+      # PyCall.exec("df.tail(2000).to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');")
+      # PyCall.exec("conn = psycopg2.connect(host='rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com', dbname='panda_quant', user='chesp', password='Chesp92J5', port='3432')")
+      # PyCall.exec("cur = conn.cursor()")
+      # PyCall.exec("sql = 'insert into ' + table + ' select * from ' + tmp_table +  ' b where not exists (select 1 from ' + table + ' a where a.date = b.date);'")
+      # PyCall.exec("cur.execute(sql, (10, 1000000, False, False))")
+      # PyCall.exec("conn.commit()")
+      # PyCall.exec("conn.close()")
 
       # data = PyCall.eval("list").to_h
       # end
@@ -225,31 +224,32 @@ module TradeOrdersHelper
       # ib_disconnect(ib)
     end
 
-    # if list.nil? || result == false
-    #   result = false
-    # else
-    #   begin
-    #     tmp_table = contract + '_tmp'
-    #     table = contract
-    #     json = list.to_dict(orient='records')
-    #     conn = PG.connect(host: ENV['quant_db_host'], dbname: ENV['quant_db_name'], user: ENV['quant_db_user'], password: ENV['quant_db_pwd'], port: ENV['quant_db_port'])
-    #     conn.exec("truncate table #{tmp_table}")
-    #     conn.prepare('statement2', "insert into #{tmp_table} values ($1, $2, $3, $4, $5, $6, $7, $8, $9)")
-    #     json.each_with_index do |row, index|
-    #       conn.exec_prepared('statement2', [index, row['date'].strftime('%Y-%m-%d %H:%M:%S'), row['open'], row['high'], row['low'], row['close'], row['volume'], row['average'], row['barCount']])
-    #     end;0
-    #
-    #     sql = 'insert into ' + table + ' select * from ' + tmp_table +  ' b where not exists (select 1 from ' + table + ' a where a.date = b.date);'
-    #     res  = conn.exec(sql)
-    #
-    #   rescue Exception => e
-    #     error_message = e
-    #     result = false
-    #   ensure
-    #     conn.close()
-    #   end
-    # end
-    Rails.logger.warn "market_data success: #{Time.zone.now}"
+    if list.nil? || result == false
+      result = false
+    else
+      begin
+        tmp_table = contract + '_tmp'
+        table = contract
+        json = list.to_dict(orient='records')
+        conn = PG.connect(host: ENV['quant_db_host'], dbname: ENV['quant_db_name'], user: ENV['quant_db_user'], password: ENV['quant_db_pwd'], port: ENV['quant_db_port'])
+        conn.exec("truncate table #{tmp_table}")
+        conn.prepare('statement2', "insert into #{tmp_table} values ($1, $2, $3, $4, $5, $6, $7, $8, $9)")
+        json.each_with_index do |row, index|
+          conn.exec_prepared('statement2', [index, row['date'].strftime('%Y-%m-%d %H:%M:%S'), row['open'], row['high'], row['low'], row['close'], row['volume'], row['average'], row['barCount']])
+        end;0
+
+        sql = 'insert into ' + table + ' select * from ' + tmp_table +  ' b where not exists (select 1 from ' + table + ' a where a.date = b.date);'
+        res  = conn.exec(sql)
+
+        Rails.logger.warn "market_data success: #{Time.zone.now}"
+      rescue Exception => e
+        error_message = e
+        result = false
+      ensure
+        conn.close()
+      end
+    end
+
     return result
   end
 
