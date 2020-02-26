@@ -60,7 +60,7 @@ class MM(object):
         period_data.loc[:,'high'] = df2['high'].resample(dual_params['resample']).max()
         period_data.loc[:,'low'] = df2['low'].resample(dual_params['resample']).min()
         period_data.loc[:,'barcount'] = df2['barcount'].resample(dual_params['resample']).sum()
-        df3 = period_data.dropna(axis=0).copy()
+        df3 = period_data.dropna(axis=0)
         df3.loc[:,'hh'] = df3['high'].rolling(dual_params['barNum']).max()
         df3.loc[:,'ll'] = df3['low'].rolling(dual_params['barNum']).min()
         df3.loc[:,'h_avg'] = df3['high'].rolling(dual_params['barNum']).mean()
