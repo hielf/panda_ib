@@ -244,8 +244,8 @@ module ContractsHelper
       PyCall.exec("df6.loc[:, 'dates2'] = df6['dates2'].apply(mdates.date2num)")
       PyCall.exec("df6['hour'] = pd.to_datetime(df6['dates2']).dt.hour")
       PyCall.exec("df6['minute'] = pd.to_datetime(df6['dates2']).dt.minute")
-      # PyCall.exec("step_n = 5") # bar 的 period 间隔
-      # PyCall.exec("i = step_n") # 第一个old bar
+      PyCall.exec("step_n = 5") # bar 的 period 间隔
+      PyCall.exec("i = step_n") # 第一个old bar
       PyCall.exec("cols= ['open',	'high',	'low',	'close',	'volume',	'barcount',	'avg',	'dates2' ]")
       PyCall.exec("df6 = df6.ix[:, cols]")
       # PyCall.exec("df2_index = list(df6.index)")
@@ -286,7 +286,7 @@ module ContractsHelper
       PyCall.exec("df7['ll_2_close_1'] = df7['ll_2']/df7['close'].shift()")
       PyCall.exec("df7.drop(['datetime'],axis=1, inplace=True)")
       PyCall.exec("df7.dropna(inplace=True)")
-      # PyCall.exec("df7_index = list(df7.index)")
+      PyCall.exec("df7_index = list(df7.index)")
 
       PyCall.exec("rf = joblib.load('#{Rails.root.to_s}' + '/lib/python/ib/rf.pkl')")
       PyCall.exec("clf2 = joblib.load('#{Rails.root.to_s}' + '/lib/python/ib/clf2.pkl')")
