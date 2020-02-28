@@ -141,8 +141,8 @@ module ContractsHelper
           PyCall.exec("current_price = current_row['close']")
 
           # 基于线性回归的模型加载
-          PyCall.exec("from sklearn.linear_model import LinearRegression")
-          PyCall.exec("from sklearn.externals import joblib")
+          # PyCall.exec("from sklearn.linear_model import LinearRegression")
+          PyCall.exec("import joblib")
           PyCall.exec("reg_buy_open = joblib.load('#{Rails.root.to_s}' + '/lib/python/ib/reg_buy_open.pkl')")
           PyCall.exec("reg_buy_break = joblib.load('#{Rails.root.to_s}' + '/lib/python/ib/reg_buy_break.pkl')")
           PyCall.exec("reg_sale_open = joblib.load('#{Rails.root.to_s}' + '/lib/python/ib/reg_sale_open.pkl')")
