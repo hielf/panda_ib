@@ -14,16 +14,30 @@ class TradersJob < ApplicationJob
     if @ib.isConnected()
       market_data = ApplicationController.helpers.market_data(contract)
       if market_data
-        file = ApplicationController.helpers.index_to_csv(contract)
+        file = ApplicationController.helpers.index_to_csv(contract, true)
+
+        current_time = Time.zone.now.strftime('%H:%M')
+        if (current_time > "09:35" && current_time < "15:30")
+          @order, @amount = ApplicationController.helpers.py_check_position(contract)
+        else
+          ApplicationController.helpers.close_position
+        end
+
+        if @order != "" && @amount != 0
+          Rails.logger.warn "ib py_check_position: #{@order} #{@amount.to_s}, #{Time.zone.now}"
+          # EventLog.create(content: "#{@order} #{@amount.to_s} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}")
+          # ApplicationController.helpers.ib_order(@order, @amount, 0)
+        end
+
         data = ApplicationController.helpers.online_data(file) if file
         if data && !data.empty?
-          current_time = Time.zone.now.strftime('%H:%M')
           if (current_time > "09:35" && current_time < "12:00") || (current_time > "13:00" && current_time < "15:30")
             ApplicationController.helpers.check_position(data)
           else
             ApplicationController.helpers.close_position
           end
         end
+
       end
     end
   end

@@ -5,7 +5,7 @@
 
 module ContractsHelper
 
-  def index_to_csv(contract)
+  def index_to_csv(contract, with_index)
     # contract = "hsi_5mins"
     begin_time = EventLog.maximum(:created_at).nil? ? Time.zone.now - 1.day : EventLog.maximum(:created_at).beginning_of_day
     end_time = Time.zone.now
@@ -20,6 +20,7 @@ module ContractsHelper
 
         file = Rails.root.to_s + "/tmp/csv/#{contract}.csv"
         CSV.open( file, 'w' ) do |writer|
+          writer << ["date", "open", "high", "low", "close", "volume", "barCount", "average"] if with_index
           json.each do |c|
             writer << [c["date"], c["open"], c["high"], c["low"], c["close"], c["volume"], c["barCount"], c["average"]]
           end
@@ -194,6 +195,27 @@ module ContractsHelper
     end
 
     return data
+  end
+
+  def py_check_position(contract)
+    amount = 4
+    order = ""
+    position = ib_positions
+
+    csv = Rails.root.to_s + "/tmp/csv/#{contract}.csv"
+    json = Rails.root.to_s + "/tmp/#{contract}_trades.json"
+    system( "cd #{Rails.root.to_s + '/lib/python/ib'} && python3 v4.py '#{csv}' '#{json}'" )
+    data = JSON.parse(File.read(json))
+    if data.last
+      time_diff = Time.zone.now - data.last["time"].to_time
+      if time_diff.abs < 60
+        order = data.last["order"].upcase
+        amount = position["position"].abs
+      end
+    end
+    Rails.logger.warn "ib order: #{order == "" ? "NO" : order} #{amount.to_s}"
+    
+    return order, amount
   end
 
   def check_position(data)
