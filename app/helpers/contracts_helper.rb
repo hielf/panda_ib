@@ -197,8 +197,7 @@ module ContractsHelper
     return data
   end
 
-  def py_check_position(contract)
-    amount = 4
+  def py_check_position(contract, amount = 4)
     order = ""
     position = ib_positions
 
@@ -210,11 +209,11 @@ module ContractsHelper
       time_diff = Time.zone.now - data.last["time"].to_time
       if time_diff.abs < 60
         order = data.last["order"].upcase
-        amount = position["position"].abs
+        amount = position["position"].abs if !position["position"].nil?
       end
     end
     Rails.logger.warn "ib order: #{order == "" ? "NO" : order} #{amount.to_s}"
-    
+
     return order, amount
   end
 
