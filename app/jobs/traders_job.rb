@@ -17,8 +17,8 @@ class TradersJob < ApplicationJob
         file = ApplicationController.helpers.index_to_csv(contract, true)
 
         current_time = Time.zone.now.strftime('%H:%M')
-        if (current_time > "09:35" && current_time < "15:30" && file)
-          @order, @amount = ApplicationController.helpers.py_check_position(contract)
+        if (current_time > "09:35" && current_time < "15:30")
+          @order, @amount = ApplicationController.helpers.py_check_position(contract) if file
         else
           ApplicationController.helpers.close_position
         end
