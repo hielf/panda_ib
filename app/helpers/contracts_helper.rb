@@ -200,16 +200,19 @@ module ContractsHelper
   def py_check_position(contract, amount = 4)
     order = ""
     position = ib_positions
+    amount = position["position"].abs if (position && position != {} && !position["position"].nil?)
+    Rails.logger.warn "ib position: #{position}"
 
     csv = Rails.root.to_s + "/tmp/csv/#{contract}.csv"
     json = Rails.root.to_s + "/tmp/#{contract}_trades.json"
     system( "cd #{Rails.root.to_s + '/lib/python/ib'} && python3 v4.py '#{csv}' '#{json}'" )
     data = JSON.parse(File.read(json))
     if data.last
+      Rails.logger.warn "ib check last data: #{data.last}"
       time_diff = Time.zone.now - data.last["time"].to_time
-      if time_diff.abs < 60
+      Rails.logger.warn "ib check time_diff: #{time_diff}"
+      if time_diff.abs < 90
         order = data.last["order"].upcase
-        amount = position["position"].abs if !position["position"].nil?
       end
     end
     Rails.logger.warn "ib order: #{order == "" ? "NO" : order} #{amount.to_s}"

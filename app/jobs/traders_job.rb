@@ -19,12 +19,12 @@ class TradersJob < ApplicationJob
         current_time = Time.zone.now.strftime('%H:%M')
         if (current_time > "09:35" && current_time < "15:30")
           @order, @amount = ApplicationController.helpers.py_check_position(contract) if file
+          Rails.logger.warn "ib py_check_position: #{@order} #{@amount.to_s}, #{Time.zone.now}"
         else
           ApplicationController.helpers.close_position
         end
 
         if @order != "" && @amount != 0
-          Rails.logger.warn "ib py_check_position: #{@order} #{@amount.to_s}, #{Time.zone.now}"
           ApplicationController.helpers.ib_order(@order, @amount, 0)
           EventLog.create(content: "#{@order} #{@amount.to_s} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}")
         end
