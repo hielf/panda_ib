@@ -14,6 +14,8 @@ from sklearn.linear_model import LinearRegression
 import joblib
 import json
 
+from tqdm import tqdm
+
 starttime = time.time()
 
 reg_buy_open = joblib.load('reg_buy_open.pkl')
@@ -31,7 +33,11 @@ class dual_trust(bt.Indicator):
         # 策略会调用prenext方法。而在indicator中，这个函数就是告诉strategy，我需要几天才能成熟
         self.addminperiod(self.params.dual_window)
         self.params.dual_period = dual_period
+
+        self.iteration_progress = tqdm(desc='Total runs', total=(self.datas[0].close.buflen()))
+
     def DUAL(self, df2, period):
+
         period_data = df2.resample(period).last()
 
         period_data['open'] = df2['open'].resample(period).first()
@@ -40,11 +46,19 @@ class dual_trust(bt.Indicator):
         # 最低价
         period_data['low'] = df2['low'].resample(period).min()
 
+        period_data['hh'] = period_data['high'].rolling(2).max()
+        period_data['ll'] = period_data['low'].rolling(2).min()
+
+        period_data = period_data[['open', 'high', 'hh', 'low', 'll', 'close' ]]
+
         period_data.dropna(inplace=True)
 
         return period_data
 
     def next(self):
+
+        self.iteration_progress.update()
+        self.iteration_progress.set_description("Dual trust Processing {} out of {}".format(len(self.datas[0].close), self.datas[0].close.buflen()))
 
         data_serial_open = self.data.open.get(size=self.params.dual_window)
         data_serial_high = self.data.high.get(size=self.params.dual_window)
@@ -52,20 +66,22 @@ class dual_trust(bt.Indicator):
         data_serial_close = self.data.close.get(size=self.params.dual_window)
 
         dt_date = self.datas[0].datetime.datetime()
+
         dt1 = pd.date_range( end= dt_date, periods=self.params.dual_window, freq="min")
 
         dt = pd.DataFrame({})
+
         dt['datetime'] = dt1
         dt['open'] = pd.DataFrame(data_serial_open)
+        dt['close'] = pd.DataFrame(data_serial_close)
         dt['high'] = pd.DataFrame(data_serial_high)
         dt['low'] = pd.DataFrame(data_serial_low)
-        dt['close'] = pd.DataFrame(data_serial_close)
 
         dt.set_index('datetime', inplace= True)
         pred_data = self.DUAL(dt, self.params.dual_period)
+
+        # lines 0 是当前, 1是未来, -1 是上一个 和pandas 不一样, pd 是 -1 为当前时间
         self.lines.close_resample[0] = pred_data.close[-2] # 当前价格和上一个close 价格比较
-        self.lines.high_resample[0] = pred_data.high[-1] # 当前bar最高价 和 预测 price line 比较
-        self.lines.low_resample[0] = pred_data.low[-1] # 当前bar 最低价 和 预测 price line 比较,
 
         prenext_num = -2
         #reg_buy_open = joblib.load('reg_buy_open.pkl')
@@ -84,12 +100,12 @@ class dual_trust(bt.Indicator):
 # Create a Stratey
 class MyStrategy(bt.Strategy):
     params = (
-        ('maperiod', 15),
+        ('maperiod', 48),
         ('printlog', True),
-        ('dual_window', 15),
+        ('dual_window',48),
         ('dual_period', '04T'),
         ('max_price', 0),
-        ('min_price', 999999999)
+        ('min_price', 0)
     )
 
     def log(self, txt, dt=None, doprint=False):
@@ -109,10 +125,6 @@ class MyStrategy(bt.Strategy):
         self.buyprice = None
         self.buycomm = None
 
-        # # Add a MovingAverageSimple indicator
-        # self.ssa = ssa_index_ind(ssa_window=self.params.ssa_window, subplot=False)
-        # # bt.indicator.LinePlotterIndicator(self.ssa, name='ssa')
-        # self.sma = bt.indicators.SimpleMovingAverage(period=self.params.maperiod)
         self.dual_lines = dual_trust(dual_window=self.params.dual_window, dual_period= self.params.dual_period, subplot=False)
     def start(self):
         print("the world call me!")
@@ -159,11 +171,13 @@ class MyStrategy(bt.Strategy):
                  (trade.commission, trade.pnl, trade.pnlcomm))
 
     def next(self):
-        if self.data.datetime.time() > datetime.time(15, 30) or self.data.datetime.time() < datetime.time(9, 30):
+
+        # 9:45 - 15:45
+        if self.data.datetime.time() > datetime.time(15, 45) or self.data.datetime.time() < datetime.time(9, 45):
             if self. position.size > 0:
                 self.order = self.sell()
 
-            if self. position.size > 0:
+            if self. position.size < 0:
                 self.order = self.buy()
 
             return
@@ -174,12 +188,12 @@ class MyStrategy(bt.Strategy):
         # Check if we are in the market
         if not self.position:
 
-            if self.dataclose[0] > self.dual_lines.dual_buy_open[0] and abs( self.dual_lines.close_resample[0] - self.dual_lines.dual_buy_open[0] > 5):
+            if self.dataclose[0] > self.dual_lines.dual_buy_open[0]:
                  self.log('BUY CREATE, %.2f' % self.dataclose[0])
                  self.order = self.buy()
                  trades.append({'order': 'buy', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
-            elif self.dataclose[0] < self.dual_lines.dual_sale_open[0] and abs( self.dual_lines.close_resample[0] - self.dual_lines.dual_sale_open[0] > 5):
+            elif self.dataclose[0] < self.dual_lines.dual_sale_open[0]:
                  self.log('SELL CREATE, %.2f' % self.dataclose[0])
                  self.order = self.sell()
                  trades.append({'order': 'sell', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
@@ -190,36 +204,36 @@ class MyStrategy(bt.Strategy):
             == 0 is no position
             < 0 is short (you have given)
             '''
-            if self. position.size > 0:
+            if self. position.size > 0 and len(self) >= (self.bar_executed + 4):
                 if self.params.max_price < self.dataclose[0]:
                     self.params.max_price = self.dataclose[0]
                 # 冲高回落
-                if self.dual_lines.high_resample[0] > self.dual_lines.dual_buy_break[0] and self.dataclose[0] < self.dual_lines.dual_buy_open[0]:
+                if self.params.max_price > self.dual_lines.dual_buy_break[0] and self.dataclose[0] < self.dual_lines.dual_buy_open[0]:
                     self.log('BUY CLOSE HIT, %.2f' % self.dataclose[0])
                     self.order = self.sell()
                     self.params.max_price = 0
                     trades.append({'order': 'sell', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
                 # # 移动平仓
-                elif self.dataclose[0] < self.dual_lines.high_resample[0]:
+                elif self.dataclose[0] < self.dual_lines.close_resample[0]:
                     self.log('BUY CLOSE MOV, %.2f' % self.dataclose[0])
                     self.order = self.sell()
                     self.params.max_price = 0
                     trades.append({'order': 'sell', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
-            if self. position.size < 0:
-                if self.params.min_price > self.dataclose[0]:
-                    self.params.min_price = self.dataclose[0]
+            if self. position.size < 0 and len(self) >= (self.bar_executed + 4):
+                if self.params.min_price > -self.dataclose[0]:
+                    self.params.min_price = -self.dataclose[0]
                 # 冲低回升
-                if self.dual_lines.low_resample[0] < self.dual_lines.dual_sale_break[0] and self.dataclose[0] > self.dual_lines.dual_sale_open[0]:
+                if -self.params.min_price < self.dual_lines.dual_sale_break[0] and self.dataclose[0] > self.dual_lines.dual_sale_open[0]:
                     self.log('SALE CLOSE HIT, %.2f' % self.dataclose[0])
                     self.order = self.buy()
-                    self.params.min_price = 999999999
+                    self.params.min_price = 0
                     trades.append({'order': 'buy', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
                 # 移动平仓
-                elif self.dataclose[0] > self.dual_lines.low_resample[0]:
+                elif self.dataclose[0] > self.dual_lines.close_resample[0]:
                     self.log('SALE CLOSE MOV, %.2f' % self.dataclose[0])
                     self.order = self.buy()
-                    self.params.min_price = 999999999
+                    self.params.min_price = 0
                     trades.append({'order': 'buy', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
 
@@ -232,13 +246,14 @@ if __name__ == '__main__':
     future = today + addDays
     csv_path = sys.argv[1]
     json_path = sys.argv[2]
-    # Create a cerebro entity
+
     date_handler = lambda obj: (
         obj.isoformat()
         if isinstance(obj, (datetime.datetime, datetime.date))
         else None
     )
     trades = []
+    # Create a cerebro entity
     cerebro = bt.Cerebro()
     # Add a strategy
     cerebro.addstrategy(MyStrategy)
@@ -261,7 +276,7 @@ if __name__ == '__main__':
     cerebro.broker.setcommission(
         commission=30,
         commtype = bt.CommInfoBase.COMM_FIXED, # 固定手续费
-        automargin = 5, # 保证金10% = 0.1%, 这里5是因为hsi 指数 一个点50元, 10%保证金, 交易一次30元
+        automargin = 5, # 保证金10% , 这里5是因为hsi 指数 一个点50元, 10%保证金, 交易一次30元
         mult = 50  # 利润乘数, hsi 是1个点50
         )
     # Print out the starting conditions
@@ -273,6 +288,7 @@ if __name__ == '__main__':
 
     endtime = time.time()
     print('='*5, 'program running time', '='*5)
+    print('from 2019,6,1 to 2019,8,1', '+4')
     print ('time:', (endtime - starttime), 'seconds')
     print('='*5, 'program running time', '='*5)
 
@@ -280,6 +296,7 @@ if __name__ == '__main__':
     print('Final Portfolio Value: %.2f' % cerebro.broker.getvalue())
     print('SR:', strat.analyzers.SharpeRatio.get_analysis())
     print('DW:', strat.analyzers.DW.get_analysis())
+
     print(trades)
     with open(json_path, 'w') as f:
         json.dump(trades, f)
