@@ -38,13 +38,10 @@ class dual_trust(bt.Indicator):
 
     def DUAL(self, df2, period):
 
-        period_data = df2.resample(period).last()
-
-        period_data['open'] = df2['open'].resample(period).first()
-        # 处理最高价和最低价
-        period_data['high'] = df2['high'].resample(period).max()
-        # 最低价
-        period_data['low'] = df2['low'].resample(period).min()
+        period_data= df2.resample(period).agg({'open': 'first',
+                                 'high': 'max',
+                                 'low': 'min',
+                                 'close': 'last'})
 
         period_data['hh'] = period_data['high'].rolling(2).max()
         period_data['ll'] = period_data['low'].rolling(2).min()
