@@ -238,11 +238,13 @@ class MyStrategy(bt.Strategy):
         print("death")
 
 if __name__ == '__main__':
-    today = datetime.date.today()
-    addDays = relativedelta(days=3)
-    future = today + addDays
     csv_path = sys.argv[1]
     json_path = sys.argv[2]
+    begin_date = sys.argv[3]
+    end_date = sys.argv[4]
+
+    begin_date = datetime.datetime.strptime(begin_date, '%Y-%m-%d').date()
+    end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d').date()
 
     date_handler = lambda obj: (
         obj.isoformat()
@@ -260,8 +262,8 @@ if __name__ == '__main__':
     dataframe = pd.read_csv(csv_path, index_col=0, parse_dates=True)
     dataframe['openinterest'] = 0
     data = bt.feeds.PandasData(dataname=dataframe,
-                            fromdate = today,
-                            todate = future
+                            fromdate = begin_date,
+                            todate = end_date
                             )
     # Add the Data Feed to Cerebro
     cerebro.adddata(data)
