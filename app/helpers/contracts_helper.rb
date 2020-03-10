@@ -205,13 +205,13 @@ module ContractsHelper
 
     csv = Rails.root.to_s + "/tmp/csv/#{contract}.csv"
     json = Rails.root.to_s + "/tmp/#{contract}_trades.json"
-    begin_date = 1.business_day.ago.to_date
+    begin_date = Time.zone.now < (Time.parse "11:30 am") ? 1.business_day.ago.to_date : Date.today
     end_date = 1.business_day.from_now.to_date
     system( "cd #{Rails.root.to_s + '/lib/python/ib'} && python3 v4.py '#{csv}' '#{json}' '#{begin_date}' '#{end_date}'" )
     data = JSON.parse(File.read(json))
     if data.last
       Rails.logger.warn "ib check last data: #{data.last}"
-      time_diff = Time.zone.now - data.last["time"].to_time
+      time_diff = Time.zone.now.beginning_of_minute - data.last["time"].to_time
       Rails.logger.warn "ib check time_diff: #{time_diff}"
       if time_diff.abs < 90
         order = data.last["order"].upcase
