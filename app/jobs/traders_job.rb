@@ -11,10 +11,12 @@ class TradersJob < ApplicationJob
     contract = args[0]
     Rails.logger.warn "ib job start: #{contract}, #{Time.zone.now}"
     @ib = ApplicationController.helpers.ib_connect
+    market_on = false
     if @ib.isConnected()
       5.times do
         market_data = ApplicationController.helpers.market_data(contract)
         if market_data
+          market_on = true
           break
         else
           Rails.logger.warn "await for 3 seconds.."
