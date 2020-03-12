@@ -13,14 +13,15 @@ class TradersJob < ApplicationJob
     @ib = ApplicationController.helpers.ib_connect
     if @ib.isConnected()
       5.times do
-        if ApplicationController.helpers.check_hsi_data_is_current(contract)
+        market_data = ApplicationController.helpers.market_data(contract)
+        if market_data
           break
         else
-          Rails.logger.warn "await for 2 seconds.."
-          sleep 2
+          Rails.logger.warn "await for 3 seconds.."
+          sleep 3
         end
       end
-      market_data = ApplicationController.helpers.market_data(contract)
+
       if market_data
         file = ApplicationController.helpers.index_to_csv(contract, true)
 

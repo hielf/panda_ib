@@ -176,24 +176,6 @@ module TradeOrdersHelper
     return data
   end
 
-  def check_hsi_data_is_current(contract)
-    bar_size = case contract
-    when "hsi"
-      "1 min"
-    when "hsi_5mins"
-      "5 mins"
-    when "hsi_30mins"
-      "30 mins"
-    end
-    PyCall.exec("import datetime")
-    PyCall.exec("contracts = [Index(symbol = 'HSI', exchange = 'HKFE')]")
-    PyCall.exec("contract = contracts[0]")
-    PyCall.exec("bars = ib.reqHistoricalData(contract, endDateTime='', durationStr='120 S', barSizeSetting='#{bar_size}', whatToShow='TRADES', useRTH=True)")
-    result = PyCall.eval("bars[-1].date == datetime.datetime.now().replace(second=0, microsecond=0)")
-    Rails.logger.warn "check_hsi_data_is_current: #{PyCall.eval("bars[-1].date").to_s}"
-    return result
-  end
-
   def market_data(contract)
     # contract = "hsi_5mins"
     bar_size = case contract
@@ -214,15 +196,20 @@ module TradeOrdersHelper
       # PyCall.exec("import psycopg2")
       # PyCall.exec("import sched, time")
       # if ib.isConnected()
+      PyCall.exec("import datetime")
       PyCall.exec("contracts = [Index(symbol = 'HSI', exchange = 'HKFE')]")
       PyCall.exec("contract = contracts[0]")
       PyCall.exec("bars = ib.reqHistoricalData(contract, endDateTime='', durationStr='7200 S', barSizeSetting='#{bar_size}', whatToShow='TRADES', useRTH=True, keepUpToDate=True)")
       # PyCall.exec("tmp_table = '#{contract}' + '_tmp'")
       # PyCall.exec("table = '#{contract}'")
-      PyCall.exec("df = util.df(bars)")
-
-      list = PyCall.eval("df")
+      result = PyCall.eval("bars[-1].date == datetime.datetime.now().replace(second=0, microsecond=0)")
       Rails.logger.warn "market_data_latest: #{PyCall.eval("bars[-1].date").to_s}"
+      if result == false
+        return result
+      end
+      PyCall.exec("df = util.df(bars)")
+      list = PyCall.eval("df")
+
       #
       # PyCall.exec("engine = create_engine('postgresql+psycopg2://chesp:Chesp92J5@rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com:3432/panda_quant',echo=True,client_encoding='utf8')")
       # PyCall.exec("df.tail(2000).to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');")
@@ -256,9 +243,11 @@ module TradeOrdersHelper
         json.each_with_index do |row, index|
           conn.exec_prepared('statement2', [index, row['date'].strftime('%Y-%m-%d %H:%M:%S'), row['open'], row['high'], row['low'], row['close'], row['volume'], row['average'], row['barCount']])
         end;0
-
-        sql = 'insert into ' + table + ' select * from ' + tmp_table +  ' b where not exists (select 1 from ' + table + ' a where a.date = b.date);'
+        sql = "delete from " + table + " a where a.date = " + "'#{PyCall.eval("bars[-2].date").to_s}'" + ";"
         res  = conn.exec(sql)
+
+        sql2 = 'insert into ' + table + ' select * from ' + tmp_table +  ' b where not exists (select 1 from ' + table + ' a where a.date = b.date);'
+        res  = conn.exec(sql2)
 
         Rails.logger.warn "market_data success: #{Time.zone.now}"
       rescue Exception => e
