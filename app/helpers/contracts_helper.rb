@@ -213,7 +213,7 @@ module ContractsHelper
       Rails.logger.warn "ib check last data: #{data.last}"
       time_diff = Time.zone.now.beginning_of_minute - data.last["time"].to_time
       Rails.logger.warn "ib check time_diff: #{time_diff}"
-      if time_diff.abs < 90
+      if time_diff.abs <= 60
         order = data.last["order"].upcase
       end
     end

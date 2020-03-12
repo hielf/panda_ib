@@ -204,9 +204,7 @@ module TradeOrdersHelper
       # PyCall.exec("table = '#{contract}'")
       result = PyCall.eval("bars[-1].date == datetime.datetime.now().replace(second=0, microsecond=0)")
       Rails.logger.warn "market_data_latest: #{PyCall.eval("bars[-1].date").to_s}"
-      if result == false
-        return result
-      end
+
       PyCall.exec("df = util.df(bars)")
       list = PyCall.eval("df")
 
