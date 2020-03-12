@@ -176,6 +176,24 @@ module TradeOrdersHelper
     return data
   end
 
+  def check_hsi_data_is_current(contract)
+    bar_size = case contract
+    when "hsi"
+      "1 min"
+    when "hsi_5mins"
+      "5 mins"
+    when "hsi_30mins"
+      "30 mins"
+    end
+    PyCall.exec("import datetime")
+    PyCall.exec("contracts = [Index(symbol = 'HSI', exchange = 'HKFE')]")
+    PyCall.exec("contract = contracts[0]")
+    PyCall.exec("bars = ib.reqHistoricalData(contract, endDateTime='', durationStr='120 S', barSizeSetting='#{bar_size}', whatToShow='TRADES', useRTH=True)")
+    result = PyCall.eval("bars[-1].date == datetime.datetime.now().replace(second=0, microsecond=0)")
+
+    return result
+  end
+
   def market_data(contract)
     # contract = "hsi_5mins"
     bar_size = case contract
@@ -198,7 +216,7 @@ module TradeOrdersHelper
       # if ib.isConnected()
       PyCall.exec("contracts = [Index(symbol = 'HSI', exchange = 'HKFE')]")
       PyCall.exec("contract = contracts[0]")
-      PyCall.exec("bars = ib.reqHistoricalData(contract, endDateTime='', durationStr='7200 S', barSizeSetting='#{bar_size}', whatToShow='TRADES', useRTH=True)")
+      PyCall.exec("bars = ib.reqHistoricalData(contract, endDateTime='', durationStr='7200 S', barSizeSetting='#{bar_size}', whatToShow='TRADES', useRTH=True, keepUpToDate=True)")
       # PyCall.exec("tmp_table = '#{contract}' + '_tmp'")
       # PyCall.exec("table = '#{contract}'")
       PyCall.exec("df = util.df(bars)")

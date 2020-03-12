@@ -12,6 +12,14 @@ class TradersJob < ApplicationJob
     Rails.logger.warn "ib job start: #{contract}, #{Time.zone.now}"
     @ib = ApplicationController.helpers.ib_connect
     if @ib.isConnected()
+      5.times do
+        if ApplicationController.helpers.check_hsi_data_is_current(contract)
+          break
+        else
+          Rails.logger.warn "await for 2 seconds.."
+          sleep 2
+        end
+      end
       market_data = ApplicationController.helpers.market_data(contract)
       if market_data
         file = ApplicationController.helpers.index_to_csv(contract, true)
