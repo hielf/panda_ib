@@ -190,7 +190,7 @@ module TradeOrdersHelper
     PyCall.exec("contract = contracts[0]")
     PyCall.exec("bars = ib.reqHistoricalData(contract, endDateTime='', durationStr='120 S', barSizeSetting='#{bar_size}', whatToShow='TRADES', useRTH=True)")
     result = PyCall.eval("bars[-1].date == datetime.datetime.now().replace(second=0, microsecond=0)")
-
+    Rails.logger.warn "check_hsi_data_is_current: #{PyCall.eval("bars[-1].date").to_s}"
     return result
   end
 
@@ -222,6 +222,7 @@ module TradeOrdersHelper
       PyCall.exec("df = util.df(bars)")
 
       list = PyCall.eval("df")
+      Rails.logger.warn "market_data_latest: #{PyCall.eval("bars[-1].date").to_s}"
       #
       # PyCall.exec("engine = create_engine('postgresql+psycopg2://chesp:Chesp92J5@rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com:3432/panda_quant',echo=True,client_encoding='utf8')")
       # PyCall.exec("df.tail(2000).to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');")
