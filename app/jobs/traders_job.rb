@@ -12,14 +12,16 @@ class TradersJob < ApplicationJob
     Rails.logger.warn "ib job start: #{contract}, #{Time.zone.now}"
     @ib = ApplicationController.helpers.ib_connect
     if @ib.isConnected()
+      attempt = 0
       5.times do
+        attempt += 1
         market_data = ApplicationController.helpers.market_data(contract)
         if market_data
-          market_on = true
           break
         else
           Rails.logger.warn "await for 3 seconds.."
           sleep 3
+          market_data = ApplicationController.helpers.market_data(contract, true) if attempt == 5
         end
       end
 

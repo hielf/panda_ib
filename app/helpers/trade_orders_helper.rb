@@ -176,7 +176,7 @@ module TradeOrdersHelper
     return data
   end
 
-  def market_data(contract)
+  def market_data(contract, force_collect=false)
     # contract = "hsi_5mins"
     bar_size = case contract
     when "hsi"
@@ -203,7 +203,8 @@ module TradeOrdersHelper
       # PyCall.exec("tmp_table = '#{contract}' + '_tmp'")
       # PyCall.exec("table = '#{contract}'")
       result = PyCall.eval("bars[-1].date == datetime.datetime.now().replace(second=0, microsecond=0)")
-      Rails.logger.warn "market_data_latest: #{PyCall.eval("bars[-1].date").to_s}"
+      result = true if force_collect
+      Rails.logger.warn "market_data_latest: #{PyCall.eval("bars[-1].date").to_s} force_collect: #{force_collect.to_s}"
 
       PyCall.exec("df = util.df(bars)")
       list = PyCall.eval("df")
