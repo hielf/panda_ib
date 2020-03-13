@@ -214,7 +214,15 @@ module ContractsHelper
       time_diff = Time.zone.now.beginning_of_minute - data.last["time"].to_time
       Rails.logger.warn "ib check time_diff: #{time_diff}"
       if time_diff.abs <= 60
-        order = data.last["order"].upcase
+        if position == {}
+          order = data.last["order"].upcase
+        elsif !position["position"].nil?
+          if position["position"] > 0 && data.last["order"].upcase == "SELL"
+            order = data.last["order"].upcase
+          elsif position["position"] < 0 && data.last["order"].upcase == "BUY"
+            order = data.last["order"].upcase
+          end
+        end
       end
     end
     Rails.logger.warn "ib order: #{order == "" ? "NO" : order} #{amount.to_s}"
