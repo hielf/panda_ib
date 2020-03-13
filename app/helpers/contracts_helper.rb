@@ -215,6 +215,8 @@ module ContractsHelper
       Rails.logger.warn "ib check time_diff: #{time_diff}"
       if time_diff.abs == 0
         order = data.last["order"].upcase
+      elsif time_diff.abs == 60 && data.last["order"].upcase == "CLOSE"
+        order = data.last["order"].upcase
       end
     end
     Rails.logger.warn "ib order: #{order == "" ? "NO" : order} #{amount.to_s}"
