@@ -25,7 +25,7 @@ class TradersJob < ApplicationJob
         end
       end
 
-      file = ApplicationController.helpers.index_to_csv(contract, true)
+      file = ApplicationController.helpers.index_to_csv(contract, market_data, true)
 
       current_time = Time.zone.now.strftime('%H:%M')
       if (current_time > "09:35" && current_time < "15:30")

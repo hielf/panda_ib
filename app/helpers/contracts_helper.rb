@@ -5,33 +5,32 @@
 
 module ContractsHelper
 
-  def index_to_csv(contract, with_index)
-    # contract = "hsi_5mins"
-    begin_time = EventLog.maximum(:created_at).nil? ? Time.zone.now - 1.day : EventLog.maximum(:created_at).beginning_of_day
-    end_time = Time.zone.now
-    # url = "http://#{ENV["market_db"]}:3000/#{contract}?and=(date.gte.#{begin_time.strftime('%Y-%m-%dT%H:%M:%S')},date.lte.#{end_time.strftime('%Y-%m-%dT%H:%M:%S')})"
-    url = "http://#{ENV["market_db"]}:3000/#{contract}_last_1200"
-    res = HTTParty.get url
-    json = JSON.parse res.body
-    begin
-      latest_time = strftime_time(json.last["date"].to_datetime + 2.minutes)
-      if latest_time >= strftime_time(end_time)
-        csv = CSV.generate(headers: false) { |csv| json.map(&:to_a).each { |row| csv << row } }
+  def index_to_csv(contract, market_data, with_index, db_collect=ENV['db_collect'])
 
-        file = Rails.root.to_s + "/tmp/csv/#{contract}.csv"
+    file = Rails.root.to_s + "/tmp/csv/#{contract}.csv"
+    if db_collect == 'false'
+      market_data.to_csv(file, sep: ',', encoding: 'utf-8', index: false)
+    else
+      # contract = "hsi_5mins"
+      begin_time = EventLog.maximum(:created_at).nil? ? Time.zone.now - 1.day : EventLog.maximum(:created_at).beginning_of_day
+      end_time = Time.zone.now
+      # url = "http://#{ENV["market_db"]}:3000/#{contract}?and=(date.gte.#{begin_time.strftime('%Y-%m-%dT%H:%M:%S')},date.lte.#{end_time.strftime('%Y-%m-%dT%H:%M:%S')})"
+      url = "http://#{ENV["market_db"]}:3000/#{contract}_last_1200"
+      res = HTTParty.get url
+      json = JSON.parse res.body
+      begin
+        csv = CSV.generate(headers: false) { |csv| json.map(&:to_a).each { |row| csv << row } }
         CSV.open( file, 'w' ) do |writer|
           writer << ["date", "open", "high", "low", "close", "volume", "barCount", "average"] if with_index
           json.each do |c|
             writer << [c["date"], c["open"], c["high"], c["low"], c["close"], c["volume"], c["barCount"], c["average"]]
           end
         end
-        return file
-      else
-        return false
+      rescue Exception => e
+        Rails.logger.warn "index_to_csv failed: #{e}"
       end
-    rescue Exception => e
-      Rails.logger.warn "index_to_csv failed: #{e}"
     end
+    return file
   end
 
 
@@ -215,7 +214,7 @@ module ContractsHelper
       Rails.logger.warn "ib check time_diff: #{time_diff}"
       if time_diff.abs <= 60
         if !position["position"].nil? && data.last["order"].upcase == "CLOSE"
-            order = data.last["order"].upcase
+          order = data.last["order"].upcase
         end
         if position == {}
           order = data.last["order"].upcase

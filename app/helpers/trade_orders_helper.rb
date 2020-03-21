@@ -176,7 +176,7 @@ module TradeOrdersHelper
     return data
   end
 
-  def market_data(contract, force_collect=false)
+  def market_data(contract, force_collect=false, db_collect=ENV['db_collect'])
     # contract = "hsi_5mins"
     bar_size = case contract
     when "hsi"
@@ -186,6 +186,7 @@ module TradeOrdersHelper
     when "hsi_30mins"
       "30 mins"
     end
+    duration = (db_collect == "true" ? "7200" : "72000")
     result = true
     list = nil
     Rails.logger.warn "market_data start: #{Time.zone.now}"
@@ -199,7 +200,7 @@ module TradeOrdersHelper
       PyCall.exec("import datetime")
       PyCall.exec("contracts = [Index(symbol = 'HSI', exchange = 'HKFE')]")
       PyCall.exec("contract = contracts[0]")
-      PyCall.exec("bars = ib.reqHistoricalData(contract, endDateTime='', durationStr='7200 S', barSizeSetting='#{bar_size}', whatToShow='TRADES', useRTH=True, keepUpToDate=True)")
+      PyCall.exec("bars = ib.reqHistoricalData(contract, endDateTime='', durationStr='#{duration} S', barSizeSetting='#{bar_size}', whatToShow='TRADES', useRTH=True, keepUpToDate=True)")
       # PyCall.exec("tmp_table = '#{contract}' + '_tmp'")
       # PyCall.exec("table = '#{contract}'")
       result = PyCall.eval("bars[-1].date == datetime.datetime.now().replace(second=0, microsecond=0)")
@@ -232,6 +233,8 @@ module TradeOrdersHelper
     if list.nil? || result == false
       result = false
     else
+      return list if db_collect == 'false'
+
       begin
         tmp_table = contract + '_tmp'
         table = contract
