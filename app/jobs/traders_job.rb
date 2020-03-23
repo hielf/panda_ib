@@ -13,6 +13,7 @@ class TradersJob < ApplicationJob
     @ib = ApplicationController.helpers.ib_connect
     if @ib.isConnected()
       attempt = 0
+      market_data = nil
       5.times do
         attempt += 1
         market_data = ApplicationController.helpers.market_data(contract)
