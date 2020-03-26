@@ -196,7 +196,7 @@ module ContractsHelper
     return data
   end
 
-  def py_check_position(contract, amount = 4)
+  def py_check_position(contract, amount = ENV["amount"])
     order = ""
     position = ib_positions
     amount = position["position"].abs if (position && position != {} && !position["position"].nil?)
