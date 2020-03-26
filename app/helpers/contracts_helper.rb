@@ -232,7 +232,7 @@ module ContractsHelper
     # "reg_buy_open"=>26547.974999999995, "reg_buy_break"=>26559.200000000008, "reg_sale_open"=>26503.075,
     # "reg_sale_break"=>26491.85}
 
-    amount = 4
+    amount = ENV["amount"].to_i
     order = ""
     position = ib_positions
 
