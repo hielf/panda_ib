@@ -6,7 +6,7 @@ import sched, time
 # util.startLoop()  # uncomment this line when in a notebook
 
 ib = IB()
-ib.connect('127.0.0.1', 7496, clientId=100)
+ib.connect('124.156.100.215', 7497, clientId=100)
 
 hsi = Future('HSI')
 cds = ib.reqContractDetails(hsi)

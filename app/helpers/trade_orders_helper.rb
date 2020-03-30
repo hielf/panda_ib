@@ -71,9 +71,16 @@ module TradeOrdersHelper
 
       PyCall.exec("months = []")
       PyCall.exec("for co in contracts: months.append(co.lastTradeDateOrContractMonth)")
-
       PyCall.exec("months.sort()")
-      PyCall.exec("month = months[0]")
+
+      PyCall.exec("from datetime import datetime")
+      PyCall.exec("dt = datetime.now()")
+      PyCall.exec("today = dt.strftime( '%Y%m%d' )")
+      if PyCall.eval("today == months[0]")
+        PyCall.exec("month = months[1]")
+      else
+        PyCall.exec("month = months[0]")
+      end
       PyCall.exec("hsi = Future(symbol='HSI', lastTradeDateOrContractMonth=month, exchange='HKFE', currency='HKD')")
       PyCall.exec("contract = ib.reqContractDetails(hsi)[0].contract")
 
@@ -208,7 +215,13 @@ module TradeOrdersHelper
       PyCall.exec("for co in contracts: months.append(co.lastTradeDateOrContractMonth)")
 
       PyCall.exec("months.sort()")
-      PyCall.exec("month = months[0]")
+      PyCall.exec("dt = datetime.datetime.now()")
+      PyCall.exec("today = dt.strftime( '%Y%m%d' )")
+      if PyCall.eval("today == months[0]")
+        PyCall.exec("month = months[1]")
+      else
+        PyCall.exec("month = months[0]")
+      end
       PyCall.exec("hsi = Future(symbol='HSI', lastTradeDateOrContractMonth=month, exchange='HKFE', currency='HKD')")
       PyCall.exec("contract = ib.reqContractDetails(hsi)[0].contract")
       PyCall.exec("bars = ib.reqHistoricalData(contract, endDateTime='', durationStr='#{duration} S', barSizeSetting='#{bar_size}', whatToShow='TRADES', useRTH=True, keepUpToDate=True)")
