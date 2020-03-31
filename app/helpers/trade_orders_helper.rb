@@ -76,7 +76,7 @@ module TradeOrdersHelper
       PyCall.exec("from datetime import datetime")
       PyCall.exec("dt = datetime.now()")
       PyCall.exec("today = dt.strftime( '%Y%m%d' )")
-      if PyCall.eval("today == months[0]")
+      if PyCall.eval("today >= months[0]")
         PyCall.exec("month = months[1]")
       else
         PyCall.exec("month = months[0]")
@@ -217,7 +217,7 @@ module TradeOrdersHelper
       PyCall.exec("months.sort()")
       PyCall.exec("dt = datetime.datetime.now()")
       PyCall.exec("today = dt.strftime( '%Y%m%d' )")
-      if PyCall.eval("today == months[0]")
+      if PyCall.eval("today >= months[0]")
         PyCall.exec("month = months[1]")
       else
         PyCall.exec("month = months[0]")
