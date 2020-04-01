@@ -18,10 +18,10 @@ from tqdm import tqdm
 
 starttime = time.time()
 
-reg_buy_open = joblib.load('reg_buy_open.pkl')
-reg_buy_break = joblib.load('reg_buy_break.pkl')
-reg_sale_open = joblib.load('reg_sale_open.pkl')
-reg_sale_break = joblib.load('reg_buy_break.pkl')
+reg_buy_open = joblib.load('reg_buy_open3.pkl')
+reg_buy_break = joblib.load('reg_buy_break3.pkl')
+reg_sale_open = joblib.load('reg_sale_open3.pkl')
+reg_sale_break = joblib.load('reg_buy_break3.pkl')
 
 
 
@@ -297,7 +297,7 @@ if __name__ == '__main__':
 
     endtime = time.time()
     print('='*5, 'program running time', '='*5)
-    print('from 2018,1,1 to 2018,3,1', '+4')
+    print('from ' + str(begin_date) + ' to ' + str(end_date) + '', '+4')
     print ('time:', (endtime - starttime), 'seconds')
     print('='*5, 'program running time', '='*5)
 

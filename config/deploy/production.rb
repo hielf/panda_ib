@@ -7,10 +7,9 @@
 # server "example.com", user: "deploy", roles: %w{app web}, other_property: :other_value
 # server "db.example.com", user: "deploy", roles: %w{db}
 
-# server '192.168.5.184', port: 122, roles: [:web, :app, :db], primary: true
 server '129.226.126.93', port: 122, roles: [:web, :app, :db], user: "deploy", ssh_options: {user: "deploy"}, primary: true
 server '129.226.126.93', port: 123, roles: [:web, :app, :db], user: "deploy", ssh_options: {user: "deploy"}, primary: true
-# server '10.0.0.189', port: 222, roles: [:web, :app, :db], user: "deploy", ssh_options: {user: "deploy"}, primary: true
+
 set :branch, "V4"
 # set :rvm_ruby_version, '2.4.0@panda_ib'
 # set :rvm_type, :system
