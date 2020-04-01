@@ -206,7 +206,7 @@ module ContractsHelper
     json = Rails.root.to_s + "/tmp/#{contract}_trades.json"
     begin_date = Time.zone.now < (Time.parse "11:30 am") ? 1.business_day.ago.to_date : Date.today
     end_date = 1.business_day.from_now.to_date
-    system( "cd #{Rails.root.to_s + '/lib/python/ib'} && python3 v4_3min.py '#{csv}' '#{json}' '#{begin_date}' '#{end_date}'" )
+    system( "cd #{Rails.root.to_s + '/lib/python/ib'} && python3 v4_#{ENV["backtrader_version"]}.py '#{csv}' '#{json}' '#{begin_date}' '#{end_date}'" )
     data = JSON.parse(File.read(json))
     if data.last
       Rails.logger.warn "ib check last data: #{data.last}"
