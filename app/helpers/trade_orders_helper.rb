@@ -105,8 +105,9 @@ module TradeOrdersHelper
       # ib = ib_connect
       PyCall.exec("pos = ib.positions()")
       PyCall.exec("list = {}")
-      PyCall.exec("for po in pos: list.update({'position': po.position, 'currency': po.contract.currency, 'contract_date': po.contract.lastTradeDateOrContractMonth, 'symbol': po.contract.symbol})")
-      # PyCall.exec("for po in pos: list.update(symbol: po.symbol, contract_date: po.lastTradeDateOrContractMonth, currency: po.currency, position: po.position)")
+      PyCall.exec("for po in pos:
+          if po.contract.symbol == 'HSI':
+            list.update({'position': po.position, 'currency': po.contract.currency, 'contract_date': po.contract.lastTradeDateOrContractMonth, 'symbol': po.contract.symbol})")
 
       data = PyCall.eval("list").to_h
     rescue Exception => e
