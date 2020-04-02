@@ -102,9 +102,9 @@ class dual_trust(bt.Indicator):
 # Create a Stratey
 class MyStrategy(bt.Strategy):
     params = (
-        ('maperiod', 24),
+        ('maperiod', 12),
         ('printlog', True),
-        ('dual_window',24),
+        ('dual_window',12),
         ('dual_period', '04T'),
         ('max_price', 0),
         ('min_price', 0)
