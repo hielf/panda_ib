@@ -30,7 +30,7 @@ class TradersJob < ApplicationJob
       file = ApplicationController.helpers.index_to_csv(contract, market_data, true)
 
       current_time = Time.zone.now.strftime('%H:%M')
-      if (current_time > "09:35" && current_time < "15:30")
+      if (current_time >= "09:45" && current_time <= "15:45")
         @order, @amount = ApplicationController.helpers.py_check_position(contract) if file
         Rails.logger.warn "ib py_check_position: #{@order} #{@amount.to_s}, #{Time.zone.now}"
       else
