@@ -249,11 +249,11 @@ class MyStrategy(bt.Strategy):
 if __name__ == '__main__':
     csv_path = sys.argv[1]
     json_path = sys.argv[2]
-    begin_date = sys.argv[3]
-    end_date = sys.argv[4]
+    begin_time = sys.argv[3]
+    end_time = sys.argv[4]
 
-    begin_date = datetime.datetime.strptime(begin_date, '%Y-%m-%d').date()
-    end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d').date()
+    begin_time = datetime.datetime.strptime(begin_time, '%Y-%m-%d %H:%M:%S +0800')
+    end_time = datetime.datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S +0800')
 
     date_handler = lambda obj: (
         obj.isoformat()
@@ -272,8 +272,8 @@ if __name__ == '__main__':
     dataframe = pd.read_csv(csv_path, index_col=0, parse_dates=True, usecols=['date', 'open', 'high', 'low', 'close', 'volume'])
     dataframe['openinterest'] = 0
     data = bt.feeds.PandasData(dataname=dataframe,
-                            fromdate = begin_date,
-                            todate = end_date
+                            fromdate = begin_time,
+                            todate = end_time
                             )
     # Add the Data Feed to Cerebro
     cerebro.adddata(data)
@@ -297,7 +297,7 @@ if __name__ == '__main__':
 
     endtime = time.time()
     print('='*5, 'program running time', '='*5)
-    print('from ' + str(begin_date) + ' to ' + str(end_date) + '', '+4')
+    print('from ' + str(begin_time) + ' to ' + str(end_time) + '', '+4')
     print ('time:', (endtime - starttime), 'seconds')
     print('='*5, 'program running time', '='*5)
 

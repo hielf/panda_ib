@@ -204,9 +204,12 @@ module ContractsHelper
 
     csv = Rails.root.to_s + "/tmp/csv/#{contract}.csv"
     json = Rails.root.to_s + "/tmp/#{contract}_trades.json"
-    begin_date = Time.zone.now < (Time.parse "11:30 am") ? 1.business_day.ago.to_date : Date.today
-    end_date = 1.business_day.from_now.to_date
-    system( "cd #{Rails.root.to_s + '/lib/python/ib'} && python3 v4_#{ENV["backtrader_version"]}.py '#{csv}' '#{json}' '#{begin_date}' '#{end_date}'" )
+    # begin_date = Time.zone.now < (Time.parse "11:30 am") ? 1.business_day.ago.to_date : Date.today
+    # end_date = 1.business_day.from_now.to_date
+    skip_minute = Time.zone.now < (Time.parse "10:45 am") ? 75 : 0
+    begin_time = CSV.read(file)[CSV.read(file).count-skip_minute-60][0].to_time #回溯1小时，舍去9:15-9:44 & 15:45-16:29交易时间
+    end_time = Time.zone.now
+    system( "cd #{Rails.root.to_s + '/lib/python/ib'} && python3 v4_#{ENV["backtrader_version"]}.py '#{csv}' '#{json}' '#{begin_time}' '#{end_time}'" )
     data = JSON.parse(File.read(json))
     if data.last
       Rails.logger.warn "ib check last data: #{data.last}"

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
- 
+
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
- 
+
 import datetime  # For datetime objects
 import time
 import pandas as pd
@@ -23,8 +23,8 @@ reg_sale_break = joblib.load('reg_buy_break.pkl')
 
 
 class dual_trust(bt.Indicator):
-    lines = (   'dual_buy_open','dual_buy_break','dual_sale_open','dual_sale_break', 'close_resample', 
-                'high_resample', 
+    lines = (   'dual_buy_open','dual_buy_break','dual_sale_open','dual_sale_break', 'close_resample',
+                'high_resample',
                 'low_resample', )
     def __init__(self, dual_window,  dual_period):
         self.params.dual_window = dual_window
@@ -36,7 +36,7 @@ class dual_trust(bt.Indicator):
         self.iteration_progress = tqdm(desc='Total runs', total=(self.datas[0].close.buflen()))
 
     def DUAL(self, df2, period):
-        
+
         period_data = df2.resample(period).last()
 
         period_data['open'] = df2['open'].resample(period).first()
@@ -49,11 +49,11 @@ class dual_trust(bt.Indicator):
         period_data['ll'] = period_data['low'].rolling(1).min()
 
         period_data = period_data[['open', 'high', 'hh', 'low', 'll', 'close' ]]
-        
+
         period_data.dropna(inplace=True)
 
         return period_data
-        
+
     def next(self):
 
         self.iteration_progress.update()
@@ -63,10 +63,10 @@ class dual_trust(bt.Indicator):
         data_serial_high = self.data.high.get(size=self.params.dual_window)
         data_serial_low = self.data.low.get(size=self.params.dual_window)
         data_serial_close = self.data.close.get(size=self.params.dual_window)
-    
+
         dt_date = self.datas[0].datetime.datetime()
 
-        dt1 = pd.date_range( end= dt_date, periods=self.params.dual_window, freq="min") 
+        dt1 = pd.date_range( end= dt_date, periods=self.params.dual_window, freq="min")
 
         dt = pd.DataFrame({})
 
@@ -75,7 +75,7 @@ class dual_trust(bt.Indicator):
         dt['close'] = pd.DataFrame(data_serial_close)
         dt['high'] = pd.DataFrame(data_serial_high)
         dt['low'] = pd.DataFrame(data_serial_low)
-    
+
         dt.set_index('datetime', inplace= True)
         pred_data = self.DUAL(dt, self.params.dual_period)
 
@@ -106,13 +106,13 @@ class MyStrategy(bt.Strategy):
         ('max_price', 0),
         ('min_price', 0)
     )
- 
+
     def log(self, txt, dt=None, doprint=False):
         ''' Logging function fot this strategy'''
         if self.params.printlog or doprint:
             dt = dt or self.datas[0].datetime.datetime(0)
             print('%s, %s' % (dt.isoformat(), txt))
- 
+
     def __init__(self):
         # Keep a reference to the "close" line in the data[0] dataseries
         self.dataclose = self.datas[0].close
@@ -125,19 +125,19 @@ class MyStrategy(bt.Strategy):
         self.buycomm = None
         self.sellprice = None
         self.sellcomm = None
- 
+
         self.dual_lines = dual_trust(dual_window=self.params.dual_window, dual_period= self.params.dual_period, subplot=False)
     def start(self):
         print("the world call me!")
- 
+
     def prenext(self):
         print("not mature")
- 
+
     def notify_order(self, order):
         if order.status in [order.Submitted, order.Accepted]:
             # Buy/Sell order submitted/accepted to/by broker - Nothing to do
             return
- 
+
         # Check if an order has been completed
         # Attention: broker could reject order if not enougth cash
         if order.status in [order.Completed]:
@@ -147,7 +147,7 @@ class MyStrategy(bt.Strategy):
                     (order.executed.price,
                      order.executed.value,
                      order.executed.comm))
- 
+
                 self.buyprice = order.executed.price
                 self.buycomm = order.executed.comm
             else:  # Sell
@@ -159,22 +159,22 @@ class MyStrategy(bt.Strategy):
                 self.sellcomm = order.executed.comm
 
             self.bar_executed = len(self)
- 
+
         elif order.status in [order.Canceled, order.Margin, order.Rejected]:
             pass
             #self.log('Order Canceled/Margin/Rejected')
- 
+
         self.order = None
- 
+
     def notify_trade(self, trade):
         if not trade.isclosed:
             return
- 
+
         self.log('OPERATION PROFIT, COMM %.2f, GROSS %.2f, NET %.2f \n\n' %
                  (trade.commission, trade.pnl, trade.pnlcomm))
- 
+
     def next(self):
-        
+
         # 9:45 - 15:45
         if self.data.datetime.time() > datetime.time(15, 45) or self.data.datetime.time() < datetime.time(9, 45):
             if self. position.size > 0:
@@ -184,21 +184,21 @@ class MyStrategy(bt.Strategy):
                 self.order = self.buy()
 
             return
-        
+
         if self.order:
             return
- 
+
         # Check if we are in the market
         if not self.position:
 
             if self.dataclose[0] > self.dual_lines.dual_buy_open[0]:
                  self.log('BUY CREATE, %.2f' % self.dataclose[0])
                  self.order = self.buy()
-                 
+
             elif self.dataclose[0] < self.dual_lines.dual_sale_open[0]:
                  self.log('SELL CREATE, %.2f' % self.dataclose[0])
                  self.order = self.sell()
- 
+
         else:
             '''
             > 0 is long (you have taken)
@@ -212,7 +212,7 @@ class MyStrategy(bt.Strategy):
                 if self.params.max_price > self.dual_lines.dual_buy_break[0] and self.dataclose[0] < self.dual_lines.dual_buy_open[0]:
                     self.log('BUY CLOSE HIT, %.2f' % self.dataclose[0])
                     self.order = self.sell()
-                    self.params.max_price = 0 
+                    self.params.max_price = 0
                 # # 移动平仓
                 elif self.dataclose[0] < self.dual_lines.close_resample[0]:
                     self.log('BUY CLOSE MOV, %.2f' % self.dataclose[0])
@@ -233,10 +233,10 @@ class MyStrategy(bt.Strategy):
                     self.order = self.buy()
                     self.params.min_price = 0
 
-            
+
     def stop(self):
         print("death")
- 
+
 if __name__ == '__main__':
     # Create a cerebro entity
     cerebro = bt.Cerebro()
@@ -249,8 +249,9 @@ if __name__ == '__main__':
     dataframe = pd.read_csv('./data/hsi202003.csv', index_col=0, parse_dates=True, usecols=['date', 'open', 'high', 'low', 'close', 'volume'])
     dataframe['openinterest'] = 0
     data = bt.feeds.PandasData(dataname=dataframe,
-                            fromdate = datetime.datetime(2020, 3, 3),
-                            todate = datetime.datetime(2020, 3, 17)
+                            fromdate = datetime.datetime(2020, 4, 3, 9, 45),
+                            todate = datetime.datetime(2020, 4, 3, 10,45)
+                            ) # 年月日, 小时, 分钟, 实盘就传参数吧
                             )
     # Add the Data Feed to Cerebro
     cerebro.adddata(data)
@@ -260,7 +261,7 @@ if __name__ == '__main__':
     cerebro.addsizer(bt.sizers.FixedSize, stake=4)
     # Set the commission
     cerebro.broker.setcommission(
-        commission=30, 
+        commission=30,
         commtype = bt.CommInfoBase.COMM_FIXED, # 固定手续费
         automargin = 5, # 保证金10% , 这里5是因为hsi 指数 一个点50元, 10%保证金, 交易一次30元
         mult = 50  # 利润乘数, hsi 是1个点50
