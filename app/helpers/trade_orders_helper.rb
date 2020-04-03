@@ -194,7 +194,8 @@ module TradeOrdersHelper
     when "hsi_30mins"
       "30 mins"
     end
-    duration = (db_collect == "true" ? "7200" : "72000")
+    today_start = Time.zone.now.change({hour: 9, min: 15})
+    duration = (db_collect == "true" ? "7200" : (Time.zone.now - today_start + 7200).to_i.to_s)
     result = true
     list = nil
     Rails.logger.warn "market_data start: #{Time.zone.now}"
