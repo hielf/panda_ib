@@ -40,4 +40,9 @@ every 1.minute do
   rake "ib:test"
   # runner 'TradersJob.perform_later'
 end
+
+every 1.day, at: '6:00' do
+  command "cat /dev/null > /var/www/panda_ib/current/log/puma.access.log"
+  command "cat /dev/null > /var/www/panda_ib/current/log/puma.error.log"
+end
 #
