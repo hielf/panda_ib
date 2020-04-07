@@ -199,10 +199,10 @@ class MyStrategy(bt.Strategy):
                  self.order = self.buy()
                  trades.append({'order': 'buy', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
-            elif self.dataclose[0] < self.dual_lines.dual_sale_open[0]:
-                 self.log('SELL CREATE, %.2f' % self.dataclose[0])
-                 self.order = self.sell()
-                 trades.append({'order': 'sell', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
+            # elif self.dataclose[0] < self.dual_lines.dual_sale_open[0]:
+            #      self.log('SELL CREATE, %.2f' % self.dataclose[0])
+            #      self.order = self.sell()
+            #      trades.append({'order': 'sell', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
         else:
             '''
@@ -225,6 +225,12 @@ class MyStrategy(bt.Strategy):
                     self.order = self.sell()
                     self.params.max_price = 0
                     trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
+            else:
+                if self.dataclose[0] < self.dual_lines.close_resample[-1]:
+                    self.log('BUY CLOSE MOV, %.2f' % self.dataclose[0])
+                    self.order = self.sell()
+                    self.params.max_price = 0
+                    trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
             if self. position.size < 0 and len(self) >= (self.bar_executed + 4):
                 if self.params.min_price > -self.dataclose[0]:
@@ -237,6 +243,12 @@ class MyStrategy(bt.Strategy):
                     trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
                 # 移动平仓
                 elif self.dataclose[0] > self.dual_lines.close_resample[0]:
+                    self.log('SALE CLOSE MOV, %.2f' % self.dataclose[0])
+                    self.order = self.buy()
+                    self.params.min_price = 0
+                    trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
+            else:
+                if self.dataclose[0] > self.dual_lines.close_resample[-1]:
                     self.log('SALE CLOSE MOV, %.2f' % self.dataclose[0])
                     self.order = self.buy()
                     self.params.min_price = 0
