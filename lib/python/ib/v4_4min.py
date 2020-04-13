@@ -21,7 +21,7 @@ starttime = time.time()
 reg_buy_open = joblib.load('reg_buy_open4.pkl')
 reg_buy_break = joblib.load('reg_buy_break4.pkl')
 reg_sale_open = joblib.load('reg_sale_open4.pkl')
-reg_sale_break = joblib.load('reg_buy_break4.pkl')
+reg_sale_break = joblib.load('reg_sale_break4.pkl')
 
 
 

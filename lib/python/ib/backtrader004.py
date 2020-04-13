@@ -18,7 +18,7 @@ starttime = time.time()
 reg_buy_open = joblib.load('reg_buy_open4.pkl')
 reg_buy_break = joblib.load('reg_buy_break4.pkl')
 reg_sale_open = joblib.load('reg_sale_open4.pkl')
-reg_sale_break = joblib.load('reg_buy_break4.pkl')
+reg_sale_break = joblib.load('reg_sale_break4.pkl')
 
 
 
@@ -246,12 +246,12 @@ if __name__ == '__main__':
     # parase_dates = True是为了读取csv为dataframe的时候能够自动识别datetime格式的字符串，big作为index
     # 注意，这里最后的pandas要符合backtrader的要求的格式
     #dataframe = pd.read_csv('./data/hsi202003.csv', index_col=0, parse_dates=True)
-    dataframe = pd.read_csv('./data/hsi2019.csv', index_col=0, parse_dates=True, usecols=['date', 'open', 'high', 'low', 'close', 'volume'])
+    dataframe = pd.read_csv('./data/hsi202003.csv', index_col=0, parse_dates=True, usecols=['date', 'open', 'high', 'low', 'close', 'volume'])
     dataframe['openinterest'] = 0
     data = bt.feeds.PandasData(dataname=dataframe,
-                            fromdate = datetime.datetime(2019, 1, 1, 9, 45),
+                            fromdate = datetime.datetime(2020, 4, 1, 9, 45),
                             todate = datetime.datetime(2020, 12, 1, 10,15)
-                            )
+                            ) # 年月日, 小时, 分钟, 实盘就传参数吧
     # Add the Data Feed to Cerebro
     cerebro.adddata(data)
     # Set our desired cash start

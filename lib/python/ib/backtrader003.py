@@ -18,7 +18,7 @@ starttime = time.time()
 reg_buy_open = joblib.load('reg_buy_open3.pkl')
 reg_buy_break = joblib.load('reg_buy_break3.pkl')
 reg_sale_open = joblib.load('reg_sale_open3.pkl')
-reg_sale_break = joblib.load('reg_buy_break3.pkl')
+reg_sale_break = joblib.load('reg_sale_break3.pkl')
 
 
 
@@ -214,14 +214,15 @@ class MyStrategy(bt.Strategy):
                         self.log('BUY CLOSE HIT, %.2f' % self.dataclose[0])
                         self.order = self.sell()
                         self.params.max_price = 0 
+                        
                     # # 移动平仓
-                    elif self.dataclose[0] < self.dual_lines.close_resample[0]:
+                    elif self.dataclose[0] < self.dual_lines.close_resample[-1]:
                         self.log('BUY CLOSE MOV, %.2f' % self.dataclose[0])
                         self.order = self.sell()
                         self.params.max_price = 0
                 else:
                     if self.dataclose[0] < self.dual_lines.close_resample[-1]:
-                        self.log('BUY CLOSE MOV, %.2f' % self.dataclose[0])
+                        self.log('BUY CLOSE MOV2, %.2f' % self.dataclose[0])
                         self.order = self.sell()
                         self.params.max_price = 0
 
@@ -234,14 +235,15 @@ class MyStrategy(bt.Strategy):
                         self.log('SALE CLOSE HIT, %.2f' % self.dataclose[0])
                         self.order = self.buy()
                         self.params.min_price = 0
+                        
                     # 移动平仓
-                    elif self.dataclose[0] > self.dual_lines.close_resample[0]:
+                    elif self.dataclose[0] > self.dual_lines.close_resample[-1]:
                         self.log('SALE CLOSE MOV, %.2f' % self.dataclose[0])
                         self.order = self.buy()
                         self.params.min_price = 0
                 else:
                     if self.dataclose[0] > self.dual_lines.close_resample[-1]:
-                        self.log('SALE CLOSE MOV, %.2f' % self.dataclose[0])
+                        self.log('SALE CLOSE MOV2, %.2f' % self.dataclose[0])
                         self.order = self.buy()
                         self.params.min_price = 0
 
@@ -261,7 +263,7 @@ if __name__ == '__main__':
     dataframe = pd.read_csv('./data/hsi202003.csv', index_col=0, parse_dates=True, usecols=['date', 'open', 'high', 'low', 'close', 'volume'])
     dataframe['openinterest'] = 0
     data = bt.feeds.PandasData(dataname=dataframe,
-                            fromdate = datetime.datetime(2019, 1, 1, 9, 45),
+                            fromdate = datetime.datetime(2020, 4, 1, 9, 45),
                             todate = datetime.datetime(2020, 12, 1, 10,15)
                             ) # 年月日, 小时, 分钟, 实盘就传参数吧
     # Add the Data Feed to Cerebro
