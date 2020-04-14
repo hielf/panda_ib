@@ -1,0 +1,27 @@
+clockworkd.clock: No such file or directory - busybox
+WARNING: Use strings for Figaro configuration. 4 was converted to "4".
+I, [2020-04-14T22:50:09.071977 #69831]  INFO -- : Starting clock for 1 events: [ less.frequent.job ]
+I, [2020-04-14T22:50:09.072447 #69831]  INFO -- : Triggering 'less.frequent.job'
+Running less.frequent.job
+I, [2020-04-14T22:51:09.005633 #69831]  INFO -- : Triggering 'less.frequent.job'
+Running less.frequent.job
+D, [2020-04-14T22:51:36.311219 #69831] DEBUG -- : Got TERM signal
+I, [2020-04-14T22:51:36.311382 #69831]  INFO -- : Gracefully shutting down
+clockworkd.clock: No such file or directory - busybox
+WARNING: Use strings for Figaro configuration. 4 was converted to "4".
+API connection failed: CancelledError()
+I, [2020-04-14T22:51:58.112392 #69878]  INFO -- : Starting clock for 2 events: [  less.frequent.job ]
+I, [2020-04-14T22:51:58.113319 #69878]  INFO -- : Triggering 'less.frequent.job'
+Running less.frequent.job
+I, [2020-04-14T22:52:00.005863 #69878]  INFO -- : Triggering ''
+Running 
+I, [2020-04-14T22:52:58.001531 #69878]  INFO -- : Triggering 'less.frequent.job'
+Running less.frequent.job
+I, [2020-04-14T22:53:00.002485 #69878]  INFO -- : Triggering ''
+Running 
+I, [2020-04-14T22:53:58.001631 #69878]  INFO -- : Triggering 'less.frequent.job'
+Running less.frequent.job
+I, [2020-04-14T22:54:00.003337 #69878]  INFO -- : Triggering ''
+Running 
+D, [2020-04-14T22:54:36.574214 #69878] DEBUG -- : Got TERM signal
+I, [2020-04-14T22:54:36.574395 #69878]  INFO -- : Gracefully shutting down

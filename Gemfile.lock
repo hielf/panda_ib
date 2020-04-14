@@ -75,6 +75,9 @@ GEM
       capistrano (~> 3.0)
       sshkit (~> 1.2)
     chronic (0.10.2)
+    clockwork (2.0.4)
+      activesupport
+      tzinfo
     coffee-rails (4.2.2)
       coffee-script (>= 2.2.0)
       railties (>= 4.0.0)
@@ -84,6 +87,7 @@ GEM
     coffee-script-source (1.12.2)
     concurrent-ruby (1.1.5)
     crass (1.0.4)
+    daemons (1.3.1)
     database_cleaner (1.7.0)
     diff-lcs (1.3)
     erubi (1.8.0)
@@ -285,7 +289,9 @@ DEPENDENCIES
   capistrano-rails
   capistrano-rvm
   capistrano3-puma!
+  clockwork
   coffee-rails (~> 4.2)
+  daemons
   database_cleaner
   factory_bot_rails
   figaro

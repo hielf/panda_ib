@@ -54,7 +54,7 @@ CONFIG_ROOT = File.dirname(__FILE__)
       w.stop = "cd #{app_root}/current && RAILS_ENV=production bundle exec pumactl -S /var/www/panda_ib/shared/tmp/pids/puma.state -F /var/www/#{app_name}/shared/puma.rb stop"
       w.pid_file = "#{app_root}/shared/tmp/pids/puma.pid"
 
-      w.log = "#{app_root}/shared/log/god.log"
+      w.log = "#{app_root}/shared/log/rails_app.log"
 
       w.behavior(:clean_pid_file)
 
