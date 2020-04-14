@@ -5,7 +5,7 @@ require 'active_support/time' # Allow numeric durations (eg: 1.minutes)
 
 module Clockwork
   handler do |job|
-    puts "Running #{job}"
+    puts "Running job"
   end
 
   # handler receives the time when job is prepared to run in the 2nd argument
@@ -20,4 +20,4 @@ module Clockwork
 end
 
 # clockworkd -c clock.rb start --log -d /Users/hielf/workspace/projects/panda_ib/lib/job
-# clockworkd -c clock.rb stop  
+# clockworkd -c clock.rb stop

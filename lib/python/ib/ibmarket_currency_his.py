@@ -33,7 +33,7 @@ def get_index_1min(end_date):
             if contract.symbol == 'HSI':
                 tmp_table = 'hsi_tmp'
                 table = 'hsi'
-            bars = ib.reqHistoricalData(contract, endDateTime=end_date, durationStr='10 D', barSizeSetting='1 min', whatToShow='TRADES', useRTH=True)
+            bars = ib.reqHistoricalData(contract, endDateTime=end_date, durationStr='1 D', barSizeSetting='1 min', whatToShow='TRADES', useRTH=True)
         df = util.df(bars)
         print("got bars %s" % str(bars))
         print("got contract %s" % str(contract))
