@@ -25,3 +25,6 @@ I, [2020-04-14T22:54:00.003337 #69878]  INFO -- : Triggering ''
 Running 
 D, [2020-04-14T22:54:36.574214 #69878] DEBUG -- : Got TERM signal
 I, [2020-04-14T22:54:36.574395 #69878]  INFO -- : Gracefully shutting down
+clockworkd.clock: No such file or directory - busybox
+WARNING: Use strings for Figaro configuration. 4 was converted to "4".
+I, [2020-04-15T23:27:22.521012 #53331]  INFO -- : Starting clock for 1 events: [  ]
