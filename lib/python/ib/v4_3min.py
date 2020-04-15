@@ -199,10 +199,10 @@ class MyStrategy(bt.Strategy):
                  self.order = self.buy()
                  trades.append({'order': 'buy', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
-            # elif self.dataclose[0] < self.dual_lines.dual_sale_open[0]:
-            #      self.log('SELL CREATE, %.2f' % self.dataclose[0])
-            #      self.order = self.sell()
-            #      trades.append({'order': 'sell', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
+            elif self.dataclose[0] < self.dual_lines.dual_sale_open[0]:
+                 self.log('SELL CREATE, %.2f' % self.dataclose[0])
+                 self.order = self.sell()
+                 trades.append({'order': 'sell', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
         else:
             '''

@@ -195,9 +195,9 @@ class MyStrategy(bt.Strategy):
                  self.log('BUY CREATE, %.2f' % self.dataclose[0])
                  self.order = self.buy()
                  
-            # elif self.dataclose[0] < self.dual_lines.dual_sale_open[0]:
-            #      self.log('SELL CREATE, %.2f' % self.dataclose[0])
-            #      self.order = self.sell()
+            elif self.dataclose[0] < self.dual_lines.dual_sale_open[0]:
+                 self.log('SELL CREATE, %.2f' % self.dataclose[0])
+                 self.order = self.sell()
  
         else:
             '''
