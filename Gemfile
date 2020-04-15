@@ -63,6 +63,8 @@ group :development do
   gem 'capistrano3-puma', github: "seuros/capistrano-puma", require: false
 end
 
+gem 'listen', '>= 3.0.5', '< 3.2'
+
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 # group :production do
 #   gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
@@ -81,6 +83,5 @@ gem 'ruby-pinyin'
 gem 'business_time'
 # gem 'postgres-copy'
 # gem 'dbf'
-gem 'listen', '~> 3.0'
 gem 'clockwork'
 gem 'daemons'
