@@ -51,7 +51,7 @@ CONFIG_ROOT = File.dirname(__FILE__)
       w.stop = "cd #{app_root}/lib/job && clockworkd -c clock.rb stop"
       w.pid_file = "#{app_root}/lib/job/tmp/clockworkd.clock.pid"
 
-      w.log = "#{app_root}/shared/log/rails_app.log"
+      w.log = "#{app_root}/shared/log/clock.log"
 
       w.behavior(:clean_pid_file)
 
