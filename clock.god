@@ -1,7 +1,7 @@
 CONFIG_ROOT = File.dirname(__FILE__)
 
 ["clock"].each do |app_name|
-
+# cd /var/www/panda_ib/current/lib/job && clockworkd -c clock.rb start --log -d /var/www/panda_ib/current/lib/job
   app_root = "/var/www/panda_ib/current"
 
   def generic_monitoring(w, options = {})
@@ -42,7 +42,7 @@ CONFIG_ROOT = File.dirname(__FILE__)
     end
   end
 
-  ["staging", "production"].each do |env|
+  ["production"].each do |env|
     God.watch do |w|
       w.name = app_name + "-" + env
       w.group = app_name
