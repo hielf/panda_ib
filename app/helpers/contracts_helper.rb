@@ -8,7 +8,7 @@ module ContractsHelper
   def index_to_csv(contract, market_data, with_index, db_collect=ENV['db_collect'])
 
     file = Rails.root.to_s + "/tmp/csv/#{contract}.csv"
-    if db_collect == 'false'
+    if db_collect == 'false' && market_data
       market_data.to_csv(file, sep: ',', encoding: 'utf-8', index: false)
     else
       # contract = "hsi_5mins"
