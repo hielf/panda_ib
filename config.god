@@ -42,7 +42,7 @@ CONFIG_ROOT = File.dirname(__FILE__)
     end
   end
 
-  ["staging", "production"].each do |env|
+  ["production"].each do |env|
     God.watch do |w|
       w.name = app_name + "-" + env
       w.group = app_name
@@ -61,4 +61,22 @@ CONFIG_ROOT = File.dirname(__FILE__)
       generic_monitoring(w, :cpu_limit => 80.percent, :memory_limit => 500.megabytes)
     end
   end
+
+  ["clock"].each do |env|
+    God.watch do |w|
+      w.name = app_name + "-" + env
+      w.group = app_name
+      w.start = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock.rb start --log -d #{app_root}/current/lib/job"
+      w.restart = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock.rb restart --log -d #{app_root}/current/lib/job"
+      w.stop = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock.rb stop"
+      w.pid_file = "#{app_root}/current/lib/job/tmp/clockworkd.clock.pid"
+
+      w.log = "#{app_root}/shared/log/clock.log"
+
+      w.behavior(:clean_pid_file)
+
+      generic_monitoring(w, :cpu_limit => 80.percent, :memory_limit => 500.megabytes)
+    end
+  end
+
 end
