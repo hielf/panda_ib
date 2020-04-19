@@ -199,7 +199,7 @@ module TradeOrdersHelper
     result = true
     list = nil
     Rails.logger.warn "market_data start: #{Time.zone.now}"
-    return false if duration < 0
+    return false if duration.to_i < 0
     begin
       # ib = ib_connect
       # PyCall.exec("from sqlalchemy import create_engine")
