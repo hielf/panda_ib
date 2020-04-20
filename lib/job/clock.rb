@@ -13,7 +13,7 @@ module Clockwork
   #   puts "Running #{job}, at #{time}"
   # end
   every(1.second, (TradersJob.perform_now 'hsi'), :if => lambda { |t| t.sec == 0 })
-  # every(1.minute, 'less.frequent.job')
+  every(1.minute, Rails.logger.warn "clock 1min start: #{Time.now.to_s}")
   # every(1.hour, 'hourly.job')
   #
   # every(1.day, 'midnight.job', :at => '00:00')
