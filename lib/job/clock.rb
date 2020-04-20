@@ -12,7 +12,7 @@ module Clockwork
   # handler do |job, time|
   #   puts "Running #{job}, at #{time}"
   # end
-  every(1.second, (TradersJob.perform_now 'hsi'), :if => lambda { |t| t.sec == 0 })
+  # every(1.second, (TradersJob.perform_now 'hsi'), :if => lambda { |t| t.sec == 0 })
   every(1.minute, (Rails.logger.warn "clock 1min start: #{Time.now.to_s}"))
   # every(1.hour, 'hourly.job')
   #
@@ -21,4 +21,5 @@ end
 
 # cd /var/www/panda_ib/current/lib/job && clockworkd -c clock.rb start --log -d /var/www/panda_ib/current/lib/job
 # clockworkd -c clock.rb start --log -d /Users/hielf/workspace/projects/panda_ib/lib/job
+# clockworkd -c clock.rb start --log -d /var/www/panda_ib/current/lib/job
 # clockworkd -c clock.rb stop
