@@ -2,7 +2,7 @@ CONFIG_ROOT = File.dirname(__FILE__)
 
 ["panda_ib"].each do |app_name|
 
-  app_root = "/var/www/panda_ib"
+  app_root = "/var/www/#{app_name}"
 
   def generic_monitoring(w, options = {})
 
