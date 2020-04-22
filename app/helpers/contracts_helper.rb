@@ -198,9 +198,6 @@ module ContractsHelper
 
   def py_check_position(contract, amount = ENV["amount"])
     order = ""
-    position = ib_positions
-    amount = position["position"].abs if (position && position != {} && !position["position"].nil?)
-    Rails.logger.warn "ib position: #{position}"
 
     csv = Rails.root.to_s + "/tmp/csv/#{contract}.csv"
     json = Rails.root.to_s + "/tmp/#{contract}_trades.json"
@@ -216,7 +213,18 @@ module ContractsHelper
       time_diff = Time.zone.now.beginning_of_minute - data.last["time"].to_time
       Rails.logger.warn "ib check time_diff: #{time_diff}"
       if time_diff.abs <= 60
+        position = ib_positions
+        amount = position["position"].abs if (position && position != {} && !position["position"].nil?)
+        Rails.logger.warn "ib position: #{position}"
         if !position["position"].nil? && data.last["order"].upcase == "CLOSE"
+          order = data.last["order"].upcase
+        end
+        if !position["position"].nil? && position["position"] < 0 && data.last["order"].upcase == "BUY"
+          OrdersJob.perform_now "CLOSE", @amount
+          order = data.last["order"].upcase
+        end
+        if !position["position"].nil? && position["position"] > 0 && data.last["order"].upcase == "SELL"
+          OrdersJob.perform_now "CLOSE", @amount
           order = data.last["order"].upcase
         end
         if position == {}
@@ -225,6 +233,7 @@ module ContractsHelper
       end
     end
     Rails.logger.warn "ib order: #{order == "" ? "NO" : order} #{amount.to_s}"
+    Action.create!(order: order, amount: amount, action_time: data.last["time"].to_time) if order != ""
 
     return order, amount
   end

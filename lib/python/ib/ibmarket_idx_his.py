@@ -17,8 +17,9 @@ contracts = [Index(symbol = "SPX", exchange = "CBOE"), Forex('USDJPY'), Forex('E
 #         barSizeSetting='1 min', whatToShow='TRADES', useRTH=True)
 
 def get_index_1min(end_date):
-    print("start collect %s" % str(end_date))
+    print("start 1min collect %s" % str(end_date))
     for contract in contracts:
+        print(str(contract))
         conn = psycopg2.connect("host='rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com' dbname='panda_quant' user='chesp' password='Chesp92J5' port='3432'")
         cur = conn.cursor()
         if contract.secType == 'CASH':
@@ -50,7 +51,9 @@ def get_index_1min(end_date):
 
 
 def get_index_5min(end_date):
+    print("start 5min collect %s" % str(end_date))
     for contract in contracts:
+        print(str(contract))
         conn = psycopg2.connect("host='rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com' dbname='panda_quant' user='chesp' password='Chesp92J5' port='3432'")
         cur = conn.cursor()
         if contract.secType == 'CASH':
@@ -125,7 +128,7 @@ def get_index_5min(end_date):
 #         s.enter(60, 1, get_index_1min, (date_time,))
 
 if __name__ == '__main__':
-    d1 = datetime.date(2017,1,1)
+    d1 = datetime.date(2017,9,10)
     d2 = datetime.date(2019,4,9)
     diff = d2 - d1
     for i in range(diff.days + 1):

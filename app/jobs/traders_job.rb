@@ -37,11 +37,13 @@ class TradersJob < ApplicationJob
         ApplicationController.helpers.close_position
       end
 
-      if @order != "" && @amount != 0
-        ApplicationController.helpers.ib_order(@order, @amount, 0)
-        ApplicationController.helpers.close_position if @order == "CLOSE"
-        EventLog.create(content: "#{@order} #{@amount.to_s} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}")
-      end
+      OrdersJob.perform_now @order, @amount
+
+      # if @order != "" && @amount != 0
+      #   ApplicationController.helpers.ib_order(@order, @amount, 0)
+      #   ApplicationController.helpers.close_position if @order == "CLOSE"
+      #   EventLog.create(content: "#{@order} #{@amount.to_s} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}")
+      # end
     end
   end
 
