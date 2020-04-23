@@ -35,11 +35,11 @@
 #  command "cd /var/www/panda_ib && god -c config.god"
 # end
 
-every 1.minute do
-  # rake "ib:hsi"
-  rake "ib:test"
-  # runner 'TradersJob.perform_later'
-end
+# every 1.minute do
+#   # rake "ib:hsi"
+#   rake "ib:test"
+#   # runner 'TradersJob.perform_later'
+# end
 
 every 1.day, at: '6:00' do
   command "cat /dev/null > /var/www/panda_ib/current/log/puma.access.log"
