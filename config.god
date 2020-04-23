@@ -1,5 +1,23 @@
 CONFIG_ROOT = File.dirname(__FILE__)
 
+God::Contacts::Email.defaults do |d|
+  d.from_email = 'zishi.mou@ripple-tech.com'
+  d.from_name = 'Process monitoring'
+  d.delivery_method = :smtp
+  d.server_host = 'smtp.ym.163.com'
+  d.server_port = 25
+  d.server_auth = true
+  d.server_domain = 'smtp.ym.163.com'
+  d.server_user = 'zishi.mou@ripple-tech.com'
+  d.server_password = 'myPassword'
+end
+
+God.contact(:email) do |c|
+  c.name = 'me'
+  c.group = 'developers'
+  c.to_email = 'hielf@qq.com'
+end
+
 ["panda_ib"].each do |app_name|
 
   app_root = "/var/www/#{app_name}"
@@ -14,6 +32,7 @@ CONFIG_ROOT = File.dirname(__FILE__)
       start.condition(:process_running) do |c|
         c.interval = 10.seconds
         c.running = false
+        c.notify = {:contacts => ['me'], :priority => 1, :category => 'staging'}
       end
     end
 
@@ -42,41 +61,39 @@ CONFIG_ROOT = File.dirname(__FILE__)
     end
   end
 
-  ["production"].each do |env|
-    God.watch do |w|
-      w.name = app_name + "-" + env
-      w.group = app_name
-      assets = (env == "production") ? "rake assets:precompile --trace RAILS_ENV=production && " : ""
-      # cmd = "/usr/local/rvm/bin/rvm default do bundle exec puma -C /var/www/#{app_name}/shared/puma.rb --daemon"
-      # w.start = "cd #{app_root} && #{assets}puma -e #{env}"
-      w.start = "cd #{app_root}/current && RAILS_ENV=production bundle exec pumactl -S /var/www/panda_ib/shared/tmp/pids/puma.state -F /var/www/#{app_name}/shared/puma.rb start"
-      w.restart = "cd #{app_root}/current && RAILS_ENV=production bundle exec pumactl -S /var/www/panda_ib/shared/tmp/pids/puma.state -F /var/www/#{app_name}/shared/puma.rb restart"
-      w.stop = "cd #{app_root}/current && RAILS_ENV=production bundle exec pumactl -S /var/www/panda_ib/shared/tmp/pids/puma.state -F /var/www/#{app_name}/shared/puma.rb stop"
-      w.pid_file = "#{app_root}/shared/tmp/pids/puma.pid"
+  env_1 = "production"
+  God.watch do |w|
+    w.name = app_name + "-" + env_1
+    w.group = app_name
+    assets = (env_1 == "production") ? "rake assets:precompile --trace RAILS_ENV=production && " : ""
+    # cmd = "/usr/local/rvm/bin/rvm default do bundle exec puma -C /var/www/#{app_name}/shared/puma.rb --daemon"
+    # w.start = "cd #{app_root} && #{assets}puma -e #{env_1}"
+    w.start = "cd #{app_root}/current && RAILS_ENV=production bundle exec pumactl -S /var/www/panda_ib/shared/tmp/pids/puma.state -F /var/www/#{app_name}/shared/puma.rb start"
+    w.restart = "cd #{app_root}/current && RAILS_ENV=production bundle exec pumactl -S /var/www/panda_ib/shared/tmp/pids/puma.state -F /var/www/#{app_name}/shared/puma.rb restart"
+    w.stop = "cd #{app_root}/current && RAILS_ENV=production bundle exec pumactl -S /var/www/panda_ib/shared/tmp/pids/puma.state -F /var/www/#{app_name}/shared/puma.rb stop"
+    w.pid_file = "#{app_root}/shared/tmp/pids/puma.pid"
 
-      w.log = "#{app_root}/shared/log/rails_app.log"
+    w.log = "#{app_root}/shared/log/rails_app.log"
 
-      w.behavior(:clean_pid_file)
+    w.behavior(:clean_pid_file)
 
-      generic_monitoring(w, :cpu_limit => 80.percent, :memory_limit => 500.megabytes)
-    end
+    generic_monitoring(w, :cpu_limit => 80.percent, :memory_limit => 500.megabytes)
   end
 
-  ["clock"].each do |env|
-    God.watch do |w|
-      w.name = app_name + "-" + env
-      w.group = app_name
-      w.start = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock.rb start --log -d #{app_root}/current/lib/job"
-      w.restart = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock.rb restart --log -d #{app_root}/current/lib/job"
-      w.stop = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock.rb stop"
-      w.pid_file = "#{app_root}/current/lib/job/tmp/clockworkd.clock.pid"
+  env_2 = "clock"
+  God.watch do |w|
+    w.name = app_name + "-" + env_2
+    w.group = app_name
+    w.start = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock.rb start --log -d #{app_root}/current/lib/job"
+    w.restart = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock.rb restart --log -d #{app_root}/current/lib/job"
+    w.stop = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock.rb stop"
+    w.pid_file = "#{app_root}/current/lib/job/tmp/clockworkd.clock.pid"
 
-      w.log = "#{app_root}/shared/log/clock.log"
+    w.log = "#{app_root}/shared/log/clock.log"
 
-      w.behavior(:clean_pid_file)
+    w.behavior(:clean_pid_file)
 
-      generic_monitoring(w, :cpu_limit => 80.percent, :memory_limit => 500.megabytes)
-    end
+    generic_monitoring(w, :cpu_limit => 80.percent, :memory_limit => 500.megabytes)
   end
 
 end

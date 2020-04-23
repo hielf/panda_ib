@@ -9,7 +9,7 @@ import datetime
 ib = IB()
 # ib.connect('127.0.0.1', 7496, clientId=100)
 # ib.connect('129.226.51.237', 7497, clientId=101)
-ib.connect(host='129.226.51.237', port=7497, clientId=501, timeout=10, readonly=False)
+ib.connect(host='150.109.148.150', port=7497, clientId=501, timeout=10, readonly=False)
 
 contracts = [Index(symbol = "SPX", exchange = "CBOE"), Forex('USDJPY'), Forex('EURUSD')]
 # contracts = [Index(symbol = "HSI", exchange = "HKFE")]
@@ -128,7 +128,7 @@ def get_index_5min(end_date):
 #         s.enter(60, 1, get_index_1min, (date_time,))
 
 if __name__ == '__main__':
-    d1 = datetime.date(2018,2,14)
+    d1 = datetime.date(2018,3,22)
     d2 = datetime.date(2019,4,9)
     diff = d2 - d1
     for i in range(diff.days + 1):
