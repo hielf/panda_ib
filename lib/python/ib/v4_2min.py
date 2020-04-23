@@ -225,6 +225,20 @@ if __name__ == '__main__':
     # 注意，这里最后的pandas要符合backtrader的要求的格式
     #dataframe = pd.read_csv('./data/hsi202003.csv', index_col=0, parse_dates=True)
     dataframe = pd.read_csv(csv_path, index_col=0, parse_dates=True, usecols=['date', 'open', 'high', 'low', 'close', 'volume'])
+    dataframe= dataframe.resample('1T').agg({'open': 'first',
+                                'high': 'max',
+                                'low': 'min',
+                                'close': 'last', 'volume': 'sum'})
+    dataframe['datetime'] = pd.to_datetime(dataframe.index)
+    dataframe.dropna(inplace=True)
+    #period_data = period_data[['open', 'high', 'hh', 'low', 'll', 'close' ]]
+    dataframe['hh'] = dataframe['high']
+    dataframe['ll'] = dataframe['low']
+    pred_data = dataframe[['open', 'high', 'hh', 'low', 'll', 'close' ]]
+
+    dataframe['dual_buy_open'] = reg_buy_open.predict(pred_data)
+    dataframe['dual_buy_break'] = reg_buy_break.predict(pred_data)
+    dataframe['dual_sale_open'] = reg_sale_open.predict(pred_data)
     dataframe['dual_sale_break'] = reg_sale_break.predict(pred_data)
 
     dataframe['openinterest'] = 0
