@@ -233,7 +233,11 @@ module ContractsHelper
       end
     end
     Rails.logger.warn "ib order: #{order == "" ? "NO" : order} #{amount.to_s}"
-    Action.create!(order: order, amount: amount, action_time: data.last["time"].to_time) if order != ""
+    begin
+      Action.create!(order: order, amount: amount, action_time: data.last["time"].to_time) if order != ""
+    rescue Exception => e
+      Rails.logger.warn "Action create failed: #{e}"
+    end
 
     return order, amount
   end
