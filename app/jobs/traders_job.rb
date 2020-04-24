@@ -26,6 +26,7 @@ class TradersJob < ApplicationJob
           if (Time.zone.now - CSV.read(file).last[0].to_time < 60)
             break
           else
+            Rails.logger.warn "await for 2 seconds.."
             sleep 2
           end
         end
