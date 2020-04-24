@@ -15,6 +15,7 @@ class TradersJob < ApplicationJob
     if @ib.isConnected()
       attempt = 0
       market_data = nil
+      file = nil
 
       if ENV["remote_index"] == "true"
         10.times do
