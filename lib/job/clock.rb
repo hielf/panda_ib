@@ -16,10 +16,10 @@ module Clockwork
   # handler receives the time when job is prepared to run in the 2nd argument
   handler do |job, time|
     puts "Running #{job}, at #{time}"
-    # TradersJob.perform_now 'hsi'
+    TradersJob.perform_now 'hsi'
   end
 
-  every(1.second, 'IB job', :if => lambda { |t| t.min.even? && t.sec == 0 }, :skip_first_run => true)
+  every(1.second, 'IB job', :if => lambda { |t| t.min.even? && t.sec == 0 }, :thread => true)
   # every(1.minute, 'timing', :skip_first_run => true, :thread => true)
   # every(1.hour, 'hourly.job')
   #
