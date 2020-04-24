@@ -212,7 +212,7 @@ module ContractsHelper
       Rails.logger.warn "ib check last data: #{data.last}"
       time_diff = Time.zone.now.beginning_of_minute - data.last["time"].to_time
       Rails.logger.warn "ib check time_diff: #{time_diff}"
-      if time_diff.abs <= 60
+      if time_diff.abs <= 120
         position = ib_positions
         amount = position["position"].abs if (position && position != {} && !position["position"].nil?)
         Rails.logger.warn "ib position: #{position}"
