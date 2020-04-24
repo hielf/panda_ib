@@ -18,8 +18,8 @@ module Clockwork
     puts "Running #{job}, at #{time}"
     TradersJob.perform_now 'hsi'
   end
-  
-  every(1.second, 'IB job', :if => lambda { |t| t.sec == 0 }, :skip_first_run => true, :thread => true)
+
+  every(1.second, 'IB job', :if => lambda { |t| t.sec == 0 }, :skip_first_run => true)
   # every(1.minute, 'timing', :skip_first_run => true, :thread => true)
   # every(1.hour, 'hourly.job')
   #
