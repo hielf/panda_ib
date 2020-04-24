@@ -15,19 +15,34 @@ class TradersJob < ApplicationJob
     if @ib.isConnected()
       attempt = 0
       market_data = nil
-      5.times do
-        attempt += 1
-        market_data = ApplicationController.helpers.market_data(contract)
-        if market_data
-          break
-        else
-          Rails.logger.warn "await for 3 seconds.."
-          sleep 3
-          market_data = ApplicationController.helpers.market_data(contract, true) if attempt == 5
-        end
-      end
 
-      file = ApplicationController.helpers.index_to_csv(contract, market_data, true)
+      if ENV["remote_index"] == "true"
+        10.times do
+          attempt += 1
+          url = "http://#{ENV['remote_index_url']}/csv/hsi.csv"
+          download = open(url)
+          IO.copy_stream(download, Rails.root.to_s + '/tmp/csv/hsi.csv')
+          file = Rails.root.to_s + "/tmp/csv/#{contract}.csv"
+          if (Time.zone.now - CSV.read(file).last[0].to_time < 60)
+            break
+          else
+            sleep 2
+          end
+        end
+      else
+        5.times do
+          attempt += 1
+          market_data = ApplicationController.helpers.market_data(contract)
+          if market_data
+            break
+          else
+            Rails.logger.warn "await for 3 seconds.."
+            sleep 3
+            market_data = ApplicationController.helpers.market_data(contract, true) if attempt == 5
+          end
+        end
+        file = ApplicationController.helpers.index_to_csv(contract, market_data, true)
+      end
 
       current_time = Time.zone.now.strftime('%H:%M')
       if (current_time >= "09:45" && current_time <= "15:45")
