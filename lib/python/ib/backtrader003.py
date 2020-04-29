@@ -206,7 +206,7 @@ class MyStrategy(bt.Strategy):
             < 0 is short (you have given)
             '''
             if self. position.size > 0:
-                if len(self) >= (self.bar_executed + 4):
+                if len(self) >= (self.bar_executed + 3):
                     if self.params.max_price < self.dataclose[0]:
                         self.params.max_price = self.dataclose[0]
                     # 冲高回落
@@ -216,33 +216,34 @@ class MyStrategy(bt.Strategy):
                         self.params.max_price = 0 
                         
                     # # 移动平仓
-                    elif self.dataclose[0] < self.dual_lines.close_resample[-1]:
+                    elif self.dataclose[0] < self.dual_lines.close_resample[-2]:
                         self.log('BUY CLOSE MOV, %.2f' % self.dataclose[0])
                         self.order = self.sell()
                         self.params.max_price = 0
                 else:
-                    if self.dataclose[0] < self.dual_lines.close_resample[-1]:
+                    if self.dataclose[0] < self.dual_lines.close_resample[-2]:
                         self.log('BUY CLOSE MOV2, %.2f' % self.dataclose[0])
                         self.order = self.sell()
                         self.params.max_price = 0
 
             if self. position.size < 0: 
-                if len(self) >= (self.bar_executed + 4):
+                if len(self) >= (self.bar_executed + 3):
                     if self.params.min_price > -self.dataclose[0]:
                         self.params.min_price = -self.dataclose[0]
                     # 冲低回升
+                           
                     if abs(self.params.min_price) < self.dual_lines.dual_sale_break[0] and self.dataclose[0] > self.dual_lines.dual_sale_open[0]:
                         self.log('SALE CLOSE HIT, %.2f' % self.dataclose[0])
                         self.order = self.buy()
                         self.params.min_price = 0
                         
                     # 移动平仓
-                    elif self.dataclose[0] > self.dual_lines.close_resample[-1]:
+                    elif self.dataclose[0] > self.dual_lines.close_resample[-2]:
                         self.log('SALE CLOSE MOV, %.2f' % self.dataclose[0])
                         self.order = self.buy()
                         self.params.min_price = 0
                 else:
-                    if self.dataclose[0] > self.dual_lines.close_resample[-1]:
+                    if self.dataclose[0] > self.dual_lines.close_resample[-2]:
                         self.log('SALE CLOSE MOV2, %.2f' % self.dataclose[0])
                         self.order = self.buy()
                         self.params.min_price = 0
@@ -260,11 +261,11 @@ if __name__ == '__main__':
     # parase_dates = True是为了读取csv为dataframe的时候能够自动识别datetime格式的字符串，big作为index
     # 注意，这里最后的pandas要符合backtrader的要求的格式
     #dataframe = pd.read_csv('./data/hsi202003.csv', index_col=0, parse_dates=True)
-    dataframe = pd.read_csv('./data/hsi202003.csv', index_col=0, parse_dates=True, usecols=['date', 'open', 'high', 'low', 'close', 'volume'])
+    dataframe = pd.read_csv('./data/hsi2020.csv', index_col=0, parse_dates=True, usecols=['date', 'open', 'high', 'low', 'close', 'volume'])
     dataframe['openinterest'] = 0
     data = bt.feeds.PandasData(dataname=dataframe,
-                            fromdate = datetime.datetime(2020, 4, 1, 9, 45),
-                            todate = datetime.datetime(2020, 12, 1, 10,15)
+                            fromdate = datetime.datetime(2020, 1, 1, 9, 45),
+                            todate = datetime.datetime(2020, 3, 20, 10,15)
                             ) # 年月日, 小时, 分钟, 实盘就传参数吧
     # Add the Data Feed to Cerebro
     cerebro.adddata(data)
