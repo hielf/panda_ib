@@ -13,16 +13,14 @@ module Clockwork
   #   config[:thread] = true
   # end
 
-  handler do |job|
-    puts "Running job"
+  # handler receives the time when job is prepared to run in the 2nd argument
+  handler do |job, time|
+    puts "Running #{job}, at #{time}"
+    TradersJob.perform_now 'hsi'
   end
 
-  # handler receives the time when job is prepared to run in the 2nd argument
-  # handler do |job, time|
-  #   puts "Running #{job}, at #{time}"
-  # end
-  # every(1.second, (TradersJob.perform_now 'hsi'), :if => lambda { |t| t.sec == 0 })
-  every(1.minute, (Rails.logger.warn "clock 1min start: #{Time.now.to_s}"), :skip_first_run => true, :thread => true)
+  every(1.second, 'IB job', :if => lambda { |t| t.min.even? && t.sec == 0 }, :thread => true)
+  # every(1.minute, 'timing', :skip_first_run => true, :thread => true)
   # every(1.hour, 'hourly.job')
   #
   # every(1.day, 'midnight.job', :at => '00:00')
