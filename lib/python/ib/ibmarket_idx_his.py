@@ -128,7 +128,7 @@ def get_index_5min(end_date):
 #         s.enter(60, 1, get_index_1min, (date_time,))
 
 if __name__ == '__main__':
-    d1 = datetime.date(2019,6,10)
+    d1 = datetime.date(2020,2,6)
     d2 = datetime.date(2020,4,30)
     diff = d2 - d1
     for i in range(diff.days + 1):
