@@ -233,7 +233,7 @@ module ContractsHelper
         end
       end
     else
-      order = "CLOSE"
+      
     end
     Rails.logger.warn "ib order: #{order == "" ? "NO" : order} #{amount.to_s}"
     begin
