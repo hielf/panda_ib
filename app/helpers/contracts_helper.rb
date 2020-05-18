@@ -198,7 +198,7 @@ module ContractsHelper
 
   def py_check_position(contract, amount = ENV["amount"])
     order = ""
-    position == {}
+    position = {}
     csv = Rails.root.to_s + "/tmp/csv/#{contract}.csv"
     json = Rails.root.to_s + "/tmp/#{contract}_trades.json"
     # begin_date = Time.zone.now < (Time.parse "11:30 am") ? 1.business_day.ago.to_date : Date.today
