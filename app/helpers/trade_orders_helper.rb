@@ -120,6 +120,26 @@ module TradeOrdersHelper
     return data
   end
 
+  def ib_portfolio
+    begin
+      # ib = ib_connect
+      PyCall.exec("pnls = ib.portfolio()")
+      PyCall.exec("list = {}")
+      PyCall.exec("for pnl in pnls:
+          if pnl.contract.symbol == 'HSI':
+            list.update({'position': pnl.position, 'marketPrice': pnl.marketPrice, 'marketValue': pnl.marketValue, 'unrealizedPNL': pnl.unrealizedPNL,  'realizedPNL': pnl.realizedPNL})")
+
+      data = PyCall.eval("list").to_h
+    rescue Exception => e
+      data = false
+      error_message = e
+    # ensure
+    #   ib_disconnect(ib)
+    end
+
+    return data
+  end
+
   def ib_trades
     data = []
     begin

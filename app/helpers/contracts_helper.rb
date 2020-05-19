@@ -239,11 +239,11 @@ module ContractsHelper
     end
 
     # temp for reverse test
-    if order == "BUY"
-      order = "SELL"
-    elsif order == "SELL"
-      order = "BUY"
-    end
+    # if order == "BUY"
+    #   order = "SELL"
+    # elsif order == "SELL"
+    #   order = "BUY"
+    # end
 
     Rails.logger.warn "ib order: #{order == "" ? "NO" : order} #{amount.to_s}"
     begin
