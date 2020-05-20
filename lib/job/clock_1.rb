@@ -16,11 +16,9 @@ module Clockwork
   # handler receives the time when job is prepared to run in the 2nd argument
   handler do |job, time|
     TradersJob.perform_now 'hsi' if job == 'IB trader'
-    RisksJob.perform_now 'hsi' if job == 'IB risk'
   end
 
   every(1.second, 'IB trader', :if => lambda { |t| (t.min.even? if ENV['backtrader_version'] == '2min') && t.sec == 0 }, :thread => true)
-  every(8.second, 'IB risk', :thread => true)
   # every(1.minute, 'timing', :skip_first_run => true, :thread => true)
   # every(1.hour, 'hourly.job')
   #

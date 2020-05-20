@@ -14,7 +14,7 @@ class RisksJob < ApplicationJob
     @ib = ApplicationController.helpers.ib_connect
     if @ib.isConnected()
       data = ApplicationController.helpers.ib_portfolio
-      loss_limit = ENV["total_asset"].to_f * 0.001
+      loss_limit = ENV["total_asset"].to_f * 0.001 * -1
 
       if !data["unrealizedPNL"].nil? && data["unrealizedPNL"] < loss_limit
         Rails.logger.warn "ib risk loss_limit alert: #{data["unrealizedPNL"]}, #{Time.zone.now}"

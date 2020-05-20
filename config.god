@@ -80,16 +80,32 @@ end
     generic_monitoring(w, :cpu_limit => 80.percent, :memory_limit => 500.megabytes)
   end
 
-  env_2 = "clock"
+  env_2 = "clock_1"
   God.watch do |w|
     w.name = app_name + "-" + env_2
     w.group = app_name
-    w.start = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock.rb start --log -d #{app_root}/current/lib/job"
-    w.restart = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock.rb restart --log -d #{app_root}/current/lib/job"
-    w.stop = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock.rb stop"
-    w.pid_file = "#{app_root}/current/lib/job/tmp/clockworkd.clock.pid"
+    w.start = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock_1.rb start --log -d #{app_root}/current/lib/job"
+    w.restart = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock_1.rb restart --log -d #{app_root}/current/lib/job"
+    w.stop = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock_1.rb stop"
+    w.pid_file = "#{app_root}/current/lib/job/tmp/clockworkd.clock_1.pid"
 
-    w.log = "#{app_root}/shared/log/clock.log"
+    w.log = "#{app_root}/shared/log/clock_1.log"
+
+    w.behavior(:clean_pid_file)
+
+    generic_monitoring(w, :cpu_limit => 80.percent, :memory_limit => 500.megabytes)
+  end
+
+  env_2 = "clock_2"
+  God.watch do |w|
+    w.name = app_name + "-" + env_2
+    w.group = app_name
+    w.start = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock_2.rb start --log -d #{app_root}/current/lib/job"
+    w.restart = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock_2.rb restart --log -d #{app_root}/current/lib/job"
+    w.stop = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock_2.rb stop"
+    w.pid_file = "#{app_root}/current/lib/job/tmp/clockworkd.clock_2.pid"
+
+    w.log = "#{app_root}/shared/log/clock_2.log"
 
     w.behavior(:clean_pid_file)
 
