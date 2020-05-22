@@ -9,7 +9,7 @@ import datetime
 ib = IB()
 # ib.connect('127.0.0.1', 7496, clientId=100)
 # ib.connect('129.226.51.237', 7497, clientId=101)
-ib.connect(host='150.109.148.150', port=7497, clientId=501, timeout=10, readonly=False)
+ib.connect(host='150.109.148.150', port=7497, clientId=1001, timeout=10, readonly=False)
 
 contracts = [Index(symbol = "HSI", exchange = "HKFE"), Index(symbol = "SPX", exchange = "CBOE"), Forex('USDJPY'), Forex('EURUSD')]
 # contracts = [Index(symbol = "HSI", exchange = "HKFE")]

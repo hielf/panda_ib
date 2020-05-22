@@ -19,7 +19,7 @@ module TradeOrdersHelper
     ip = ENV['tws_ip'] #PyCall.eval("str('127.0.0.1')")
     port = ENV['tws_port'].to_i
     clientId = ENV['tws_clientid'].to_i #master client id
-    clientId = rand(11..499)
+    clientId = rand(11..19999)
 
     begin
       PyCall.exec("from ib_insync import *")
