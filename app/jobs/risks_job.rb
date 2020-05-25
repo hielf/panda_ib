@@ -28,10 +28,10 @@ class RisksJob < ApplicationJob
       Rails.logger.warn "ib risk position: #{last_trade.action}, open: #{last_trade.price}, close: #{close}, current unrealizedPNL: #{unrealizedPNL}, #{Time.zone.now}" if unrealizedPNL != 0
       loss_limit = ENV["total_asset"].to_f * 0.001 * -1
       if unrealizedPNL < loss_limit
-        Rails.logger.warn "ib risk loss_limit alert: #{unrealizedPNL}, #{Time.zone.now}"
+        Rails.logger.warn "ib risk loss_limit: #{loss_limit} alert: #{unrealizedPNL}, #{Time.zone.now}"
         ApplicationController.helpers.close_position
       end
-      # 
+      #
       #
       #
       # data = ApplicationController.helpers.ib_portfolio
