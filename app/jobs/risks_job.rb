@@ -27,12 +27,9 @@ class RisksJob < ApplicationJob
           unrealizedPNL = -1 * (close - last_trade[:price]) * ENV['amount'].to_i * 50
         end
       end
-      Rails.logger.warn "ib risk position: #{last_trade[:action]}, open: #{last_trade[:price]}, close: #{close}, current unrealizedPNL: #{unrealizedPNL}, #{Time.zone.now}" if unrealizedPNL != 0
+      Rails.logger.warn "ib risk loss_limit: #{loss_limit}, position: #{last_trade[:action]}, open: #{last_trade[:price]}, close: #{close}, unrealizedPNL: #{unrealizedPNL}, #{Time.zone.now}" if unrealizedPNL != 0
 
-      if unrealizedPNL < 0 && unrealizedPNL < loss_limit
-        Rails.logger.warn "ib risk loss_limit: #{loss_limit} alert: #{unrealizedPNL}, #{Time.zone.now}"
-        ApplicationController.helpers.close_position
-      end
+      ApplicationController.helpers.close_position if unrealizedPNL < -1000
     end
   end
 
