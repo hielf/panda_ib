@@ -19,7 +19,7 @@ class RisksJob < ApplicationJob
       last_trade = trades.sort_by { |h| -h[:time] }.reverse.last
       close = market_data.iloc[-1].close
       unrealizedPNL = 0
-      if last_trade.realized_pnl == 0
+      if last_trade[:realized_pnl] == 0
         case last_trade[:action]
         when "BUY"
           unrealizedPNL = (close - last_trade[:price]) * ENV['amount'].to_i * 50
