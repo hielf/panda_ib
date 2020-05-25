@@ -56,6 +56,38 @@ module TradeOrdersHelper
     return status
   end
 
+  def ib_main_contract(contract)
+    main_contract = false
+    begin
+      PyCall.exec("hsi = Future('HSI')")
+      PyCall.exec("cds = ib.reqContractDetails(hsi)")
+      PyCall.exec("contracts = [cd.contract for cd in cds]")
+
+      PyCall.exec("months = []")
+      PyCall.exec("for co in contracts: months.append(co.lastTradeDateOrContractMonth)")
+      PyCall.exec("months.sort()")
+
+      PyCall.exec("import datetime")
+      PyCall.exec("dt = datetime.datetime.now()")
+      PyCall.exec("today = dt.strftime( '%Y%m%d' )")
+      PyCall.exec("last_day = (datetime.datetime.strptime(months[0], '%Y%m%d').date() - datetime.timedelta(days=7)).strftime( '%Y%m%d' )")
+
+      if PyCall.eval("today >= last_day")
+        PyCall.exec("month = months[1]")
+      else
+        PyCall.exec("month = months[0]")
+      end
+      PyCall.exec("hsi = Future(symbol='HSI', lastTradeDateOrContractMonth=month, exchange='HKFE', currency='HKD')")
+      PyCall.exec("contract = ib.reqContractDetails(hsi)[0].contract")
+
+      main_contract = PyCall.eval("contract")
+    rescue Exception => e
+      error_message = e
+    end
+
+    return main_contract
+  end
+
   def ib_order(order_type, amount, price)
 
     # order_type = 'SELL'
@@ -65,25 +97,9 @@ module TradeOrdersHelper
     begin
       # ib = ib_connect
       order_status = false
-      PyCall.exec("hsi = Future('HSI')")
-      PyCall.exec("cds = ib.reqContractDetails(hsi)")
-      PyCall.exec("contracts = [cd.contract for cd in cds]")
 
-      PyCall.exec("months = []")
-      PyCall.exec("for co in contracts: months.append(co.lastTradeDateOrContractMonth)")
-      PyCall.exec("months.sort()")
-
-      PyCall.exec("from datetime import datetime")
-      PyCall.exec("dt = datetime.now()")
-      PyCall.exec("today = dt.strftime( '%Y%m%d' )")
-      if PyCall.eval("today >= months[0]")
-        PyCall.exec("month = months[1]")
-      else
-        PyCall.exec("month = months[0]")
-      end
-      PyCall.exec("hsi = Future(symbol='HSI', lastTradeDateOrContractMonth=month, exchange='HKFE', currency='HKD')")
-      PyCall.exec("contract = ib.reqContractDetails(hsi)[0].contract")
-
+      main_contract = ib_main_contract("hsi")
+      PyCall.exec("contract = #{main_contract}")
       PyCall.exec("order = MarketOrder('#{order_type}', #{amount})")
       PyCall.exec("trade = ib.placeOrder(contract, order)")
       PyCall.exec("trade")
@@ -227,26 +243,8 @@ module TradeOrdersHelper
       # PyCall.exec("import psycopg2")
       # PyCall.exec("import sched, time")
       # if ib.isConnected()
-      PyCall.exec("import datetime")
-      # PyCall.exec("contracts = [Index(symbol = 'HSI', exchange = 'HKFE')]")
-      # PyCall.exec("contract = contracts[0]")
-      PyCall.exec("hsi = Future('HSI')")
-      PyCall.exec("cds = ib.reqContractDetails(hsi)")
-      PyCall.exec("contracts = [cd.contract for cd in cds]")
-
-      PyCall.exec("months = []")
-      PyCall.exec("for co in contracts: months.append(co.lastTradeDateOrContractMonth)")
-
-      PyCall.exec("months.sort()")
-      PyCall.exec("dt = datetime.datetime.now()")
-      PyCall.exec("today = dt.strftime( '%Y%m%d' )")
-      if PyCall.eval("today >= months[0]")
-        PyCall.exec("month = months[1]")
-      else
-        PyCall.exec("month = months[0]")
-      end
-      PyCall.exec("hsi = Future(symbol='HSI', lastTradeDateOrContractMonth=month, exchange='HKFE', currency='HKD')")
-      PyCall.exec("contract = ib.reqContractDetails(hsi)[0].contract")
+      main_contract = ib_main_contract(contract)
+      PyCall.exec("contract = #{main_contract}")
       PyCall.exec("bars = ib.reqHistoricalData(contract, endDateTime='', durationStr='#{duration} S', barSizeSetting='#{bar_size}', whatToShow='TRADES', useRTH=True, keepUpToDate=True)")
       # PyCall.exec("tmp_table = '#{contract}' + '_tmp'")
       # PyCall.exec("table = '#{contract}'")

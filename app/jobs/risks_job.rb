@@ -9,8 +9,7 @@ class RisksJob < ApplicationJob
 
   def perform(*args)
     contract = args[0]
-    # sleep 15
-    Rails.logger.warn "ib risk start: #{contract}, #{Time.zone.now}"
+
     @ib = ApplicationController.helpers.ib_connect
     if @ib.isConnected()
       loss_limit = ENV["total_asset"].to_f * 0.001 * -1
@@ -29,7 +28,9 @@ class RisksJob < ApplicationJob
       end
       Rails.logger.warn "ib risk loss_limit: #{loss_limit}, position: #{last_trade[:action]}, open: #{last_trade[:price]}, close: #{close}, unrealized_pnl: #{unrealized_pnl}, #{Time.zone.now}" if unrealized_pnl != 0
 
-      ApplicationController.helpers.close_position if unrealized_pnl.to_f < loss_limit
+      if unrealized_pnl < loss_limit
+        ApplicationController.helpers.close_position
+      end
     end
   end
 
