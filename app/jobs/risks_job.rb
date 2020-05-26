@@ -16,20 +16,22 @@ class RisksJob < ApplicationJob
       market_data = ApplicationController.helpers.market_data(contract, true)
       trades = ApplicationController.helpers.ib_trades
       last_trade = trades.sort_by { |h| -h[:time] }.reverse.last
-      close = market_data.iloc[-1].close
-      unrealized_pnl = 0
-      if !last_trade[:realized_pnl].nil? && last_trade[:realized_pnl] == 0
-        case last_trade[:action]
-        when "BUY"
-          unrealized_pnl = (close - last_trade[:price]) * ENV['amount'].to_i * 50
-        when "SELL"
-          unrealized_pnl = -1 * (close - last_trade[:price]) * ENV['amount'].to_i * 50
+      if last_trade
+        close = market_data.iloc[-1].close
+        unrealized_pnl = 0
+        if last_trade[:realized_pnl] == 0
+          case last_trade[:action]
+          when "BUY"
+            unrealized_pnl = (close - last_trade[:price]) * ENV['amount'].to_i * 50
+          when "SELL"
+            unrealized_pnl = -1 * (close - last_trade[:price]) * ENV['amount'].to_i * 50
+          end
         end
-      end
-      Rails.logger.warn "ib risk loss_limit: #{loss_limit}, position: #{last_trade[:action]}, open: #{last_trade[:price]}, close: #{close}, unrealized_pnl: #{unrealized_pnl}, #{Time.zone.now}" if unrealized_pnl != 0
+        Rails.logger.warn "ib risk loss_limit: #{loss_limit}, position: #{last_trade[:action]}, open: #{last_trade[:price]}, close: #{close}, unrealized_pnl: #{unrealized_pnl}, #{Time.zone.now}" if unrealized_pnl != 0
 
-      if unrealized_pnl < loss_limit
-        ApplicationController.helpers.close_position
+        if unrealized_pnl < loss_limit
+          ApplicationController.helpers.close_position
+        end
       end
     end
   end
