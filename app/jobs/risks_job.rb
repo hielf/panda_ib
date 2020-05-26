@@ -29,7 +29,7 @@ class RisksJob < ApplicationJob
         end
         Rails.logger.warn "ib risk loss_limit: #{loss_limit}, position: #{last_trade[:action]}, open: #{last_trade[:price]}, close: #{close}, unrealized_pnl: #{unrealized_pnl}, #{Time.zone.now}" if unrealized_pnl != 0
 
-        if unrealized_pnl < loss_limit
+        if unrealized_pnl.to_f < loss_limit.to_f
           ApplicationController.helpers.close_position
         end
       end
