@@ -49,7 +49,7 @@ class TradersJob < ApplicationJob
       current_time = Time.zone.now.strftime('%H:%M')
       if (current_time >= "09:45" && current_time <= "15:45")
         if ENV['backtrader_version'] == '2min'
-          @order, @amount = ApplicationController.helpers.py_check_position(contract) if (file && current_time.min.even?)
+          @order, @amount = ApplicationController.helpers.py_check_position(contract) if (file && Time.now.min.even?)
         else
           @order, @amount = ApplicationController.helpers.py_check_position(contract) if file
         end
