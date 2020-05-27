@@ -16,7 +16,7 @@ class RisksJob < ApplicationJob
       market_data = ApplicationController.helpers.market_data(contract, true)
       trades = ApplicationController.helpers.ib_trades
       last_trade = trades.sort_by { |h| -h[:time] }.reverse.last
-      if last_trade
+      if last_trade && market_data
         close = market_data.iloc[-1].close
         unrealized_pnl = 0
         if last_trade[:realized_pnl] == 0
