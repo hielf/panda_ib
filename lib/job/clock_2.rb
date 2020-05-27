@@ -18,7 +18,7 @@ module Clockwork
     RisksJob.perform_now 'hsi' if job == 'IB risk'
   end
 
-  every(12.second, 'IB risk', :thread => false)
+  every(12.second, 'IB risk', :if => lambda { |t| t.sec >= 24 }, :thread => true)
   # every(1.minute, 'timing', :skip_first_run => true, :thread => true)
   # every(1.hour, 'hourly.job')
   #
