@@ -55,6 +55,15 @@ class TradersJob < ApplicationJob
         end
         Rails.logger.warn "ib py_check_position: #{@order} #{@amount.to_s}, #{Time.zone.now}"
 
+        elr = EventLog.where("log_type = ? AND created_at > ?", "RISK", 60.seconds.ago).last
+        if elr
+          elo = EventLog.where("log_type = ? AND created_at > ?", "ORDER", 120.seconds.ago).last
+          if elo && elo.order_type == @order
+            Rails.logger.warn "ib return for last RISK CLOSE: #{@order}, #{Time.zone.now}"
+            return
+          end
+        end
+
         OrdersJob.perform_now @order, @amount
 
       elsif (current_time > "09:15" && current_time < "09:45") || (current_time > "15:45" && current_time < "16:30")

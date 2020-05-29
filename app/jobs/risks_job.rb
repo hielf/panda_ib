@@ -47,7 +47,7 @@ class RisksJob < ApplicationJob
             if pnls[0] < pnls[1] && pnls[1] < pnls[2]
               ApplicationController.helpers.close_position
               begin
-                EventLog.create(content: "RISK CLOSE #{@order} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}")
+                EventLog.create(log_type: "RISK", order_type: @order, content: "RISK CLOSE #{@order} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}")
               rescue Exception => e
                 Rails.logger.warn "EventLog create error: #{e}"
               end
@@ -57,7 +57,7 @@ class RisksJob < ApplicationJob
           if unrealized_pnl.to_f < loss_limit.to_f
             ApplicationController.helpers.close_position
             begin
-              EventLog.create(content: "RISK CLOSE #{@order} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}")
+              EventLog.create(log_type: "RISK", order_type: @order, content: "RISK CLOSE #{@order} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}")
             rescue Exception => e
               Rails.logger.warn "EventLog create error: #{e}"
             end
