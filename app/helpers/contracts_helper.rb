@@ -335,7 +335,7 @@ module ContractsHelper
       ib_order(order, amount, 0)
     end
 
-    return {"order": order, "amount": amount}
+    return order, amount
   end
 
   def trades_to_csv(contract)

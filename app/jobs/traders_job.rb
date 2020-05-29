@@ -54,11 +54,14 @@ class TradersJob < ApplicationJob
           @order, @amount = ApplicationController.helpers.py_check_position(contract) if file
         end
         Rails.logger.warn "ib py_check_position: #{@order} #{@amount.to_s}, #{Time.zone.now}"
-      else
-        ApplicationController.helpers.close_position
-      end
 
-      OrdersJob.perform_now @order, @amount
+        OrdersJob.perform_now @order, @amount
+
+      elsif (current_time > "09:15" && current_time < "09:45") || (current_time > "15:45" && current_time < "16:30")
+        ApplicationController.helpers.close_position
+      else
+        return
+      end
 
       # if @order != "" && @amount != 0
       #   ApplicationController.helpers.ib_order(@order, @amount, 0)

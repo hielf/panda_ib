@@ -19,6 +19,7 @@ class RisksJob < ApplicationJob
         trades = ApplicationController.helpers.ib_trades
         last_trade = trades.sort_by { |h| -h[:time] }.reverse.last
         @profit_losses = ProfitLoss.latest(4)
+        @order = last_trade[:action]
 
         if last_trade && market_data
           close = market_data.iloc[-1].close
@@ -31,6 +32,13 @@ class RisksJob < ApplicationJob
               unrealized_pnl = -1 * (close - last_trade[:price]) * ENV['amount'].to_i * 50
             end
           end
+
+          begin
+            ProfitLoss.create(open: last_trade[:price], close: close, unrealized_pnl: unrealized_pnl)
+          rescue Exception => e
+            Rails.logger.warn "profit_losses create error: #{e}"
+          end
+
           Rails.logger.warn "ib risk loss_limit: #{loss_limit}, position: #{last_trade[:action]}, open: #{last_trade[:price]}, close: #{close}, unrealized_pnl: #{unrealized_pnl}, #{Time.zone.now}" if unrealized_pnl != 0
 
           pnls = @profit_losses.to_a.map{|pr| pr.unrealized_pnl}
@@ -38,13 +46,23 @@ class RisksJob < ApplicationJob
           if pnls.length >= 3
             if pnls[0] < pnls[1] && pnls[1] < pnls[2]
               ApplicationController.helpers.close_position
+              begin
+                EventLog.create(content: "RISK CLOSE #{@order} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}")
+              rescue Exception => e
+                Rails.logger.warn "EventLog create error: #{e}"
+              end
             end
           end
 
           if unrealized_pnl.to_f < loss_limit.to_f
             ApplicationController.helpers.close_position
+            begin
+              EventLog.create(content: "RISK CLOSE #{@order} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}")
+            rescue Exception => e
+              Rails.logger.warn "EventLog create error: #{e}"
+            end
           end
-          
+
         end
       end
     end
