@@ -34,7 +34,7 @@ class RisksJob < ApplicationJob
           end
 
           begin
-            ProfitLoss.create(open: last_trade[:price], close: close, unrealized_pnl: unrealized_pnl)
+            ProfitLoss.create(open: last_trade[:price], close: close, unrealized_pnl: unrealized_pnl) if unrealized_pnl != 0
           rescue Exception => e
             Rails.logger.warn "profit_losses create error: #{e}"
           end
@@ -44,7 +44,7 @@ class RisksJob < ApplicationJob
           pnls = @profit_losses.to_a.map{|pr| pr.unrealized_pnl}
 
           if pnls.length >= 3
-            if pnls[0] < pnls[1] && pnls[1] < pnls[2]
+            if pnls[0] > 0 && pnls[0] < pnls[1] && pnls[1] < pnls[2]
               ApplicationController.helpers.close_position
               begin
                 EventLog.create(log_type: "RISK", order_type: @order, content: "RISK CLOSE #{@order} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}")
