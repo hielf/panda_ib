@@ -16,10 +16,12 @@ class RisksJob < ApplicationJob
       if @ib.isConnected()
         loss_limit = ENV["total_asset"].to_f * 0.001 * -1
         market_data = ApplicationController.helpers.market_data(contract, true)
-        trades = ApplicationController.helpers.ib_trades
-        last_trade = trades.sort_by { |h| -h[:time] }.reverse.last
-        @profit_losses = ProfitLoss.latest(4)
+        last_trade
         @order = last_trade[:action]
+
+        if last_trade.nil?
+          ProfitLoss.where(current: true).update_all(current: false)
+        end
 
         if last_trade && market_data
           close = market_data.iloc[-1].close
@@ -41,6 +43,7 @@ class RisksJob < ApplicationJob
 
           Rails.logger.warn "ib risk loss_limit: #{loss_limit}, position: #{last_trade[:action]}, open: #{last_trade[:price]}, close: #{close}, unrealized_pnl: #{unrealized_pnl}, #{Time.zone.now}" if unrealized_pnl != 0
 
+          @profit_losses = ProfitLoss.latest(4)
           pnls = @profit_losses.to_a.map{|pr| pr.unrealized_pnl}
 
           if unrealized_pnl.to_f < loss_limit.to_f
@@ -73,7 +76,7 @@ class RisksJob < ApplicationJob
     ApplicationController.helpers.ib_disconnect(@ib)
 
     begin
-      if @profit_losses.count == 4
+      if @profit_losses && @profit_losses.count == 4
         @profit_losses.last.update(current: false)
       end
     rescue Exception => e
