@@ -338,10 +338,19 @@ module ContractsHelper
     return order, amount
   end
 
-  def trades_to_csv(contract)
+  def trades_to_csv(contract, duration)
     # contract = "hsi_5mins"
-
-    json = Trade.all.as_json
+    json = []
+    case duration
+    when "day"
+      json = Trade.where("time >= ?", DateTime.now.beginning_of_day).as_json
+    when "week"
+      json = Trade.where("time >= ?", DateTime.now.beginning_of_week).as_json
+    when "month"
+      json = Trade.where("time >= ?", DateTime.now.beginning_of_month).as_json
+    else
+      json = Trade.all.as_json
+    end
     # csv = CSV.generate(headers: false) { |csv| json.map(&:to_a).each { |row| csv << row } }
 
     file = Rails.root.to_s + "/tmp/csv/trades_#{contract}.csv"

@@ -60,8 +60,9 @@ class Api::TradeOrdersController < Api::ApplicationController
 
   def trades_data
     if request.format.csv?
+      duration = params[:duration]
       contract = "hsi"
-      trades_to_csv(contract)
+      trades_to_csv(contract, duration)
       file = Rails.root.to_s + "/tmp/csv/trades_#{contract}.csv"
       send_data(File.read(file), type: "application/csv", disposition:  "attachment", filename: "trades_#{contract}.csv")
     else

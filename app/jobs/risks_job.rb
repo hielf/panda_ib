@@ -11,6 +11,7 @@ class RisksJob < ApplicationJob
     contract = args[0]
 
     current_time = Time.zone.now.strftime('%H:%M')
+    @order = ""
     if (current_time > "09:45" && current_time < "12:00") || (current_time > "13:00" && current_time < "15:45")
       @ib = ApplicationController.helpers.ib_connect
       if @ib.isConnected()
@@ -18,13 +19,13 @@ class RisksJob < ApplicationJob
         market_data = ApplicationController.helpers.market_data(contract, true)
         trades = ApplicationController.helpers.ib_trades
         last_trade = trades.sort_by { |h| -h[:time] }.reverse.last
-        @order = last_trade[:action]
 
         if last_trade.nil?
           ProfitLoss.where(current: true).update_all(current: false)
         end
 
         if last_trade && market_data
+          @order = last_trade[:action]
           close = market_data.iloc[-1].close
           unrealized_pnl = 0
           if last_trade[:realized_pnl] == 0
@@ -74,7 +75,7 @@ class RisksJob < ApplicationJob
 
   private
   def around_check
-    ApplicationController.helpers.ib_disconnect(@ib)
+    ApplicationController.helpers.ib_disconnect(@ib) if @ib
 
     begin
       if @profit_losses && @profit_losses.count == 4
