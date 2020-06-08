@@ -48,8 +48,8 @@ class dual_trust(bt.Indicator):
         # 最低价
         period_data['low'] = df2['low'].resample(period).min()
 
-        period_data['hh'] = period_data['high'].rolling(2).max()
-        period_data['ll'] = period_data['low'].rolling(2).min()
+        period_data['hh'] = period_data['high'].rolling(1).max()
+        period_data['ll'] = period_data['low'].rolling(1).min()
 
         period_data = period_data[['open', 'high', 'hh', 'low', 'll', 'close' ]]
 
