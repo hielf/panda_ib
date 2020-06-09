@@ -12,8 +12,8 @@ ib = IB()
 ib.connect(host='129.226.51.237', port=7497, clientId=1, timeout=10, readonly=False)
 
 contracts = [Index(symbol = "HSI", exchange = "HKFE"), Index(symbol = "SPX", exchange = "CBOE"), Forex('USDJPY'), Forex('EURUSD')]
-contracts = [Index(symbol = "HSI", exchange = "HKFE")]
 # contracts = [Index(symbol = "HSI", exchange = "HKFE")]
+
 # bars = ib.reqHistoricalData(contract, endDateTime='', durationStr='1 D',
 #         barSizeSetting='1 min', whatToShow='TRADES', useRTH=True)
 
@@ -196,11 +196,11 @@ def get_index_5min(end_date):
 
 if __name__ == '__main__':
     d1 = datetime.date(2020,5,27)
-    d2 = datetime.date(2020,6,9)
+    d2 = datetime.date(2020,6,8)
     diff = d2 - d1
     for i in range(diff.days + 1):
         end_date = (d1 + datetime.timedelta(i))
         get_index_1min(end_date)
         get_index_5min(end_date)
-        get_index_15sec(end_date)
-        get_index_30sec(end_date)
+        # get_index_15sec(end_date)
+        # get_index_30sec(end_date)

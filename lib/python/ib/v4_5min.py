@@ -120,7 +120,7 @@ class MyStrategy(bt.Strategy):
     def next(self):
 
         # 9:45 - 15:45
-        if self.data.datetime.time() > datetime.time(15, 45) or self.data.datetime.time() < datetime.time(9, 45):
+        if self.data.datetime.time() > datetime.time(16, 25) or self.data.datetime.time() < datetime.time(9, 20):
             if self. position.size > 0:
                 self.order = self.sell()
 
@@ -243,10 +243,10 @@ if __name__ == '__main__':
     dataframe['dual_sale_open'] = reg_sale_open.predict(pred_data)
     dataframe['dual_sale_break'] = reg_sale_break.predict(pred_data)
     dataframe['openinterest'] = 0
-    data = bt.feeds.PandasData(dataname=dataframe,
-                            fromdate = begin_time,
-                            todate = end_time
-                            )
+    data=PandasData(    dataname=dataframe,
+                                fromdate = begin_time,
+                                todate = end_time
+    )
     # Add the Data Feed to Cerebro
     cerebro.adddata(data)
     # Set our desired cash start
