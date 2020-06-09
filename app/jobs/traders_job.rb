@@ -9,6 +9,7 @@ class TradersJob < ApplicationJob
 
   def perform(*args)
     contract = args[0]
+    run_time = Time.zone.now
     # sleep 15
     Rails.logger.warn "ib job start: #{contract}, #{Time.zone.now}"
     @ib = ApplicationController.helpers.ib_connect
@@ -24,7 +25,7 @@ class TradersJob < ApplicationJob
           download = open(url)
           IO.copy_stream(download, Rails.root.to_s + '/tmp/csv/hsi.csv')
           file = Rails.root.to_s + "/tmp/csv/#{contract}.csv"
-          if (Time.zone.now - CSV.read(file).last[0].to_time < 60)
+          if (run_time - CSV.read(file).last[0].to_time < 60)
             break
           else
             Rails.logger.warn "await for 2 seconds.."
@@ -46,7 +47,7 @@ class TradersJob < ApplicationJob
         file = ApplicationController.helpers.index_to_csv(contract, market_data, true)
       end
 
-      current_time = Time.zone.now.strftime('%H:%M')
+      current_time = run_time.strftime('%H:%M')
       if (current_time >= "09:45" && current_time <= "15:45")
         if ENV['backtrader_version'] == '2min'
           @order, @amount = ApplicationController.helpers.py_check_position(contract) if (file && Time.now.min.even?)
