@@ -1,4 +1,11 @@
 GIT
+  remote: https://github.com/77agency/capistrano-god.git
+  revision: 66c322d4b57bb314daeaa449f9ff6a00bcdc69b0
+  specs:
+    capistrano-god (0.0.1)
+      capistrano (~> 3.1, >= 3.1.0)
+
+GIT
   remote: https://github.com/seuros/capistrano-puma.git
   revision: 87bfd747bd43a19b5d214e0272b76fb723cf1f5f
   specs:
@@ -286,6 +293,7 @@ DEPENDENCIES
   byebug
   capistrano
   capistrano-bundler
+  capistrano-god!
   capistrano-rails
   capistrano-rvm
   capistrano3-puma!
