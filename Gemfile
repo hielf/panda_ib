@@ -61,7 +61,7 @@ group :development do
   gem 'capistrano-rails', require: false
   gem 'capistrano-bundler', require: false
   gem 'capistrano3-puma', github: "seuros/capistrano-puma", require: false
-  gem 'capistrano-god', github: "77agency/capistrano-god", require: false
+  # gem 'capistrano-god', github: "77agency/capistrano-god", require: false
 end
 
 gem 'listen', '>= 3.0.5', '< 3.2'
