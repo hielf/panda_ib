@@ -16,7 +16,7 @@ class RisksJob < ApplicationJob
       @ib = ApplicationController.helpers.ib_connect
       if @ib.isConnected()
         loss_limit = ENV["total_asset"].to_f * 0.001 * -1
-        market_data = ApplicationController.helpers.market_data(contract, true)
+        @market_data = ApplicationController.helpers.market_data(contract, true)
         trades = ApplicationController.helpers.ib_trades
         last_trade = trades.sort_by { |h| -h[:time] }.reverse.last
 
@@ -24,9 +24,9 @@ class RisksJob < ApplicationJob
           ProfitLoss.where(current: true).update_all(current: false)
         end
 
-        if last_trade && market_data
+        if last_trade && @market_data
           @order = last_trade[:action]
-          close = market_data.iloc[-1].close
+          close = @market_data.iloc[-1].close
           unrealized_pnl = 0
           if last_trade[:realized_pnl] == 0
             case last_trade[:action]
@@ -76,7 +76,7 @@ class RisksJob < ApplicationJob
   private
   def around_check
     ApplicationController.helpers.ib_disconnect(@ib) if @ib
-
+    file = ApplicationController.helpers.index_to_csv(contract, @market_data, true) if @market_data
     begin
       if @profit_losses && @profit_losses.count == 4
         @profit_losses.last.update(current: false)
