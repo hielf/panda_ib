@@ -10,7 +10,6 @@ class TradersJob < ApplicationJob
   def perform(*args)
     contract = args[0]
     run_time = Time.zone.now
-    # sleep 15
     Rails.logger.warn "ib job start: #{contract}, #{Time.zone.now}"
     @ib = ApplicationController.helpers.ib_connect
     if @ib.isConnected()
