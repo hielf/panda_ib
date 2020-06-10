@@ -75,6 +75,14 @@ namespace :puma do
 end
 
 namespace :deploy do
+  desc "stops god"
+  task :stop_god do
+    on roles(:app) do
+      execute "sudo -H -u deploy /bin/bash -l -c 'god stop'"
+    end
+  end
+  before 'deploy', 'deploy:stop_god'
+
   desc "Make sure local git is in sync with remote."
   task :check_revision do
     on roles(:app) do
@@ -162,4 +170,4 @@ namespace :god do
   end
 end
 
-# after "deploy:finished", "god:restart"
+after "deploy:finished", "god:restart"
