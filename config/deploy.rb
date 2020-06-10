@@ -115,7 +115,7 @@ namespace :god do
 
   # Must be executed within SSHKit context
   def config_file
-    "#{shared_path}/config/config.god"
+    "#{release_path}/config.god"
   end
 
   # Must be executed within SSHKit context
@@ -125,8 +125,8 @@ namespace :god do
 
   desc "Start god and his processes"
   task :start do
-    on roles(:web) do
-      within "#{shared_path}/config" do
+    on roles(:app) do
+      within release_path do
         with RAILS_ENV: fetch(:rails_env) do
           start_god
         end
@@ -136,8 +136,8 @@ namespace :god do
 
   desc "Terminate god and his processes"
   task :stop do
-    on roles(:web) do
-      within "#{shared_path}/config" do
+    on roles(:app) do
+      within release_path do
         if god_is_running
           execute :bundle, "exec god terminate"
         end
@@ -147,8 +147,8 @@ namespace :god do
 
   desc "Restart god's child processes"
   task :restart do
-    on roles(:web) do
-      within "#{shared_path}/config" do
+    on roles(:app) do
+      within release_path do
         with RAILS_ENV: fetch(:rails_env) do
           if god_is_running
             execute :bundle, "exec god load #{config_file}"
@@ -162,4 +162,4 @@ namespace :god do
   end
 end
 
-after "deploy:updated", "god:restart"
+# after "deploy:finished", "god:restart"

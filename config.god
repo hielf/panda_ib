@@ -65,12 +65,12 @@ end
   God.watch do |w|
     w.name = app_name + "-" + env_1
     w.group = app_name
-    assets = (env_1 == "production") ? "rake assets:precompile --trace RAILS_ENV=production && " : ""
+    # assets = (env_1 == "production") ? "rake assets:precompile --trace RAILS_ENV=production && " : ""
     # cmd = "/usr/local/rvm/bin/rvm default do bundle exec puma -C /var/www/#{app_name}/shared/puma.rb --daemon"
     # w.start = "cd #{app_root} && #{assets}puma -e #{env_1}"
-    w.start = "cd #{app_root}/current && RAILS_ENV=production bundle exec pumactl -S /var/www/panda_ib/shared/tmp/pids/puma.state -F /var/www/#{app_name}/shared/puma.rb start"
-    w.restart = "cd #{app_root}/current && RAILS_ENV=production bundle exec pumactl -S /var/www/panda_ib/shared/tmp/pids/puma.state -F /var/www/#{app_name}/shared/puma.rb restart"
-    w.stop = "cd #{app_root}/current && RAILS_ENV=production bundle exec pumactl -S /var/www/panda_ib/shared/tmp/pids/puma.state -F /var/www/#{app_name}/shared/puma.rb stop"
+    w.start = "cd #{app_root}/current && RAILS_ENV=production bundle exec pumactl -S #{app_root}/shared/tmp/pids/puma.state -F #{app_root}/shared/puma.rb start"
+    w.restart = "cd #{app_root}/current && RAILS_ENV=production bundle exec pumactl -S #{app_root}/shared/tmp/pids/puma.state -F #{app_root}/shared/puma.rb restart"
+    w.stop = "cd #{app_root}/current && RAILS_ENV=production bundle exec pumactl -S #{app_root}/shared/tmp/pids/puma.state -F #{app_root}/shared/puma.rb stop"
     w.pid_file = "#{app_root}/shared/tmp/pids/puma.pid"
 
     w.log = "#{app_root}/shared/log/rails_app.log"
