@@ -16,7 +16,7 @@ class RisksJob < ApplicationJob
       @ib = ApplicationController.helpers.ib_connect
       if @ib.isConnected()
         loss_limit = ENV["total_asset"].to_f * 0.001 * -1
-        @market_data = ApplicationController.helpers.market_data(@contract, true)
+        @market_data = ApplicationController.helpers.market_data(@contract, true) unless ENV["remote_index"] == "true"
         trades = ApplicationController.helpers.ib_trades
         last_trade = trades.sort_by { |h| -h[:time] }.reverse.last
 
