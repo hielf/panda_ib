@@ -27,7 +27,7 @@ set :deploy_to, "/var/www/#{fetch(:application)}"
 # set :pty, true
 
 # Default value for :linked_files is []
-append :linked_files, "config/database.yml", "config/secrets.yml", "config/application.yml", "tmp/hsi_trades.json"
+append :linked_files, "config/database.yml", "config/secrets.yml", "config/application.yml", "tmp/hsi_trades.json", "config/config.god"
 
 # Default value for linked_dirs is []
 append :linked_dirs, "log", "tmp/pids", "tmp/cache", "tmp/sockets", 'tmp/image', "tmp/csv"
@@ -115,7 +115,7 @@ namespace :god do
 
   # Must be executed within SSHKit context
   def config_file
-    "#{release_path}/config.god"
+    "#{shared_path}/config/config.god"
   end
 
   # Must be executed within SSHKit context
@@ -126,7 +126,7 @@ namespace :god do
   desc "Start god and his processes"
   task :start do
     on roles(:web) do
-      within release_path do
+      within "#{shared_path}/config" do
         with RAILS_ENV: fetch(:rails_env) do
           start_god
         end
@@ -137,7 +137,7 @@ namespace :god do
   desc "Terminate god and his processes"
   task :stop do
     on roles(:web) do
-      within release_path do
+      within "#{shared_path}/config" do
         if god_is_running
           execute :bundle, "exec god terminate"
         end
@@ -148,7 +148,7 @@ namespace :god do
   desc "Restart god's child processes"
   task :restart do
     on roles(:web) do
-      within release_path do
+      within "#{shared_path}/config" do
         with RAILS_ENV: fetch(:rails_env) do
           if god_is_running
             execute :bundle, "exec god load #{config_file}"
