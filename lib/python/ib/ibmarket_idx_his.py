@@ -11,34 +11,34 @@ ib = IB()
 # ib.connect('129.226.51.237', 7497, clientId=101)
 ib.connect(host='129.226.51.237', port=7497, clientId=1, timeout=10, readonly=False)
 
-contracts = [Index(symbol = "HSI", exchange = "HKFE"), Index(symbol = "SPX", exchange = "CBOE"), Forex('USDJPY'), Forex('EURUSD')]
-# contracts = [Index(symbol = "HSI", exchange = "HKFE")]
+# contracts = [Index(symbol = "HSI", exchange = "HKFE"), Index(symbol = "SPX", exchange = "CBOE"), Forex('USDJPY'), Forex('EURUSD')]
+contracts = [Index(symbol = "HSI", exchange = "HKFE")]
 
 # bars = ib.reqHistoricalData(contract, endDateTime='', durationStr='1 D',
 #         barSizeSetting='1 min', whatToShow='TRADES', useRTH=True)
 
-def get_index_15sec(end_date):
-    print("start 15sec collect %s" % str(end_date))
+def get_index_15sec(end_datetime):
+    print("start 15sec collect %s" % str(end_datetime))
     for contract in contracts:
         print(str(contract))
         conn = psycopg2.connect("host='rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com' dbname='panda_quant' user='chesp' password='Chesp92J5' port='3432'")
         cur = conn.cursor()
         if contract.secType == 'CASH':
             if contract.symbol == 'USD' and contract.currency == 'JPY':
-                tmp_table = 'usd_jpy_tmp'
-                table = 'usd_jpy'
+                tmp_table = 'usd_jpy_15secs_tmp'
+                table = 'usd_jpy_15secs'
             elif contract.symbol == 'EUR' and contract.currency == 'USD':
-                tmp_table = 'eur_usd_tmp'
-                table = 'eur_usd'
-            bars = ib.reqHistoricalData(contract, endDateTime=end_date, durationStr='14400 S', barSizeSetting='15 secs', whatToShow='MIDPOINT', useRTH=True)
+                tmp_table = 'eur_usd_15secs_tmp'
+                table = 'eur_usd_15secs'
+            bars = ib.reqHistoricalData(contract, endDateTime=end_datetime, durationStr='14400 S', barSizeSetting='15 secs', whatToShow='MIDPOINT', useRTH=True)
         elif contract.secType == 'IND':
             if contract.symbol == 'HSI':
-                tmp_table = 'hsi_tmp'
-                table = 'hsi'
+                tmp_table = 'hsi_15secs_tmp'
+                table = 'hsi_15secs'
             elif contract.symbol == 'SPX':
-                tmp_table = 'spx_tmp'
-                table = 'spx'
-            bars = ib.reqHistoricalData(contract, endDateTime=end_date, durationStr='14400 S', barSizeSetting='15 secs', whatToShow='TRADES', useRTH=True)
+                tmp_table = 'spx_15secs_tmp'
+                table = 'spx_15secs'
+            bars = ib.reqHistoricalData(contract, endDateTime=end_datetime, durationStr='14400 S', barSizeSetting='15 secs', whatToShow='TRADES', useRTH=True)
         df = util.df(bars)
         print("got bars %s" % str(bars))
         print("got contract %s" % str(contract))
@@ -58,19 +58,19 @@ def get_index_30sec(end_date):
         cur = conn.cursor()
         if contract.secType == 'CASH':
             if contract.symbol == 'USD' and contract.currency == 'JPY':
-                tmp_table = 'usd_jpy_tmp'
-                table = 'usd_jpy'
+                tmp_table = 'usd_jpy_30secs_tmp'
+                table = 'usd_jpy_30secs'
             elif contract.symbol == 'EUR' and contract.currency == 'USD':
-                tmp_table = 'eur_usd_tmp'
-                table = 'eur_usd'
+                tmp_table = 'eur_usd_30secs_tmp'
+                table = 'eur_usd_30secs'
             bars = ib.reqHistoricalData(contract, endDateTime=end_date, durationStr='1 D', barSizeSetting='30 secs', whatToShow='MIDPOINT', useRTH=True)
         elif contract.secType == 'IND':
             if contract.symbol == 'HSI':
-                tmp_table = 'hsi_tmp'
-                table = 'hsi'
+                tmp_table = 'hsi_30secs_tmp'
+                table = 'hsi_30secs'
             elif contract.symbol == 'SPX':
-                tmp_table = 'spx_tmp'
-                table = 'spx'
+                tmp_table = 'spx_30secs_tmp'
+                table = 'spx_30secs'
             bars = ib.reqHistoricalData(contract, endDateTime=end_date, durationStr='1 D', barSizeSetting='30 secs', whatToShow='TRADES', useRTH=True)
         df = util.df(bars)
         print("got bars %s" % str(bars))
@@ -125,11 +125,11 @@ def get_index_5min(end_date):
         cur = conn.cursor()
         if contract.secType == 'CASH':
             if contract.symbol == 'USD' and contract.currency == 'JPY':
-                tmp_table = 'usd_jpy_tmp'
-                table = 'usd_jpy'
+                tmp_table = 'usd_jpy_5mins_tmp'
+                table = 'usd_jpy_5mins'
             elif contract.symbol == 'EUR' and contract.currency == 'USD':
-                tmp_table = 'eur_usd_tmp'
-                table = 'eur_usd'
+                tmp_table = 'eur_usd_5mins_tmp'
+                table = 'eur_usd_5mins'
             bars = ib.reqHistoricalData(contract, endDateTime=end_date, durationStr='1 D', barSizeSetting='5 mins', whatToShow='MIDPOINT', useRTH=True)
         elif contract.secType == 'IND':
             if contract.symbol == 'HSI':
@@ -195,12 +195,16 @@ def get_index_5min(end_date):
 #         s.enter(60, 1, get_index_1min, (date_time,))
 
 if __name__ == '__main__':
-    d1 = datetime.date(2020,5,27)
-    d2 = datetime.date(2020,6,8)
+    d1 = datetime.date(2020,1,1)
+    d2 = datetime.date(2020,6,9)
     diff = d2 - d1
     for i in range(diff.days + 1):
         end_date = (d1 + datetime.timedelta(i))
-        get_index_1min(end_date)
-        get_index_5min(end_date)
-        # get_index_15sec(end_date)
+        print (end_date)
+        # get_index_1min(end_date)
+        # get_index_5min(end_date)
         # get_index_30sec(end_date)
+        for j in range(6):
+            end_datetime = (datetime.timedelta(j/6))
+            print (end_datetime)
+            # get_index_15sec(end_datetime)

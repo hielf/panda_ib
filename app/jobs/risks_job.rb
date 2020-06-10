@@ -8,7 +8,7 @@ class RisksJob < ApplicationJob
   end
 
   def perform(*args)
-    contract = args[0]
+    @contract = args[0]
 
     current_time = Time.zone.now.strftime('%H:%M')
     @order = ""
@@ -16,7 +16,7 @@ class RisksJob < ApplicationJob
       @ib = ApplicationController.helpers.ib_connect
       if @ib.isConnected()
         loss_limit = ENV["total_asset"].to_f * 0.001 * -1
-        @market_data = ApplicationController.helpers.market_data(contract, true)
+        @market_data = ApplicationController.helpers.market_data(@contract, true)
         trades = ApplicationController.helpers.ib_trades
         last_trade = trades.sort_by { |h| -h[:time] }.reverse.last
 
@@ -76,7 +76,7 @@ class RisksJob < ApplicationJob
   private
   def around_check
     ApplicationController.helpers.ib_disconnect(@ib) if @ib
-    file = ApplicationController.helpers.index_to_csv(contract, @market_data, true) if @market_data
+    file = ApplicationController.helpers.index_to_csv(@contract, @market_data, true) if @market_data
     begin
       if @profit_losses && @profit_losses.count == 4
         @profit_losses.last.update(current: false)
