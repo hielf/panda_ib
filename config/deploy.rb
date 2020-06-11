@@ -27,7 +27,7 @@ set :deploy_to, "/var/www/#{fetch(:application)}"
 # set :pty, true
 
 # Default value for :linked_files is []
-append :linked_files, "config/database.yml", "config/secrets.yml", "config/application.yml", "tmp/hsi_trades.json", "config/config.god"
+append :linked_files, "config/database.yml", "config/secrets.yml", "config/application.yml", "tmp/hsi_trades.json"
 
 # Default value for linked_dirs is []
 append :linked_dirs, "log", "tmp/pids", "tmp/cache", "tmp/sockets", 'tmp/image', "tmp/csv"

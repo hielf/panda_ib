@@ -49,9 +49,9 @@ class RisksJob < ApplicationJob
           pnls = @profit_losses.to_a.map{|pr| pr.unrealized_pnl}
 
           if unrealized_pnl.to_f < loss_limit.to_f
-            ApplicationController.helpers.close_position
+            order, amount = ApplicationController.helpers.close_position
             begin
-              EventLog.create(log_type: "RISK", order_type: @order, content: "RISK unrealized_pnl: #{unrealized_pnl} CLOSE #{@order} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}")
+              EventLog.create(log_type: "RISK", order_type: @order, content: "RISK unrealized_pnl: #{unrealized_pnl} CLOSE #{@order} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}") if order != "" && amount != 0
             rescue Exception => e
               Rails.logger.warn "EventLog create error: #{e}"
             end
@@ -59,9 +59,9 @@ class RisksJob < ApplicationJob
 
           if pnls && pnls.length >= 3
             if pnls[0] > 0 && pnls[0] < pnls[1] && pnls[1] < pnls[2]
-              ApplicationController.helpers.close_position
+              order, amount = ApplicationController.helpers.close_position
               begin
-                EventLog.create(log_type: "RISK", order_type: @order, content: "RISK profit: #{pnls[0]} CLOSE #{@order} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}")
+                EventLog.create(log_type: "RISK", order_type: @order, content: "RISK profit: #{pnls[0]} CLOSE #{@order} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}") if order != "" && amount != 0
               rescue Exception => e
                 Rails.logger.warn "EventLog create error: #{e}"
               end
