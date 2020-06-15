@@ -13,7 +13,7 @@ class OrdersJob < ApplicationJob
 
     if @order != "" && @amount != 0
       ApplicationController.helpers.ib_order(@order, @amount, 0)
-      ApplicationController.helpers.close_position if @order == "CLOSE"
+      @order, @amount = ApplicationController.helpers.close_position if @order == "CLOSE"
     end
   end
 

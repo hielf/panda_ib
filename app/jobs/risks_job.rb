@@ -57,7 +57,7 @@ class RisksJob < ApplicationJob
             end
           end
 
-          if pnls && pnls.length >= 3
+          if pnls && pnls.length >= 3 && ENV["backtrader_version"] != "5min"
             if pnls[0] > 0 && pnls[0] < pnls[1] && pnls[1] < pnls[2]
               order, amount = ApplicationController.helpers.close_position
               begin
