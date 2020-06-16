@@ -8,7 +8,7 @@ class SmsJob < ApplicationJob
     @backtrader_version = args[1]
     @message = args[2]
 
-    last_sm = Sm.where("created_at < ?", 30.minutes.ago).last
+    last_sm = Sm.where("created_at > ?", 30.minutes.ago).last
 
     @var        = {}
     @var["backtrader_version"] = @backtrader_version
