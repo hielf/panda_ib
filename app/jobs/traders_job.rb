@@ -77,13 +77,15 @@ class TradersJob < ApplicationJob
       #   ApplicationController.helpers.close_position if @order == "CLOSE"
       #   EventLog.create(content: "#{@order} #{@amount.to_s} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}")
       # end
+    else
+      SmsJob.perform_later ENV["admin_phone"], ENV["backtrader_version"], "无法连接"
     end
   end
 
   private
   def around_check
     data = ApplicationController.helpers.ib_trades
-    ApplicationController.helpers.ib_disconnect(@ib)
+    ApplicationController.helpers.ib_disconnect(@ib) if @ib.isConnected()
     if data && !data.empty?
       # Rails.logger.warn "ib trades data: #{data}"
       Rails.logger.warn "ib trades got: #{Time.zone.now}"
