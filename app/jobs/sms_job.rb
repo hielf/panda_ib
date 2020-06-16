@@ -16,13 +16,17 @@ class SmsJob < ApplicationJob
     @status = nil
 
     if last_sm.nil?
-      uri             = URI.parse("https://api.mysubmail.com/message/xsend.json")
-      sms_appid       = ENV['sms_appid']
-      sms_signature   = ENV['sms_signature']
-      sms_project     = ENV['sms_project']
-      res             = Net::HTTP.post_form(uri, appid: sms_appid, to: cell, project: sms_project, signature: sms_signature, vars: @var.to_json)
+      run_time = Time.zone.now
+      current_time = run_time.strftime('%H:%M')
+      if !(current_time >= "09:15" && current_time <= "16:45")
+        uri             = URI.parse("https://api.mysubmail.com/message/xsend.json")
+        sms_appid       = ENV['sms_appid']
+        sms_signature   = ENV['sms_signature']
+        sms_project     = ENV['sms_project']
+        res             = Net::HTTP.post_form(uri, appid: sms_appid, to: cell, project: sms_project, signature: sms_signature, vars: @var.to_json)
 
-      @status      = JSON.parse(res.body)["status"]
+        @status      = JSON.parse(res.body)["status"]
+      end
     end
   end
 # SmsJob.perform_later ENV["admin_phone"], ENV["backtrader_version"], "无法连接"
