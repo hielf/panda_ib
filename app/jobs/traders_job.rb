@@ -78,7 +78,7 @@ class TradersJob < ApplicationJob
       #   EventLog.create(content: "#{@order} #{@amount.to_s} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}")
       # end
     else
-      SmsJob.perform_later ENV["admin_phone"], ENV["backtrader_version"], "无法连接"
+      SmsJob.perform_later ENV["admin_phone"], ENV["superme_user"] + " " + ENV["backtrader_version"], "无法连接"
     end
   end
 

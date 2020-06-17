@@ -29,7 +29,7 @@ class SmsJob < ApplicationJob
       end
     end
   end
-# SmsJob.perform_later ENV["admin_phone"], ENV["backtrader_version"], "无法连接"
+# SmsJob.perform_later ENV["admin_phone"], ENV["superme_user"] + " " + ENV["backtrader_version"], "无法连接"
 
   private
   def around_check
