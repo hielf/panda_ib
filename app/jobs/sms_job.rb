@@ -18,7 +18,7 @@ class SmsJob < ApplicationJob
     if last_sm.nil?
       run_time = Time.zone.now
       current_time = run_time.strftime('%H:%M')
-      if !(current_time >= "09:15" && current_time <= "16:45")
+      if current_time >= "09:15" && current_time <= "16:45"
         uri             = URI.parse("https://api.mysubmail.com/message/xsend.json")
         sms_appid       = ENV['sms_appid']
         sms_signature   = ENV['sms_signature']
