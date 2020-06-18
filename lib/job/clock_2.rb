@@ -16,17 +16,20 @@ module Clockwork
   # handler receives the time when job is prepared to run in the 2nd argument
   handler do |job, time|
     if job == 'IB risk'
+      stop_time = Time.zone.now + 15.minutes - 5.seconds
+      p "clockwork 2 started at #{Time.zone.now}"
       180.times do
+        break if Time.zone.now > stop_time
         @ib = ApplicationController.helpers.ib_connect if @ib.nil?
         @ib = ApplicationController.helpers.ib_connect if !@ib.nil? && !@ib.isConnected()
-        p @ib
         RisksJob.perform_now @ib, 'hsi' if @ib
         sleep 5
       end
+      p "clockwork 2 stopped at #{Time.zone.now}"
     end
   end
 
-  every(15.minute, 'IB risk', :thread => false)
+  every(15.minute, 'IB risk', :thread => true)
   # every(1.minute, 'timing', :skip_first_run => true, :thread => true)
   # every(1.hour, 'hourly.job')
   #
