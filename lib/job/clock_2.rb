@@ -19,10 +19,9 @@ module Clockwork
   # handler receives the time when job is prepared to run in the 2nd argument
   handler do |job, time|
     if job == 'IB risk'
-      @ib = ApplicationController.helpers.ib_connect
-      p @ib
-
       180.times do
+        @ib = ApplicationController.helpers.ib_connect if @ib && !@ib.isConnected()
+        p @ib
         RisksJob.perform_now @ib, 'hsi'
         sleep 5
       end
