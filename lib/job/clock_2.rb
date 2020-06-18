@@ -12,10 +12,18 @@ module Clockwork
   #   config[:max_threads] = 15
   #   config[:thread] = true
   # end
-
+  def connect
+    @ib = ApplicationController.helpers.ib_connect
+    return @ib
+  end
   # handler receives the time when job is prepared to run in the 2nd argument
   handler do |job, time|
-    RisksJob.perform_now 'hsi' if job == 'IB risk'
+    p @ib
+    if !@ib.isConnected()
+      RisksJob.perform_now @ib, 'hsi' if job == 'IB risk'
+    else
+      @ib = ApplicationController.helpers.ib_connect
+    end
   end
 
   every(5.second, 'IB risk', :thread => true)

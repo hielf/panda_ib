@@ -8,7 +8,8 @@ class RisksJob < ApplicationJob
   end
 
   def perform(*args)
-    @contract = args[0]
+    @ib = args[0]
+    @contract = args[1]
 
     current_time = Time.zone.now.strftime('%H:%M')
     @order = ""
@@ -75,7 +76,7 @@ class RisksJob < ApplicationJob
 
   private
   def around_check
-    ApplicationController.helpers.ib_disconnect(@ib) if @ib
+    # ApplicationController.helpers.ib_disconnect(@ib) if @ib
     file = ApplicationController.helpers.index_to_csv(@contract, @market_data, true) if @market_data
     begin
       if @profit_losses && @profit_losses.count == 4
