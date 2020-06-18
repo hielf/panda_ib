@@ -17,7 +17,6 @@ module Clockwork
   handler do |job, time|
     if job == 'IB risk'
       stop_time = Time.zone.now + 15.minutes - 5.seconds
-      p "clockwork 2 started at #{Time.zone.now}"
       180.times do
         break if Time.zone.now > stop_time
         @ib = ApplicationController.helpers.ib_connect if @ib.nil?
@@ -25,7 +24,6 @@ module Clockwork
         RisksJob.perform_now @ib, 'hsi' if @ib
         sleep 5
       end
-      p "clockwork 2 stopped at #{Time.zone.now}"
     end
   end
 
