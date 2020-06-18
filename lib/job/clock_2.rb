@@ -18,15 +18,18 @@ module Clockwork
   end
   # handler receives the time when job is prepared to run in the 2nd argument
   handler do |job, time|
-    p @ib
-    if !@ib.isConnected()
-      RisksJob.perform_now @ib, 'hsi' if job == 'IB risk'
-    else
+    if job == 'IB risk'
       @ib = ApplicationController.helpers.ib_connect
+      p @ib
+
+      180.times do
+        RisksJob.perform_now @ib, 'hsi'
+        sleep 5
+      end
     end
   end
 
-  every(5.second, 'IB risk', :thread => true)
+  every(15.minute, 'IB risk', :thread => false)
   # every(1.minute, 'timing', :skip_first_run => true, :thread => true)
   # every(1.hour, 'hourly.job')
   #
