@@ -22,7 +22,7 @@ module Clockwork
       180.times do
         @ib = ApplicationController.helpers.ib_connect if @ib && !@ib.isConnected()
         p @ib
-        RisksJob.perform_now @ib, 'hsi'
+        RisksJob.perform_now @ib, 'hsi' if @ib
         sleep 5
       end
     end
