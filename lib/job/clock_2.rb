@@ -20,7 +20,8 @@ module Clockwork
   handler do |job, time|
     if job == 'IB risk'
       180.times do
-        @ib = ApplicationController.helpers.ib_connect if @ib && !@ib.isConnected()
+        @ib = ApplicationController.helpers.ib_connect if @ib.nil? 
+        @ib = ApplicationController.helpers.ib_connect if !@ib.nil? && !@ib.isConnected()
         p @ib
         RisksJob.perform_now @ib, 'hsi' if @ib
         sleep 5
