@@ -16,6 +16,7 @@ class RisksJob < ApplicationJob
     if (current_time > "09:45" && current_time < "12:00") || (current_time > "13:00" && current_time < "15:45")
       # @ib = ApplicationController.helpers.ib_connect
       if @ib.isConnected()
+        Rails.logger.warn "#{@ib}"
         loss_limit = ENV["total_asset"].to_f * 0.001 * -1
         @market_data = ApplicationController.helpers.market_data(@contract, true) unless ENV["remote_index"] == "true"
         trades = ApplicationController.helpers.ib_trades
