@@ -15,6 +15,7 @@ class RisksJob < ApplicationJob
     @order = ""
     if (current_time > "09:45" && current_time < "12:00") || (current_time > "13:00" && current_time < "15:45")
       # @ib = ApplicationController.helpers.ib_connect
+      Rails.logger.warn "ib risk start: #{@ib}"
       if @ib.isConnected()
         Rails.logger.warn "#{@ib}"
         loss_limit = ENV["total_asset"].to_f * 0.001 * -1
