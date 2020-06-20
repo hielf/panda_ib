@@ -26,7 +26,7 @@ class SmsJob < ApplicationJob
         res             = Net::HTTP.post_form(uri, appid: sms_appid, to: cell, project: sms_project, signature: sms_signature, vars: @var.to_json)
 
         @status      = JSON.parse(res.body)["status"]
-      end
+      end unless run_time.saturday? || run_time.sunday?
     end
   end
 # SmsJob.perform_later ENV["admin_phone"], ENV["superme_user"] + " " + ENV["backtrader_version"], "无法连接"
