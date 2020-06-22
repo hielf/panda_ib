@@ -18,7 +18,10 @@ module Clockwork
     if job == 'IB risk'
       stop_time = Time.zone.now + 3.minutes - 5.seconds
       180.times do
-        break if Time.zone.now > stop_time
+        if Time.zone.now > stop_time
+          ApplicationController.helpers.ib_disconnect(@ib) if @ib.isConnected()
+          break
+        end
         @ib = ApplicationController.helpers.ib_connect if @ib.nil?
         @ib = ApplicationController.helpers.ib_connect if !@ib.nil? && !@ib.isConnected()
         RisksJob.perform_now @ib, 'hsi' if @ib
