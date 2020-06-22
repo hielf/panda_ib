@@ -9,7 +9,7 @@ import datetime
 ib = IB()
 # ib.connect('127.0.0.1', 7496, clientId=100)
 # ib.connect('129.226.51.237', 7497, clientId=101)
-ib.connect(host='129.226.51.237', port=7497, clientId=11, timeout=10, readonly=False)
+ib.connect(host='124.156.100.215', port=7497, clientId=11, timeout=10, readonly=False)
 
 # contracts = [Index(symbol = "HSI", exchange = "HKFE"), Index(symbol = "SPX", exchange = "CBOE"), Forex('USDJPY'), Forex('EURUSD')]
 contracts = [Index(symbol = "HSI", exchange = "HKFE")]
@@ -195,17 +195,17 @@ def get_index_5min(end_date):
 #         s.enter(60, 1, get_index_1min, (date_time,))
 
 if __name__ == '__main__':
-    d1 = datetime.datetime(2020,5,11,0,0,0)
-    d2 = datetime.datetime(2020,6,9,0,0,0)
+    d1 = datetime.datetime(2020,6,19,0,0,0)
+    d2 = datetime.datetime(2020,6,20,0,0,0)
     diff = d2 - d1
     for i in range(diff.days + 1):
         end_date = (d1 + datetime.timedelta(i))
         print (end_date)
         print ("=========================")
-        # get_index_1min(end_date)
-        # get_index_5min(end_date)
+        get_index_1min(end_date)
+        get_index_5min(end_date)
         get_index_30sec(end_date)
-        for j in range(6):
-            end_datetime = (end_date + datetime.timedelta(j/6))
-            print (end_datetime)
-            get_index_15sec(end_datetime)
+        # for j in range(6):
+        #     end_datetime = (end_date + datetime.timedelta(j/6))
+        #     print (end_datetime)
+        #     get_index_15sec(end_datetime)

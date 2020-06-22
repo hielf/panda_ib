@@ -243,7 +243,7 @@ module TradeOrdersHelper
       # PyCall.exec("import psycopg2")
       # PyCall.exec("import sched, time")
       # if ib.isConnected()
-      main_contract = ib_main_contract(contract)
+      main_contract = ApplicationController.helpers.ib_main_contract(contract)
       PyCall.exec("contract = #{main_contract}")
       PyCall.exec("bars = ib.reqHistoricalData(contract, endDateTime='', durationStr='#{duration} S', barSizeSetting='#{bar_size}', whatToShow='TRADES', useRTH=True, keepUpToDate=True)")
       # PyCall.exec("tmp_table = '#{contract}' + '_tmp'")
