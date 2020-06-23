@@ -55,10 +55,16 @@ class TradersJob < ApplicationJob
         end
         Rails.logger.warn "ib py_check_position: #{@order} #{@amount.to_s}, #{Time.zone.now}"
 
-        elr = EventLog.where("log_type = ? AND created_at > ?", "RISK", 60.seconds.ago).last
+        elr = EventLog.where("log_type = ? ", "RISK").last
         if elr
-          elo = EventLog.where("log_type = ? AND created_at > ?", "ORDER", 120.seconds.ago).last
-          if elo && elo.order_type == @order
+          ot = case ENV['backtrader_version']
+          when '5min'
+            600
+          else
+            120
+          end
+          elo = EventLog.where("log_type = ? AND created_at > ?", "ORDER", ot.seconds.ago).last
+          if elo && elo.order_type == @order && elr.id > elo.id
             Rails.logger.warn "ib return for last RISK CLOSE: #{@order}, #{Time.zone.now}"
             return
           end
