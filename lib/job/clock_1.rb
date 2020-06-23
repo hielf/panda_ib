@@ -15,11 +15,12 @@ module Clockwork
 
   # handler receives the time when job is prepared to run in the 2nd argument
   handler do |job, time|
-    TradersJob.perform_now 'hsi' if job == 'IB trader'
+    puts "ib.trader started at #{Time.zone.now}"
+    TradersJob.perform_now 'hsi' if job == 'ib.trader'
   end
 
-  every(1.second, 'IB trader', :if => lambda { |t| t.sec == 13 }, :thread => true) if ENV["backtrader_version"] != "5min"
-  every(1.second, 'IB trader', :if => lambda { |t| t.sec == 54 }, :thread => true) if ENV["backtrader_version"] == "5min"
+  every(1.second, 'ib.trader', :if => lambda { |t| t.sec == 13 }, :thread => true) if ENV["backtrader_version"] != "5min"
+  every(1.second, 'ib.trader', :if => lambda { |t| [4,9,14,19,24,29,34,39,44,49,54,59].include? t.min && t.sec == 54 }, :thread => true) if ENV["backtrader_version"] == "5min"
   # every(1.minute, 'timing', :skip_first_run => true, :thread => true)
   # every(1.hour, 'hourly.job')
   #
