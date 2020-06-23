@@ -85,7 +85,7 @@ class dual_trust(bt.Indicator):
         # lines 0 是当前, 1是未来, -1 是上一个 和pandas 不一样, pd 是 -1 为当前时间
         self.lines.close_resample[0] = pred_data.close[-2] # 当前价格和上一个close 价格比较
 
-        prenext_num = -2
+        prenext_num = -1
         #reg_buy_open = joblib.load('reg_buy_open.pkl')
         self.lines.dual_buy_open[0] = int(reg_buy_open.predict(pred_data)[prenext_num] * 100)/100
 
@@ -194,12 +194,12 @@ class MyStrategy(bt.Strategy):
         # Check if we are in the market
         if not self.position:
 
-            if self.dataclose[0] > self.dual_lines.dual_buy_open[0]:
+            if self.dataclose[0] > self.dual_lines.dual_buy_open[-1]:
                  self.log('BUY CREATE, %.2f' % self.dataclose[0])
                  self.order = self.buy()
                  trades.append({'order': 'buy', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
-            elif self.dataclose[0] < self.dual_lines.dual_sale_open[0]:
+            elif self.dataclose[0] < self.dual_lines.dual_sale_open[-1]:
                  self.log('SELL CREATE, %.2f' % self.dataclose[0])
                  self.order = self.sell()
                  trades.append({'order': 'sell', 'time': self.data.datetime.time().strftime('%H:%M:%S')})

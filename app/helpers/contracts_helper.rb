@@ -216,6 +216,10 @@ module ContractsHelper
       ot = case ENV['backtrader_version']
       when '5min'
         600
+      when '4min'
+        480
+      when '3min'
+        360
       else
         120
       end

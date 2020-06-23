@@ -82,7 +82,7 @@ class dual_trust(bt.Indicator):
         # lines 0 是当前, 1是未来, -1 是上一个 和pandas 不一样, pd 是 -1 为当前时间
         self.lines.close_resample[0] = pred_data.close[-2] # 当前价格和上一个close 价格比较
 
-        prenext_num = -2
+        prenext_num = -1
         #reg_buy_open = joblib.load('reg_buy_open.pkl')
         self.lines.dual_buy_open[0] = int(reg_buy_open.predict(pred_data)[prenext_num] * 100)/100
 
@@ -191,11 +191,11 @@ class MyStrategy(bt.Strategy):
         # Check if we are in the market
         if not self.position:
 
-            if self.dataclose[0] > self.dual_lines.dual_buy_open[0]:
+            if self.dataclose[0] > self.dual_lines.dual_buy_open[-1]:
                  self.log('BUY CREATE, %.2f' % self.dataclose[0])
                  self.order = self.buy()
                  
-            elif self.dataclose[0] < self.dual_lines.dual_sale_open[0]:
+            elif self.dataclose[0] < self.dual_lines.dual_sale_open[-1]:
                  self.log('SELL CREATE, %.2f' % self.dataclose[0])
                  self.order = self.sell()
  
@@ -206,7 +206,7 @@ class MyStrategy(bt.Strategy):
             < 0 is short (you have given)
             '''
             if self. position.size > 0:
-                if len(self) >= (self.bar_executed + 3):
+                if len(self) >= (self.bar_executed + 2):
                     if self.params.max_price < self.dataclose[0]:
                         self.params.max_price = self.dataclose[0]
                     # 冲高回落
@@ -216,18 +216,18 @@ class MyStrategy(bt.Strategy):
                         self.params.max_price = 0 
                         
                     # # 移动平仓
-                    elif self.dataclose[0] < self.dual_lines.close_resample[-2]:
+                    elif self.dataclose[0] < self.dual_lines.close_resample[-1]:
                         self.log('BUY CLOSE MOV, %.2f' % self.dataclose[0])
                         self.order = self.sell()
                         self.params.max_price = 0
                 else:
-                    if self.dataclose[0] < self.dual_lines.close_resample[-2]:
+                    if self.dataclose[0] < self.dual_lines.close_resample[-1]:
                         self.log('BUY CLOSE MOV2, %.2f' % self.dataclose[0])
                         self.order = self.sell()
                         self.params.max_price = 0
 
             if self. position.size < 0: 
-                if len(self) >= (self.bar_executed + 3):
+                if len(self) >= (self.bar_executed + 2):
                     if self.params.min_price > -self.dataclose[0]:
                         self.params.min_price = -self.dataclose[0]
                     # 冲低回升
@@ -238,12 +238,12 @@ class MyStrategy(bt.Strategy):
                         self.params.min_price = 0
                         
                     # 移动平仓
-                    elif self.dataclose[0] > self.dual_lines.close_resample[-2]:
+                    elif self.dataclose[0] > self.dual_lines.close_resample[-1]:
                         self.log('SALE CLOSE MOV, %.2f' % self.dataclose[0])
                         self.order = self.buy()
                         self.params.min_price = 0
                 else:
-                    if self.dataclose[0] > self.dual_lines.close_resample[-2]:
+                    if self.dataclose[0] > self.dual_lines.close_resample[-1]:
                         self.log('SALE CLOSE MOV2, %.2f' % self.dataclose[0])
                         self.order = self.buy()
                         self.params.min_price = 0
@@ -261,11 +261,11 @@ if __name__ == '__main__':
     # parase_dates = True是为了读取csv为dataframe的时候能够自动识别datetime格式的字符串，big作为index
     # 注意，这里最后的pandas要符合backtrader的要求的格式
     #dataframe = pd.read_csv('./data/hsi202003.csv', index_col=0, parse_dates=True)
-    dataframe = pd.read_csv('./data/hsi2020.csv', index_col=0, parse_dates=True, usecols=['date', 'open', 'high', 'low', 'close', 'volume'])
+    dataframe = pd.read_csv('./data/hsi202006.csv', index_col=0, parse_dates=True, usecols=['date', 'open', 'high', 'low', 'close', 'volume'])
     dataframe['openinterest'] = 0
     data = bt.feeds.PandasData(dataname=dataframe,
-                            fromdate = datetime.datetime(2020, 1, 1, 9, 45),
-                            todate = datetime.datetime(2020, 3, 20, 10,15)
+                            fromdate = datetime.datetime(2020, 5, 26, 9, 45),
+                            todate = datetime.datetime(2020, 6, 27, 10,15)
                             ) # 年月日, 小时, 分钟, 实盘就传参数吧
     # Add the Data Feed to Cerebro
     cerebro.adddata(data)

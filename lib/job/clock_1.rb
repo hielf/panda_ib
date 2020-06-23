@@ -19,7 +19,8 @@ module Clockwork
     TradersJob.perform_now 'hsi' if job == 'ib.trader'
   end
 
-  every(1.second, 'ib.trader', :if => lambda { |t| t.sec == 13 }, :thread => true) if ENV["backtrader_version"] != "5min"
+  every(1.second, 'ib.trader', :if => lambda { |t| (([2,5,8,11,14,17,20,23,26,29,32,35,38,41,44,47,50,53,56,59].include? t.min) && t.sec == 54) }, :thread => true) if ENV["backtrader_version"] == "3min"
+  every(1.second, 'ib.trader', :if => lambda { |t| t.sec == 13 }, :thread => true) if ENV["backtrader_version"] == "4min"
   every(1.second, 'ib.trader', :if => lambda { |t| (([4,9,14,19,24,29,34,39,44,49,54,59].include? t.min) && t.sec == 54) }, :thread => true) if ENV["backtrader_version"] == "5min"
   # every(1.minute, 'timing', :skip_first_run => true, :thread => true)
   # every(1.hour, 'hourly.job')

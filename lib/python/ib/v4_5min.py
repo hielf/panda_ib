@@ -19,8 +19,8 @@ from tqdm import tqdm
 starttime = time.time()
 
 reg_buy_open = joblib.load('hsi_buy_open05.pkl')
-reg_buy_break = joblib.load('hsi_sale_break05.pkl')
-reg_sale_open = joblib.load('hsi_buy_open05.pkl')
+reg_buy_break = joblib.load('hsi_buy_break05.pkl')
+reg_sale_open = joblib.load('hsi_sale_open05.pkl')
 reg_sale_break = joblib.load('hsi_sale_break05.pkl')
 
 
@@ -135,12 +135,12 @@ class MyStrategy(bt.Strategy):
         # Check if we are in the market
         if not self.position:
 
-            if self.dataclose[0] > self.data.dual_buy_open[0]:
+            if self.dataclose[0] > self.data.dual_buy_open[-1]:
                  self.log('BUY CREATE, %.2f' % self.dataclose[0])
                  self.order = self.buy()
                  trades.append({'order': 'buy', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
-            elif self.dataclose[0] < self.data.dual_sale_open[0]:
+            elif self.dataclose[0] < self.data.dual_sale_open[-1]:
                  self.log('SELL CREATE, %.2f' % self.dataclose[0])
                  self.order = self.sell()
                  trades.append({'order': 'sell', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
