@@ -23,8 +23,6 @@ reg_buy_break = joblib.load('hsi_buy_break05.pkl')
 reg_sale_open = joblib.load('hsi_sale_open05.pkl')
 reg_sale_break = joblib.load('hsi_sale_break05.pkl')
 
-
-
 class PandasData(bt.feeds.PandasData):
     lines = ('dual_buy_open','dual_buy_break','dual_sale_open','dual_sale_break',)
     params = (
@@ -41,7 +39,7 @@ class PandasData(bt.feeds.PandasData):
         ('dual_sale_break',-1),
     )
 
-# Create a Stratey
+
 class MyStrategy(bt.Strategy):
     params = (
         ('maperiod', 12),
@@ -119,8 +117,8 @@ class MyStrategy(bt.Strategy):
 
     def next(self):
 
-        # 9:45 - 15:45
-        if self.data.datetime.time() > datetime.time(16, 25) or self.data.datetime.time() < datetime.time(9, 20):
+        #9:45 - 15:45
+        if self.data.datetime.time() > datetime.time(15, 50) or self.data.datetime.time() < datetime.time(9, 20):
             if self. position.size > 0:
                 self.order = self.sell()
 
@@ -134,7 +132,6 @@ class MyStrategy(bt.Strategy):
 
         # Check if we are in the market
         if not self.position:
-
             if self.dataclose[0] > self.data.dual_buy_open[-1]:
                  self.log('BUY CREATE, %.2f' % self.dataclose[0])
                  self.order = self.buy()
@@ -199,6 +196,7 @@ class MyStrategy(bt.Strategy):
                         self.params.min_price = 0
                         trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
+
     def stop(self):
         print("death")
 
@@ -242,11 +240,21 @@ if __name__ == '__main__':
     dataframe['dual_buy_break'] = reg_buy_break.predict(pred_data)
     dataframe['dual_sale_open'] = reg_sale_open.predict(pred_data)
     dataframe['dual_sale_break'] = reg_sale_break.predict(pred_data)
+
     dataframe['openinterest'] = 0
+    print(dataframe.head())
+    #dataframe.to_csv('./m0120.csv')
+    #dataframe['datetime'] = pd.to_datetime(dataframe.index)
+
+    # data = bt.feeds.PandasData(dataname=dataframe,
+    #                         fromdate = datetime.datetime(2020, 3, 1, 9, 45),
+    #                         todate = datetime.datetime(2020, 4, 3, 10,15)
+    #                         ) # 年月日, 小时, 分钟, 实盘就传参数吧
     data=PandasData(    dataname=dataframe,
-                                fromdate = begin_time,
-                                todate = end_time
+                        fromdate = begin_time,
+                        todate = end_time
     )
+
     # Add the Data Feed to Cerebro
     cerebro.adddata(data)
     # Set our desired cash start
@@ -269,7 +277,7 @@ if __name__ == '__main__':
 
     endtime = time.time()
     print('='*5, 'program running time', '='*5)
-    print('from ' + str(begin_time) + ' to ' + str(end_time) + '', '+4')
+    print('5分钟一个周期, 只考虑按整个bar判断, 不考虑bar内止损止盈. 数据处理按5分钟kbar 最后一次resample 结果', '+2')
     print ('time:', (endtime - starttime), 'seconds')
     print('='*5, 'program running time', '='*5)
 
