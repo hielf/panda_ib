@@ -226,8 +226,8 @@ if __name__ == '__main__':
     #                         todate = datetime.datetime(2020, 4, 3, 10,15)
     #                         ) # 年月日, 小时, 分钟, 实盘就传参数吧
     data=PandasData(    dataname=dataframe,
-                        fromdate = datetime.datetime(2020, 6, 3),
-                        todate = datetime.datetime(2020, 6, 30)
+                        fromdate = datetime.datetime(2020, 6, 24, 9, 15),
+                        todate = datetime.datetime(2020, 6, 24, 12, 10)
     )
 
     # Add the Data Feed to Cerebro
