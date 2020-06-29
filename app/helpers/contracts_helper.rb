@@ -6,7 +6,11 @@
 module ContractsHelper
 
   def document_files(file)
-    dest = Rails.root.to_s + "/tmp/csv/#{contract}_#{Time.zone.now.strftime("%Y%m%d%H%M")}.csv"
+    dir = Rails.root.to_s + "/tmp/csv/#{Time.zone.now.strftime("%Y%m%d")}"
+    unless File.directory?(dir)
+      FileUtils.mkdir_p(dir)
+    end
+    dest = "#{dir}/#{contract}_#{Time.zone.now.strftime("%Y%m%d%H%M")}.csv"
     File.open(dest, 'w') { |f| f.write(File.read(file)) }
   end
 
