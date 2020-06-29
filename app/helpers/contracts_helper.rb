@@ -5,6 +5,11 @@
 
 module ContractsHelper
 
+  def document_files(file)
+    dest = Rails.root.to_s + "/tmp/csv/#{contract}_#{Time.zone.now.strftime("%Y%m%d%H%M")}.csv"
+    File.open(dest, 'w') { |f| f.write(File.read(file)) }
+  end
+
   def index_to_csv(contract, market_data, with_index, db_collect=ENV['db_collect'])
 
     file = Rails.root.to_s + "/tmp/csv/#{contract}.csv"
