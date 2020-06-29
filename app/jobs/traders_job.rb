@@ -56,7 +56,7 @@ class TradersJob < ApplicationJob
         if elr
           ot = case ENV['backtrader_version']
           when '5min'
-            600
+            60
           when '4min'
             480
           when '3min'
