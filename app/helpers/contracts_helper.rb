@@ -5,7 +5,7 @@
 
 module ContractsHelper
 
-  def document_files(file)
+  def document_files(contract, file)
     dir = Rails.root.to_s + "/tmp/csv/#{Time.zone.now.strftime("%Y%m%d")}"
     unless File.directory?(dir)
       FileUtils.mkdir_p(dir)
