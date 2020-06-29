@@ -227,7 +227,7 @@ if __name__ == '__main__':
     #dataframe = pd.read_csv('./data/hsi202003.csv', index_col=0, parse_dates=True)
     dataframe = pd.read_csv(csv_path, index_col=0, parse_dates=True, usecols=['date', 'open', 'high', 'low', 'close', 'volume'])
 
-    dataframe= dataframe.resample('5T').agg({'open': 'first',
+    dataframe= dataframe.resample('1T').agg({'open': 'first',
                                 'high': 'max',
                                 'low': 'min',
                                 'close': 'last', 'volume': 'sum'})
