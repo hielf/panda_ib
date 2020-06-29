@@ -5,8 +5,12 @@
 
 module ContractsHelper
 
-  def document_files(file)
-    dest = Rails.root.to_s + "/tmp/csv/#{contract}_#{Time.zone.now.strftime("%Y%m%d%H%M")}.csv"
+  def document_files(contract, file)
+    dir = Rails.root.to_s + "/tmp/csv/#{Time.zone.now.strftime("%Y%m%d")}"
+    unless File.directory?(dir)
+      FileUtils.mkdir_p(dir)
+    end
+    dest = "#{dir}/#{contract}_#{Time.zone.now.strftime("%Y%m%d%H%M")}.csv"
     File.open(dest, 'w') { |f| f.write(File.read(file)) }
   end
 
@@ -220,7 +224,7 @@ module ContractsHelper
       Rails.logger.warn "ib check time_diff: #{time_diff}"
       ot = case ENV['backtrader_version']
       when '5min'
-        60
+        600
       when '4min'
         480
       when '3min'

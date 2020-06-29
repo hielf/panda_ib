@@ -49,14 +49,14 @@ class TradersJob < ApplicationJob
       current_time = run_time.strftime('%H:%M')
       if (current_time >= "09:45" && current_time <= "15:45")
         @order, @amount = ApplicationController.helpers.py_check_position(contract) if file
-        ApplicationController.helpers.document_files(file) if @order != "" && @amount != 0
+        ApplicationController.helpers.document_files(contract, file) if file
         Rails.logger.warn "ib py_check_position: #{@order} #{@amount.to_s}, #{Time.zone.now}"
 
         elr = EventLog.where("log_type = ? ", "RISK").last
         if elr
           ot = case ENV['backtrader_version']
           when '5min'
-            60
+            600
           when '4min'
             480
           when '3min'
