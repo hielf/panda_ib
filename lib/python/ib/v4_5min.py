@@ -61,6 +61,8 @@ class MyStrategy(bt.Strategy):
         self.dataclose = self.datas[0].close
         self.datahigh = self.datas[0].high
         self.datalow = self.datas[0].low
+        self.atr = bt.indicators.ATR(self.datas[0])
+        self.tr = bt.indicators.TR(self.datas[0])
 
         # To keep track of pending orders and buy price/commission
         self.order = None
@@ -131,7 +133,7 @@ class MyStrategy(bt.Strategy):
             return
 
         # Check if we are in the market
-        if not self.position:
+        if not self.position and self.atr[0]*1.5 < self.tr[0]:
             if self.dataclose[0] > self.data.dual_buy_open[-1]:
                  self.log('BUY CREATE, %.2f' % self.dataclose[0])
                  self.order = self.buy()
@@ -148,8 +150,8 @@ class MyStrategy(bt.Strategy):
             == 0 is no position
             < 0 is short (you have given)
             '''
-            if self. position.size > 0:
-                if len(self) >= (self.bar_executed + 2):
+            if self. position.size > 0 and self.atr[0] > self.tr[0]:
+                if len(self) >= (self.bar_executed + 1):
                     if self.params.max_price < self.dataclose[0]:
                         self.params.max_price = self.dataclose[0]
                     # 冲高回落
@@ -166,14 +168,14 @@ class MyStrategy(bt.Strategy):
                         self.params.max_price = 0
                         trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
                 else:
-                    if self.dataclose[-0] < self.dataclose[-2]:
+                    if self.dataclose[0] < self.dataclose[-2]:
                         self.log('BUY CLOSE MOV2, %.2f' % self.dataclose[0])
                         self.order = self.sell()
                         self.params.max_price = 0
                         trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
-            if self. position.size < 0:
-                if len(self) >= (self.bar_executed + 2):
+            if self. position.size < 0 and self.atr[0] > self.tr[0]:
+                if len(self) >= (self.bar_executed + 1):
                     if self.params.min_price > -self.dataclose[0]:
                         self.params.min_price = -self.dataclose[0]
                     # 冲低回升
