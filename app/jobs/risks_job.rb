@@ -15,16 +15,17 @@ class RisksJob < ApplicationJob
     @order = ""
     if (current_time > "09:45" && current_time < "12:00") || (current_time > "13:00" && current_time < "15:45")
       # @ib = ApplicationController.helpers.ib_connect
-      Rails.logger.warn "ib risk start: #{@ib}"
+      # Rails.logger.warn "ib risk start: #{@ib}"
       if @ib.isConnected()
-        Rails.logger.warn "#{@ib}"
+        # Rails.logger.warn "#{@ib}"
         loss_limit = ENV["total_asset"].to_f * 0.001 * -1
-        @market_data = ApplicationController.helpers.market_data(@contract, true) unless ENV["remote_index"] == "true"
         trades = ApplicationController.helpers.ib_trades
         last_trade = trades.sort_by { |h| -h[:time] }.reverse.last
 
         if last_trade.nil?
           ProfitLoss.where(current: true).update_all(current: false)
+        else
+          @market_data = ApplicationController.helpers.market_data(@contract, true) unless ENV["remote_index"] == "true"
         end
 
         if last_trade && @market_data
