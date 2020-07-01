@@ -203,7 +203,7 @@ if __name__ == '__main__':
     #dataframe = pd.read_csv('./data/hsi202003.csv', index_col=0, parse_dates=True)
     dataframe = pd.read_csv('./data/hsi202006.csv', index_col=0, parse_dates=True, usecols=['date', 'open', 'high', 'low', 'close', 'volume'])
 
-    dataframe= dataframe.resample('1T').agg({'open': 'first',
+    dataframe= dataframe.resample('5T').agg({'open': 'first',
                                 'high': 'max',
                                 'low': 'min',
                                 'close': 'last', 'volume': 'sum'})
@@ -229,8 +229,8 @@ if __name__ == '__main__':
     #                         todate = datetime.datetime(2020, 4, 3, 10,15)
     #                         ) # 年月日, 小时, 分钟, 实盘就传参数吧
     data=PandasData(    dataname=dataframe,
-                        fromdate = datetime.datetime(2020, 6, 11),
-                        todate = datetime.datetime(2020, 6, 20)
+                        fromdate = datetime.datetime(2020, 1, 24),
+                        todate = datetime.datetime(2020, 6, 30)
     )
 
     # Add the Data Feed to Cerebro
