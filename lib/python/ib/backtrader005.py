@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-
+ 
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-
+ 
 import datetime  # For datetime objects
 import time
 import pandas as pd
@@ -46,13 +46,13 @@ class MyStrategy(bt.Strategy):
         ('max_price', 0),
         ('min_price', 0)
     )
-
+ 
     def log(self, txt, dt=None, doprint=False):
         ''' Logging function fot this strategy'''
         if self.params.printlog or doprint:
             dt = dt or self.datas[0].datetime.datetime(0)
             print('%s, %s' % (dt.isoformat(), txt))
-
+ 
     def __init__(self):
         # Keep a reference to the "close" line in the data[0] dataseries
         self.dataclose = self.datas[0].close
@@ -67,18 +67,18 @@ class MyStrategy(bt.Strategy):
         self.buycomm = None
         self.sellprice = None
         self.sellcomm = None
-
+ 
     def start(self):
         print("the world call me!")
-
+ 
     def prenext(self):
         print("not mature")
-
+ 
     def notify_order(self, order):
         if order.status in [order.Submitted, order.Accepted]:
             # Buy/Sell order submitted/accepted to/by broker - Nothing to do
             return
-
+ 
         # Check if an order has been completed
         # Attention: broker could reject order if not enougth cash
         if order.status in [order.Completed]:
@@ -88,7 +88,7 @@ class MyStrategy(bt.Strategy):
                     (order.executed.price,
                      order.executed.value,
                      order.executed.comm))
-
+ 
                 self.buyprice = order.executed.price
                 self.buycomm = order.executed.comm
             else:  # Sell
@@ -100,22 +100,22 @@ class MyStrategy(bt.Strategy):
                 self.sellcomm = order.executed.comm
 
             self.bar_executed = len(self)
-
+ 
         elif order.status in [order.Canceled, order.Margin, order.Rejected]:
             pass
             #self.log('Order Canceled/Margin/Rejected')
-
+ 
         self.order = None
-
+ 
     def notify_trade(self, trade):
         if not trade.isclosed:
             return
-
+ 
         self.log('OPERATION PROFIT, COMM %.2f, GROSS %.2f, NET %.2f \n\n' %
                  (trade.commission, trade.pnl, trade.pnlcomm))
-
+ 
     def next(self):
-
+        
         #9:45 - 15:45
         if self.data.datetime.time() > datetime.time(15, 50) or self.data.datetime.time() < datetime.time(9, 20):
             if self. position.size > 0:
@@ -125,21 +125,21 @@ class MyStrategy(bt.Strategy):
                 self.order = self.buy()
 
             return
-
+        
         if self.order:
             return
-
+ 
         # Check if we are in the market
-
+        
         if not self.position and self.atr[0]*1.5 < self.tr[0]:
             if self.dataclose[0] > self.data.dual_buy_open[-1]:
                  self.log('BUY CREATE, %.2f' % self.dataclose[0])
                  self.order = self.buy()
-
+                 
             elif self.dataclose[0] < self.data.dual_sale_open[-1]:
                  self.log('SELL CREATE, %.2f' % self.dataclose[0])
                  self.order = self.sell()
-
+ 
         else:
             '''
             > 0 is long (you have taken)
@@ -154,8 +154,8 @@ class MyStrategy(bt.Strategy):
                     if self.params.max_price > self.data.dual_buy_break[-1] and self.dataclose[0] < self.data.dual_buy_open[-1]:
                         self.log('BUY CLOSE HIT, %.2f' % self.dataclose[0])
                         self.order = self.sell()
-                        self.params.max_price = 0
-
+                        self.params.max_price = 0 
+                        
                     # # 移动平仓
                     elif self.dataclose[0] < self.dataclose[-1]:
                         self.log('BUY CLOSE MOV, %.2f' % self.dataclose[0])
@@ -167,7 +167,7 @@ class MyStrategy(bt.Strategy):
                         self.order = self.sell()
                         self.params.max_price = 0
 
-            if self. position.size < 0 and self.atr[0] > self.tr[0]:
+            if self. position.size < 0 and self.atr[0] > self.tr[0]: 
                 if len(self) >= (self.bar_executed + 1):
                     if self.params.min_price > -self.dataclose[0]:
                         self.params.min_price = -self.dataclose[0]
@@ -176,7 +176,7 @@ class MyStrategy(bt.Strategy):
                         self.log('SALE CLOSE HIT, %.2f' % self.dataclose[0])
                         self.order = self.buy()
                         self.params.min_price = 0
-
+                        
                     # 移动平仓
                     elif self.dataclose[0] > self.data.close[-1]:
                         self.log('SALE CLOSE MOV, %.2f' % self.dataclose[0])
@@ -188,10 +188,10 @@ class MyStrategy(bt.Strategy):
                         self.order = self.buy()
                         self.params.min_price = 0
 
-
+            
     def stop(self):
         print("death")
-
+ 
 if __name__ == '__main__':
     # Create a cerebro entity
     cerebro = bt.Cerebro()
@@ -202,10 +202,10 @@ if __name__ == '__main__':
     # 注意，这里最后的pandas要符合backtrader的要求的格式
     #dataframe = pd.read_csv('./data/hsi202003.csv', index_col=0, parse_dates=True)
     dataframe = pd.read_csv('./data/hsi202006.csv', index_col=0, parse_dates=True, usecols=['date', 'open', 'high', 'low', 'close', 'volume'])
-
-    dataframe= dataframe.resample('5T').agg({'open': 'first',
-                                'high': 'max',
-                                'low': 'min',
+    
+    dataframe= dataframe.resample('5T').agg({'open': 'first', 
+                                'high': 'max', 
+                                'low': 'min', 
                                 'close': 'last', 'volume': 'sum'})
     dataframe['datetime'] = pd.to_datetime(dataframe.index)
     dataframe.dropna(inplace=True)
@@ -213,12 +213,12 @@ if __name__ == '__main__':
     dataframe['hh'] = dataframe['high']
     dataframe['ll'] = dataframe['low']
     pred_data = dataframe[['open', 'high', 'hh', 'low', 'll', 'close' ]]
-
+    
     dataframe['dual_buy_open'] = reg_buy_open.predict(pred_data)
-    dataframe['dual_buy_break'] = reg_buy_break.predict(pred_data)
-    dataframe['dual_sale_open'] = reg_sale_open.predict(pred_data)
+    dataframe['dual_buy_break'] = reg_buy_break.predict(pred_data) 
+    dataframe['dual_sale_open'] = reg_sale_open.predict(pred_data) 
     dataframe['dual_sale_break'] = reg_sale_break.predict(pred_data)
-
+    
     dataframe['openinterest'] = 0
     print(dataframe.head())
     #dataframe.to_csv('./m0120.csv')
@@ -241,7 +241,7 @@ if __name__ == '__main__':
     cerebro.addsizer(bt.sizers.FixedSize, stake=1)
     # Set the commission
     cerebro.broker.setcommission(
-        commission=30,
+        commission=30, 
         commtype = bt.CommInfoBase.COMM_FIXED, # 固定手续费
         automargin = 5, # 保证金10% , 这里5是因为hsi 指数 一个点50元, 10%保证金, 交易一次30元
         mult = 50  # 利润乘数, hsi 是1个点50

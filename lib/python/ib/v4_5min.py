@@ -123,9 +123,11 @@ class MyStrategy(bt.Strategy):
         if self.data.datetime.time() > datetime.time(15, 50) or self.data.datetime.time() < datetime.time(9, 20):
             if self. position.size > 0:
                 self.order = self.sell()
+                trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
             if self. position.size < 0:
                 self.order = self.buy()
+                trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
             return
 
@@ -133,6 +135,7 @@ class MyStrategy(bt.Strategy):
             return
 
         # Check if we are in the market
+
         if not self.position and self.atr[0]*1.5 < self.tr[0]:
             if self.dataclose[0] > self.data.dual_buy_open[-1]:
                  self.log('BUY CREATE, %.2f' % self.dataclose[0])
@@ -210,6 +213,8 @@ if __name__ == '__main__':
 
     begin_time = datetime.datetime.strptime(begin_time, '%Y-%m-%d %H:%M:%S +0800')
     end_time = datetime.datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S +0800')
+    print('begin_time:' % begin_time)
+    print('end_time:' % begin_time)
 
     date_handler = lambda obj: (
         obj.isoformat()
@@ -285,9 +290,8 @@ if __name__ == '__main__':
 
     strat = results[0]
     print('Final Portfolio Value: %.2f' % cerebro.broker.getvalue())
-    print('SR:', strat.analyzers.SharpeRatio.get_analysis())
-    print('DW:', strat.analyzers.DW.get_analysis())
-
+    # print('SR:', strat.analyzers.SharpeRatio.get_analysis())
+    # print('DW:', strat.analyzers.DW.get_analysis())
     print(trades)
     with open(json_path, 'w') as f:
         json.dump(trades, f)
