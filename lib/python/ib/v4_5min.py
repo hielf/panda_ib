@@ -118,8 +118,8 @@ class MyStrategy(bt.Strategy):
                  (trade.commission, trade.pnl, trade.pnlcomm))
 
     def next(self):
-        print('datas', self.datas[0][0])
-        print(self.data.datetime.time().strftime('%H:%M:%S'), 'atr', self.atr[0]*1.5, 'tr', self.tr[0])
+        # print('datas', self.datas[0][0])
+        # print(self.data.datetime.time().strftime('%H:%M:%S'), 'atr', self.atr[0]*1.5, 'tr', self.tr[0])
         #9:45 - 15:45
         if self.data.datetime.time() > datetime.time(15, 50) or self.data.datetime.time() < datetime.time(9, 20):
             if self. position.size > 0:
