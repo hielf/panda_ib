@@ -213,8 +213,8 @@ if __name__ == '__main__':
 
     begin_time = datetime.datetime.strptime(begin_time, '%Y-%m-%d %H:%M:%S +0800')
     end_time = datetime.datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S +0800')
-    print('begin_time:' % begin_time)
-    print('end_time:' % begin_time)
+    print('begin_time:' + begin_time)
+    print('end_time:' + end_time)
 
     date_handler = lambda obj: (
         obj.isoformat()
