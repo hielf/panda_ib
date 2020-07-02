@@ -120,9 +120,11 @@ class MyStrategy(bt.Strategy):
         if self.data.datetime.time() > datetime.time(15, 50) or self.data.datetime.time() < datetime.time(9, 20):
             if self. position.size > 0:
                 self.order = self.sell()
+                trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
             if self. position.size < 0:
                 self.order = self.buy()
+                trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
             return
 
@@ -131,12 +133,12 @@ class MyStrategy(bt.Strategy):
 
         # Check if we are in the market
 
-        if not self.position and self.atr[0]*1.5 < self.tr[0]:
+        if not self.position :
             if self.dataclose[0] > self.data.dual_buy_open[-1]:
                  self.log('BUY CREATE, %.2f' % self.dataclose[0])
                  self.order = self.buy()
 
-            elif self.dataclose[0] < self.data.dual_sale_open[-1]:
+            elif self.dataclose[0] < self.data.dual_sale_open[-1] :
                  self.log('SELL CREATE, %.2f' % self.dataclose[0])
                  self.order = self.sell()
 
@@ -146,7 +148,7 @@ class MyStrategy(bt.Strategy):
             == 0 is no position
             < 0 is short (you have given)
             '''
-            if self. position.size > 0 and self.atr[0] > self.tr[0]:
+            if self. position.size > 0 and self.atr[0] > self.tr[0] :
                 if len(self) >= (self.bar_executed + 1):
                     if self.params.max_price < self.dataclose[0]:
                         self.params.max_price = self.dataclose[0]
@@ -201,7 +203,7 @@ if __name__ == '__main__':
     # parase_dates = True是为了读取csv为dataframe的时候能够自动识别datetime格式的字符串，big作为index
     # 注意，这里最后的pandas要符合backtrader的要求的格式
     #dataframe = pd.read_csv('./data/hsi202003.csv', index_col=0, parse_dates=True)
-    dataframe = pd.read_csv('./data/hsi202006.csv', index_col=0, parse_dates=True, usecols=['date', 'open', 'high', 'low', 'close', 'volume'])
+    dataframe = pd.read_csv('./data/hsi2020.csv', index_col=0, parse_dates=True, usecols=['date', 'open', 'high', 'low', 'close', 'volume'])
 
     dataframe= dataframe.resample('1T').agg({'open': 'first',
                                 'high': 'max',
@@ -220,7 +222,7 @@ if __name__ == '__main__':
     dataframe['dual_sale_break'] = reg_sale_break.predict(pred_data)
 
     dataframe['openinterest'] = 0
-    print(dataframe.head())
+    print(dataframe.tail())
     #dataframe.to_csv('./m0120.csv')
     #dataframe['datetime'] = pd.to_datetime(dataframe.index)
 
@@ -229,8 +231,8 @@ if __name__ == '__main__':
     #                         todate = datetime.datetime(2020, 4, 3, 10,15)
     #                         ) # 年月日, 小时, 分钟, 实盘就传参数吧
     data=PandasData(    dataname=dataframe,
-                        fromdate = datetime.datetime(2020, 6, 11),
-                        todate = datetime.datetime(2020, 6, 20)
+                        fromdate = datetime.datetime(2020, 1, 24),
+                        todate = datetime.datetime(2020, 7, 1)
     )
 
     # Add the Data Feed to Cerebro

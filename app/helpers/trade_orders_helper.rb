@@ -234,7 +234,7 @@ module TradeOrdersHelper
     duration = (db_collect == "true" ? "72000" : (Time.zone.now - today_start + 7200).to_i.to_s)
     result = true
     list = nil
-    Rails.logger.warn "market_data start: #{Time.zone.now}"
+    # Rails.logger.warn "market_data start: #{Time.zone.now}"
     return false if duration.to_i < 0
     begin
       # ib = ib_connect
@@ -250,7 +250,7 @@ module TradeOrdersHelper
       # PyCall.exec("table = '#{contract}'")
       result = PyCall.eval("bars[-1].date == datetime.datetime.now().replace(second=0, microsecond=0)")
       result = true if force_collect
-      Rails.logger.warn "market_data_latest: #{PyCall.eval("bars[-1].date").to_s} force_collect: #{force_collect.to_s}"
+      # Rails.logger.warn "market_data_latest: #{PyCall.eval("bars[-1].date").to_s} force_collect: #{force_collect.to_s}"
 
       PyCall.exec("df = util.df(bars)")
       list = PyCall.eval("df")

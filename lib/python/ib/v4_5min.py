@@ -133,13 +133,13 @@ class MyStrategy(bt.Strategy):
             return
 
         # Check if we are in the market
-        if not self.position and self.atr[0]*1.5 < self.tr[0]:
+        if not self.position :
             if self.dataclose[0] > self.data.dual_buy_open[-1]:
                  self.log('BUY CREATE, %.2f' % self.dataclose[0])
                  self.order = self.buy()
                  trades.append({'order': 'buy', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
-            elif self.dataclose[0] < self.data.dual_sale_open[-1]:
+            elif self.dataclose[0] < self.data.dual_sale_open[-1] :
                  self.log('SELL CREATE, %.2f' % self.dataclose[0])
                  self.order = self.sell()
                  trades.append({'order': 'sell', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
@@ -150,7 +150,7 @@ class MyStrategy(bt.Strategy):
             == 0 is no position
             < 0 is short (you have given)
             '''
-            if self. position.size > 0 and self.atr[0] > self.tr[0]:
+            if self. position.size > 0 and self.atr[0] > self.tr[0] :
                 if len(self) >= (self.bar_executed + 1):
                     if self.params.max_price < self.dataclose[0]:
                         self.params.max_price = self.dataclose[0]
@@ -244,7 +244,7 @@ if __name__ == '__main__':
     dataframe['dual_sale_break'] = reg_sale_break.predict(pred_data)
 
     dataframe['openinterest'] = 0
-    print(dataframe.head())
+    print(dataframe.tail())
     #dataframe.to_csv('./m0120.csv')
     #dataframe['datetime'] = pd.to_datetime(dataframe.index)
 
