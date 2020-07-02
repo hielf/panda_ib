@@ -6,13 +6,13 @@ import sched, time
 import datetime
 # util.startLoop()  # uncomment this line when in a notebook
 
-ib = IB()
+
 # ib.connect('127.0.0.1', 7496, clientId=100)
 # ib.connect('129.226.51.237', 7497, clientId=101)
-ib.connect(host='124.156.100.215', port=7497, clientId=11, timeout=10, readonly=False)
+# ib.connect(host='124.156.100.215', port=7497, clientId=1, timeout=10, readonly=False)
 
-# contracts = [Index(symbol = "HSI", exchange = "HKFE"), Index(symbol = "SPX", exchange = "CBOE"), Forex('USDJPY'), Forex('EURUSD')]
-contracts = [Index(symbol = "HSI", exchange = "HKFE")]
+contracts = [Index(symbol = "SPX", exchange = "CBOE"), Forex('USDJPY'), Forex('EURUSD')]
+# contracts = [Index(symbol = "HSI", exchange = "HKFE")]
 
 # bars = ib.reqHistoricalData(contract, endDateTime='', durationStr='1 D',
 #         barSizeSetting='1 min', whatToShow='TRADES', useRTH=True)
@@ -42,13 +42,16 @@ def get_index_15sec(end_datetime):
         df = util.df(bars)
         print("got bars %s" % str(bars))
         print("got contract %s" % str(contract))
-        engine = create_engine('postgresql+psycopg2://chesp:Chesp92J5@rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com:3432/panda_quant',echo=True,client_encoding='utf8')
-        print("waiting for collect %s" % table)
-        df.to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');
-        sql = "insert into " + table + " select * from " + tmp_table +  " b where not exists (select 1 from " + table + " a where a.date = b.date);"
-        cur.execute(sql, (10, 1000000, False, False))
-        conn.commit()
-        conn.close()
+        try:
+            engine = create_engine('postgresql+psycopg2://chesp:Chesp92J5@rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com:3432/panda_quant',echo=True,client_encoding='utf8')
+            print("waiting for collect %s" % table)
+            df.to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');
+            sql = "insert into " + table + " select * from " + tmp_table +  " b where not exists (select 1 from " + table + " a where a.date = b.date);"
+            cur.execute(sql, (10, 1000000, False, False))
+            conn.commit()
+            conn.close()
+        except Exception:
+            pass
 
 def get_index_30sec(end_date):
     print("start 30sec collect %s" % str(end_date))
@@ -75,13 +78,17 @@ def get_index_30sec(end_date):
         df = util.df(bars)
         print("got bars %s" % str(bars))
         print("got contract %s" % str(contract))
-        engine = create_engine('postgresql+psycopg2://chesp:Chesp92J5@rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com:3432/panda_quant',echo=True,client_encoding='utf8')
-        print("waiting for collect %s" % table)
-        df.to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');
-        sql = "insert into " + table + " select * from " + tmp_table +  " b where not exists (select 1 from " + table + " a where a.date = b.date);"
-        cur.execute(sql, (10, 1000000, False, False))
-        conn.commit()
-        conn.close()
+        try:
+            engine = create_engine('postgresql+psycopg2://chesp:Chesp92J5@rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com:3432/panda_quant',echo=True,client_encoding='utf8')
+            print("waiting for collect %s" % table)
+            df.to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');
+            sql = "insert into " + table + " select * from " + tmp_table +  " b where not exists (select 1 from " + table + " a where a.date = b.date);"
+            cur.execute(sql, (10, 1000000, False, False))
+            conn.commit()
+            conn.close()
+        except Exception:
+            pass
+
 
 def get_index_1min(end_date):
     print("start 1min collect %s" % str(end_date))
@@ -108,13 +115,16 @@ def get_index_1min(end_date):
         df = util.df(bars)
         print("got bars %s" % str(bars))
         print("got contract %s" % str(contract))
-        engine = create_engine('postgresql+psycopg2://chesp:Chesp92J5@rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com:3432/panda_quant',echo=True,client_encoding='utf8')
-        print("waiting for collect %s" % table)
-        df.to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');
-        sql = "insert into " + table + " select * from " + tmp_table +  " b where not exists (select 1 from " + table + " a where a.date = b.date);"
-        cur.execute(sql, (10, 1000000, False, False))
-        conn.commit()
-        conn.close()
+        try:
+            engine = create_engine('postgresql+psycopg2://chesp:Chesp92J5@rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com:3432/panda_quant',echo=True,client_encoding='utf8')
+            print("waiting for collect %s" % table)
+            df.to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');
+            sql = "insert into " + table + " select * from " + tmp_table +  " b where not exists (select 1 from " + table + " a where a.date = b.date);"
+            cur.execute(sql, (10, 1000000, False, False))
+            conn.commit()
+            conn.close()
+        except Exception:
+            pass
 
 
 def get_index_5min(end_date):
@@ -142,13 +152,16 @@ def get_index_5min(end_date):
         df = util.df(bars)
         print("got bars %s" % str(bars))
         print("got contract %s" % str(contract))
-        engine = create_engine('postgresql+psycopg2://chesp:Chesp92J5@rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com:3432/panda_quant',echo=True,client_encoding='utf8')
-        print("waiting for collect %s" % table)
-        df.to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');
-        sql = "insert into " + table + " select * from " + tmp_table +  " b where not exists (select 1 from " + table + " a where a.date = b.date);"
-        cur.execute(sql, (10, 1000000, False, False))
-        conn.commit()
-        conn.close()
+        try:
+            engine = create_engine('postgresql+psycopg2://chesp:Chesp92J5@rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com:3432/panda_quant',echo=True,client_encoding='utf8')
+            print("waiting for collect %s" % table)
+            df.to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');
+            sql = "insert into " + table + " select * from " + tmp_table +  " b where not exists (select 1 from " + table + " a where a.date = b.date);"
+            cur.execute(sql, (10, 1000000, False, False))
+            conn.commit()
+            conn.close()
+        except Exception:
+            pass
 
 
 # def get_index_30min(date_time):
@@ -195,17 +208,20 @@ def get_index_5min(end_date):
 #         s.enter(60, 1, get_index_1min, (date_time,))
 
 if __name__ == '__main__':
-    d1 = datetime.datetime(2020,6,19,0,0,0)
-    d2 = datetime.datetime(2020,6,20,0,0,0)
+    ib = IB()
+    d1 = datetime.datetime(2020,6,11,0,0,0)
+    d2 = datetime.datetime(2020,6,30,0,0,0)
     diff = d2 - d1
     for i in range(diff.days + 1):
+        ib.connect(host='150.109.148.150', port=7497, clientId=i, timeout=10, readonly=False)
         end_date = (d1 + datetime.timedelta(i))
         print (end_date)
         print ("=========================")
         get_index_1min(end_date)
         get_index_5min(end_date)
-        get_index_30sec(end_date)
+        # get_index_30sec(end_date)
         # for j in range(6):
         #     end_datetime = (end_date + datetime.timedelta(j/6))
         #     print (end_datetime)
         #     get_index_15sec(end_datetime)
+        ib.disconnect()
