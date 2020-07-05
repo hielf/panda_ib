@@ -133,7 +133,7 @@ class MyStrategy(bt.Strategy):
             return
 
         # Check if we are in the market
-        if not self.position :
+        if not self.position and self.atr[-1] > self.tr[-1]*1.1:
             if self.dataclose[0] > self.data.dual_buy_open[-1]:
                  self.log('BUY CREATE, %.2f' % self.dataclose[0])
                  self.order = self.buy()
@@ -150,10 +150,10 @@ class MyStrategy(bt.Strategy):
             == 0 is no position
             < 0 is short (you have given)
             '''
-            if self. position.size > 0 and self.atr[0] > self.tr[0] :
+            if self. position.size > 0 and (self.atr[-2]*1.1 < self.tr[-1] ) :
                 if len(self) >= (self.bar_executed + 1):
-                    if self.params.max_price < self.dataclose[0]:
-                        self.params.max_price = self.dataclose[0]
+                    if self.params.max_price < self.datahigh[0]:
+                        self.params.max_price = self.datahigh[0]
                     # 冲高回落
                     if self.params.max_price > self.data.dual_buy_break[-1] and self.dataclose[0] < self.data.dual_buy_open[-1]:
                         self.log('BUY CLOSE HIT, %.2f' % self.dataclose[0])
@@ -174,10 +174,10 @@ class MyStrategy(bt.Strategy):
                         self.params.max_price = 0
                         trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
-            if self. position.size < 0 and self.atr[0] > self.tr[0]:
+            if self. position.size < 0 and (self.atr[-2]*1.1 < self.tr[-1] ) :
                 if len(self) >= (self.bar_executed + 1):
-                    if self.params.min_price > -self.dataclose[0]:
-                        self.params.min_price = -self.dataclose[0]
+                    if self.params.min_price > -self.datalow[0]:
+                        self.params.min_price = -self.datalow[0]
                     # 冲低回升
                     if abs(self.params.min_price) < self.data.dual_sale_break[-1] and self.dataclose[0] > self.data.dual_sale_open[-1]:
                         self.log('SALE CLOSE HIT, %.2f' % self.dataclose[0])
