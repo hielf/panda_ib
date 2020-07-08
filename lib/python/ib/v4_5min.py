@@ -133,7 +133,7 @@ class MyStrategy(bt.Strategy):
             return
 
         # Check if we are in the market
-        if not self.position and self.atr[-1] > self.tr[-1]*1.1:
+        if not self.position and (self.atr[-2] > self.tr[-1]*0.75) :
             if self.dataclose[0] > self.data.dual_buy_open[-1]:
                  self.log('BUY CREATE, %.2f' % self.dataclose[0])
                  self.order = self.buy()
@@ -151,7 +151,7 @@ class MyStrategy(bt.Strategy):
             < 0 is short (you have given)
             '''
             if self. position.size > 0 and (self.atr[-2]*1.1 < self.tr[-1] ) :
-                if len(self) >= (self.bar_executed + 1):
+                if len(self) >= (self.bar_executed + 2):
                     if self.params.max_price < self.datahigh[0]:
                         self.params.max_price = self.datahigh[0]
                     # 冲高回落
@@ -168,14 +168,14 @@ class MyStrategy(bt.Strategy):
                         self.params.max_price = 0
                         trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
                 else:
-                    if self.dataclose[0] < self.dataclose[-2]:
+                    if self.dataclose[0] < self.dataclose[-1]:
                         self.log('BUY CLOSE MOV2, %.2f' % self.dataclose[0])
                         self.order = self.sell()
                         self.params.max_price = 0
                         trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
             if self. position.size < 0 and (self.atr[-2]*1.1 < self.tr[-1] ) :
-                if len(self) >= (self.bar_executed + 1):
+                if len(self) >= (self.bar_executed + 2):
                     if self.params.min_price > -self.datalow[0]:
                         self.params.min_price = -self.datalow[0]
                     # 冲低回升
@@ -192,7 +192,7 @@ class MyStrategy(bt.Strategy):
                         self.params.min_price = 0
                         trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
                 else:
-                    if self.dataclose[0] > self.data.close[-2]:
+                    if self.dataclose[0] > self.data.close[-1]:
                         self.log('SALE CLOSE MOV2, %.2f' % self.dataclose[0])
                         self.order = self.buy()
                         self.params.min_price = 0
