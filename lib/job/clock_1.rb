@@ -16,7 +16,7 @@ module Clockwork
   # handler receives the time when job is prepared to run in the 2nd argument
   handler do |job, time|
     puts "ib.trader started at #{Time.zone.now}"
-    TradersJob.perform_now 'hsi' if job == 'ib.trader'
+    TradersJob.perform_now 'hsi_15secs' if job == 'ib.trader'
   end
 
   # every(1.second, 'ib.trader', :if => lambda { |t| (([0,3,6,9,12,15,18,21,24,27,30,33,36,39,42,45,48,51,54,57].include? t.min) && t.sec == 56) }, :thread => true) if ENV["backtrader_version"] == "3min"
