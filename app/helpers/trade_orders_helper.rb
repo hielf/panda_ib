@@ -229,9 +229,16 @@ module TradeOrdersHelper
       "5 mins"
     when "hsi_30mins"
       "30 mins"
+    when "hsi_15secs"
+      "15 secs"
     end
     today_start = Time.zone.now.change({hour: 9, min: 15})
-    duration = (db_collect == "true" ? "72000" : (Time.zone.now - today_start + 7200).to_i.to_s)
+    duration = case contract
+    when "hsi"
+      (db_collect == "true" ? "72000" : (Time.zone.now - today_start + 7200).to_i.to_s)
+    when "hsi_15secs"
+      duration = (db_collect == "true" ? "14400" : 7200.to_s)
+    end
     result = true
     list = nil
     # Rails.logger.warn "market_data start: #{Time.zone.now}"
@@ -248,7 +255,9 @@ module TradeOrdersHelper
       PyCall.exec("bars = ib.reqHistoricalData(contract, endDateTime='', durationStr='#{duration} S', barSizeSetting='#{bar_size}', whatToShow='TRADES', useRTH=True, keepUpToDate=True)")
       # PyCall.exec("tmp_table = '#{contract}' + '_tmp'")
       # PyCall.exec("table = '#{contract}'")
-      result = PyCall.eval("bars[-1].date == datetime.datetime.now().replace(second=0, microsecond=0)")
+      result = PyCall.eval("bars[-1].date == datetime.datetime.now().replace(second=0, microsecond=0)") unless contract == "hsi"
+
+      end
       result = true if force_collect
       # Rails.logger.warn "market_data_latest: #{PyCall.eval("bars[-1].date").to_s} force_collect: #{force_collect.to_s}"
 

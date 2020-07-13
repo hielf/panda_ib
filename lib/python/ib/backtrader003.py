@@ -206,7 +206,7 @@ class MyStrategy(bt.Strategy):
             < 0 is short (you have given)
             '''
             if self. position.size > 0:
-                if len(self) >= (self.bar_executed + 2):
+                if len(self) >= (self.bar_executed + 1):
                     if self.params.max_price < self.dataclose[0]:
                         self.params.max_price = self.dataclose[0]
                     # 冲高回落
@@ -227,7 +227,7 @@ class MyStrategy(bt.Strategy):
                         self.params.max_price = 0
 
             if self. position.size < 0: 
-                if len(self) >= (self.bar_executed + 2):
+                if len(self) >= (self.bar_executed + 1):
                     if self.params.min_price > -self.dataclose[0]:
                         self.params.min_price = -self.dataclose[0]
                     # 冲低回升
@@ -261,11 +261,11 @@ if __name__ == '__main__':
     # parase_dates = True是为了读取csv为dataframe的时候能够自动识别datetime格式的字符串，big作为index
     # 注意，这里最后的pandas要符合backtrader的要求的格式
     #dataframe = pd.read_csv('./data/hsi202003.csv', index_col=0, parse_dates=True)
-    dataframe = pd.read_csv('./data/hsi202006.csv', index_col=0, parse_dates=True, usecols=['date', 'open', 'high', 'low', 'close', 'volume'])
+    dataframe = pd.read_csv('./data/hsi_15s.csv', index_col=0, parse_dates=True, usecols=['date', 'open', 'high', 'low', 'close', 'volume'])
     dataframe['openinterest'] = 0
     data = bt.feeds.PandasData(dataname=dataframe,
-                            fromdate = datetime.datetime(2020, 5, 26, 9, 45),
-                            todate = datetime.datetime(2020, 6, 27, 10,15)
+                            fromdate = datetime.datetime(2020, 5, 10, 9, 45),
+                            todate = datetime.datetime(2020, 6, 10, 10,15)
                             ) # 年月日, 小时, 分钟, 实盘就传参数吧
     # Add the Data Feed to Cerebro
     cerebro.adddata(data)

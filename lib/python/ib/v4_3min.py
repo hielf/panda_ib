@@ -211,7 +211,7 @@ class MyStrategy(bt.Strategy):
             < 0 is short (you have given)
             '''
             if self. position.size > 0:
-                if len(self) >= (self.bar_executed + 2):
+                if len(self) >= (self.bar_executed + 1):
                     if self.params.max_price < self.dataclose[0]:
                         self.params.max_price = self.dataclose[0]
                     # 冲高回落
@@ -234,7 +234,7 @@ class MyStrategy(bt.Strategy):
                         trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
             if self. position.size < 0:
-                if len(self) >= (self.bar_executed + 2):
+                if len(self) >= (self.bar_executed + 1):
                     if self.params.min_price > -self.dataclose[0]:
                         self.params.min_price = -self.dataclose[0]
                     # 冲低回升
