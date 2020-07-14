@@ -48,25 +48,27 @@ class RisksJob < ApplicationJob
 
           Rails.logger.warn "ib risk loss_limit: #{loss_limit}, position: #{last_trade[:action]}, open: #{last_trade[:price]}, close: #{close}, unrealized_pnl: #{unrealized_pnl}, #{Time.zone.now}" if unrealized_pnl != 0
 
-          @profit_losses = ProfitLoss.latest(4)
-          pnls = @profit_losses.to_a.map{|pr| pr.unrealized_pnl}
+          if @contract != "15sec"
+            @profit_losses = ProfitLoss.latest(4)
+            pnls = @profit_losses.to_a.map{|pr| pr.unrealized_pnl}
 
-          if unrealized_pnl.to_f < loss_limit.to_f
-            order, amount = ApplicationController.helpers.close_position
-            begin
-              EventLog.create(log_type: "RISK", order_type: @order, content: "RISK unrealized_pnl: #{unrealized_pnl} CLOSE #{@order} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}") if order != "" && amount != 0
-            rescue Exception => e
-              Rails.logger.warn "EventLog create error: #{e}"
-            end
-          end
-
-          if pnls && pnls.length >= 3 && ENV["backtrader_version"] != "5min"
-            if pnls[0] > 0 && pnls[0] < pnls[1] && pnls[1] < pnls[2]
+            if unrealized_pnl.to_f < loss_limit.to_f
               order, amount = ApplicationController.helpers.close_position
               begin
-                EventLog.create(log_type: "RISK", order_type: @order, content: "RISK profit: #{pnls[0]} CLOSE #{@order} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}") if order != "" && amount != 0
+                EventLog.create(log_type: "RISK", order_type: @order, content: "RISK unrealized_pnl: #{unrealized_pnl} CLOSE #{@order} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}") if order != "" && amount != 0
               rescue Exception => e
                 Rails.logger.warn "EventLog create error: #{e}"
+              end
+            end
+
+            if pnls && pnls.length >= 3 && ENV["backtrader_version"] != "5min"
+              if pnls[0] > 0 && pnls[0] < pnls[1] && pnls[1] < pnls[2]
+                order, amount = ApplicationController.helpers.close_position
+                begin
+                  EventLog.create(log_type: "RISK", order_type: @order, content: "RISK profit: #{pnls[0]} CLOSE #{@order} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}") if order != "" && amount != 0
+                rescue Exception => e
+                  Rails.logger.warn "EventLog create error: #{e}"
+                end
               end
             end
           end

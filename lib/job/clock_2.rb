@@ -16,6 +16,13 @@ module Clockwork
   # handler receives the time when job is prepared to run in the 2nd argument
   handler do |job, time|
     if job == 'IB risk'
+      contract = ''
+      case ENV['backtrader_version']
+      when '15sec'
+        contract = 'hsi_15secs'
+      else
+        contract = 'hsi'
+      end
       stop_time = Time.zone.now + 3.minutes - 5.seconds
       180.times do
         if Time.zone.now > stop_time
@@ -24,13 +31,13 @@ module Clockwork
         end
         @ib = ApplicationController.helpers.ib_connect if @ib.nil?
         @ib = ApplicationController.helpers.ib_connect if !@ib.nil? && !@ib.isConnected()
-        RisksJob.perform_now @ib, 'hsi' if @ib
+        RisksJob.perform_now @ib, contract if @ib
         sleep 5
       end
     end
   end
 
-  # every(3.minute, 'IB risk', :thread => true)
+  every(3.minute, 'IB risk', :thread => true)
 
   # every(1.minute, 'timing', :skip_first_run => true, :thread => true)
   # every(1.hour, 'hourly.job')

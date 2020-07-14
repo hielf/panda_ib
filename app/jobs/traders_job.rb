@@ -15,15 +15,14 @@ class TradersJob < ApplicationJob
     if @ib.isConnected()
       attempt = 0
       market_data = nil
-      file = nil
+      file = Rails.root.to_s + "/tmp/csv/#{contract}.csv"
 
       if ENV["remote_index"] == "true"
         10.times do
           attempt += 1
-          url = "http://#{ENV['remote_index_url']}/csv/hsi.csv"
+          url = "http://#{ENV['remote_index_url']}/csv/#{contract}.csv"
           download = open(url)
-          IO.copy_stream(download, Rails.root.to_s + '/tmp/csv/hsi.csv')
-          file = Rails.root.to_s + "/tmp/csv/#{contract}.csv"
+          IO.copy_stream(download, file)
           if (run_time - CSV.read(file).last[0].to_time < 60)
             break
           else
@@ -34,16 +33,32 @@ class TradersJob < ApplicationJob
       else
         5.times do
           attempt += 1
-          market_data = ApplicationController.helpers.market_data(contract)
-          if market_data
-            break
+          case ENV['backtrader_version']
+          when '15sec'
+            market_data = true if (run_time - CSV.read(file).last[0].to_time < 30)
           else
-            Rails.logger.warn "await for 3 seconds.."
-            sleep 3
-            market_data = ApplicationController.helpers.market_data(contract, true) if attempt == 5
+            market_data = true if (run_time - CSV.read(file).last[0].to_time < 60)
           end
+          break if market_data
+          Rails.logger.warn "await for 1 second.."
+          sleep 1
         end
-        file = ApplicationController.helpers.index_to_csv(contract, market_data, true)
+        if market_data.nil?
+          Rails.logger.warn "ib job return: no market_data, #{Time.zone.now}"
+          return
+        end
+        # 5.times do
+        #   attempt += 1
+        #   market_data = ApplicationController.helpers.market_data(contract)
+        #   if market_data
+        #     break
+        #   else
+        #     Rails.logger.warn "await for 3 seconds.."
+        #     sleep 3
+        #     market_data = ApplicationController.helpers.market_data(contract, true) if attempt == 5
+        #   end
+        # end
+        # file = ApplicationController.helpers.index_to_csv(contract, market_data, true)
       end
 
       current_time = run_time.strftime('%H:%M')
