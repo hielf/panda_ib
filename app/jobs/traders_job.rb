@@ -62,7 +62,7 @@ class TradersJob < ApplicationJob
           when '3min'
             360
           when '15sec'
-            30
+            60
           else
             120
           end
