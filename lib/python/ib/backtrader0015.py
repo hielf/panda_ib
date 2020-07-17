@@ -3,16 +3,13 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
-import sys
 import datetime  # For datetime objects
-from dateutil.relativedelta import relativedelta
 import time
 import pandas as pd
 import backtrader as bt
 import numpy as np
 from sklearn.linear_model import LinearRegression
 import joblib
-import json
 
 from tqdm import tqdm
 
@@ -27,8 +24,6 @@ reg_sale_break = joblib.load('reg_sale_break3.pkl')
 # reg_buy_break = joblib.load('hsi_buy_break05.pkl')
 # reg_sale_open = joblib.load('hsi_sale_open05.pkl')
 # reg_sale_break = joblib.load('hsi_sale_break05.pkl')
-
-
 
 class dual_trust(bt.Indicator):
     lines = (   'dual_buy_open','dual_buy_break','dual_sale_open','dual_sale_break', 'close_resample',
@@ -199,15 +194,13 @@ class MyStrategy(bt.Strategy):
         # Check if we are in the market
         if not self.position:
 
-            if self.dataclose[0] > self.dual_lines.dual_buy_open[-1]:
+            if self.dataclose[0] > self.dual_lines.dual_buy_open[0]:
                  self.log('BUY CREATE, %.2f' % self.dataclose[0])
                  self.order = self.buy()
-                 trades.append({'order': 'buy', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
-            elif self.dataclose[0] < self.dual_lines.dual_sale_open[-1]:
+            elif self.dataclose[0] < self.dual_lines.dual_sale_open[0]:
                  self.log('SELL CREATE, %.2f' % self.dataclose[0])
                  self.order = self.sell()
-                 trades.append({'order': 'sell', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
         else:
             '''
@@ -224,62 +217,45 @@ class MyStrategy(bt.Strategy):
                         self.log('BUY CLOSE HIT, %.2f' % self.dataclose[0])
                         self.order = self.sell()
                         self.params.max_price = 0
-                        trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
+
                     # # 移动平仓
                     elif self.dataclose[0] < self.dual_lines.close_resample[-1]:
                         self.log('BUY CLOSE MOV, %.2f' % self.dataclose[0])
                         self.order = self.sell()
                         self.params.max_price = 0
-                        trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
                 else:
                     if self.dataclose[0] < self.dual_lines.close_resample[-1]:
                         self.log('BUY CLOSE MOV2, %.2f' % self.dataclose[0])
                         self.order = self.sell()
                         self.params.max_price = 0
-                        trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
             if self. position.size < 0:
                 if len(self) >= (self.bar_executed + 1):
                     if self.params.min_price > -self.dataclose[0]:
                         self.params.min_price = -self.dataclose[0]
                     # 冲低回升
+
                     if abs(self.params.min_price) < self.dual_lines.dual_sale_break[0] and self.dataclose[0] > self.dual_lines.dual_sale_open[0]:
                         self.log('SALE CLOSE HIT, %.2f' % self.dataclose[0])
                         self.order = self.buy()
                         self.params.min_price = 0
-                        trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
+
                     # 移动平仓
                     elif self.dataclose[0] > self.dual_lines.close_resample[-1]:
                         self.log('SALE CLOSE MOV, %.2f' % self.dataclose[0])
                         self.order = self.buy()
                         self.params.min_price = 0
-                        trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
                 else:
                     if self.dataclose[0] > self.dual_lines.close_resample[-1]:
                         self.log('SALE CLOSE MOV2, %.2f' % self.dataclose[0])
                         self.order = self.buy()
                         self.params.min_price = 0
-                        trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
 
     def stop(self):
         print("death")
 
 if __name__ == '__main__':
-    csv_path = sys.argv[1]
-    json_path = sys.argv[2]
-    begin_time = sys.argv[3]
-    end_time = sys.argv[4]
-
-    begin_time = datetime.datetime.strptime(begin_time, '%Y-%m-%d %H:%M:%S +0800')
-    end_time = datetime.datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S +0800')
-
-    date_handler = lambda obj: (
-        obj.isoformat()
-        if isinstance(obj, (datetime.datetime, datetime.date))
-        else None
-    )
-    trades = []
     # Create a cerebro entity
     cerebro = bt.Cerebro()
     # Add a strategy
@@ -288,16 +264,16 @@ if __name__ == '__main__':
     # parase_dates = True是为了读取csv为dataframe的时候能够自动识别datetime格式的字符串，big作为index
     # 注意，这里最后的pandas要符合backtrader的要求的格式
     #dataframe = pd.read_csv('./data/hsi202003.csv', index_col=0, parse_dates=True)
-    dataframe = pd.read_csv(csv_path, index_col=0, parse_dates=True, usecols=['date', 'open', 'high', 'low', 'close', 'volume'])
+    dataframe = pd.read_csv('./data/hsi_15s.csv', index_col=0, parse_dates=True, usecols=['date', 'open', 'high', 'low', 'close', 'volume'])
     dataframe['openinterest'] = 0
     data = bt.feeds.PandasData(dataname=dataframe,
-                            fromdate = begin_time,
-                            todate = end_time
-                            )
+                            fromdate = datetime.datetime(2020, 7, 1, 9, 45),
+                            todate = datetime.datetime(2020, 7, 31, 10,15)
+                            ) # 年月日, 小时, 分钟, 实盘就传参数吧
     # Add the Data Feed to Cerebro
     cerebro.adddata(data)
     # Set our desired cash start
-    cerebro.broker.setcash(700000.0)
+    cerebro.broker.setcash(350000.0)
     # 设置每笔交易交易的股票数量
     cerebro.addsizer(bt.sizers.FixedSize, stake=1)
     # Set the commission
@@ -316,7 +292,7 @@ if __name__ == '__main__':
 
     endtime = time.time()
     print('='*5, 'program running time', '='*5)
-    print('from ' + str(begin_time) + ' to ' + str(end_time) + '', '+4')
+    print('from 2018,1,1 to 2018,3,1', '+4')
     print ('time:', (endtime - starttime), 'seconds')
     print('='*5, 'program running time', '='*5)
 
@@ -325,7 +301,4 @@ if __name__ == '__main__':
     print('SR:', strat.analyzers.SharpeRatio.get_analysis())
     print('DW:', strat.analyzers.DW.get_analysis())
 
-    print(trades)
-    with open(json_path, 'w') as f:
-        json.dump(trades, f)
-    # cerebro.plot()
+    cerebro.plot()
