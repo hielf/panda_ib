@@ -11,9 +11,8 @@
 ## 交易类 trade_orders
 ### 下单
 * POST root_url/trade_orders/order
-* params {order_type: 'BUY', amount: 4, price: 0, rand_code: 1111}     --buy open
-* params {order_type: 'SELL', amount: 4, price: 0, rand_code: 1111}    --sell open
-* params {order_type: 'CLOSE', amount: 4, price: 0, rand_code: 1111}   --close
+* params {order_type: 'BUY', amount: 4, price: 0, rand_code: 1111}     
+* params {order_type: 'SELL', amount: 4, price: 0, rand_code: 1111}    
 * {
     "status": 0,
     "message": "下单成功"
