@@ -14,14 +14,14 @@ class Api::TradeOrdersController < Api::ApplicationController
     m_requires! [:order_type, :amount, :price, :rand_code]
     result = [0, '下单成功']
 
-    order_type = params[:order_type].upcase
-    amount = params[:amount].to_i
+    @order = params[:order_type].upcase
+    @amount = params[:amount].to_i
     price = params[:price].to_f
     rand_code = params[:rand_code]
 
     begin
-      p [order_type, amount, price]
-      helpers.ib_order(order_type, amount, price)
+      # helpers.ib_order(order_type, amount, price)
+      OrdersJob.perform_now @order, @amount
     rescue Exception => e
       result = [1, '下单失败']
     end

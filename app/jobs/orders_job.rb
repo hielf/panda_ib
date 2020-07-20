@@ -10,6 +10,9 @@ class OrdersJob < ApplicationJob
   def perform(*args)
     @order = args[0]
     @amount = args[1]
+    # @ib = args[2]
+
+    # @ib = ApplicationController.helpers.ib_connect if @ib.nil?
 
     if @order != "" && @amount != 0
       ApplicationController.helpers.ib_order(@order, @amount, 0)
@@ -18,6 +21,8 @@ class OrdersJob < ApplicationJob
   end
 
   private
+  # ApplicationController.helpers.ib_disconnect(@ib) if @ib.isConnected()
+
   def event_log
     EventLog.create(log_type: "ORDER", order_type: @order, content: "#{@order} #{@amount.to_s} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}") if @order != "" && @amount != 0
   end

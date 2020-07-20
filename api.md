@@ -1,14 +1,19 @@
 # 熊猫IB API文档
 
 ### API说明
-* root_url: http://host:8090/api
+* host: http://129.226.126.93/
+* root_url: host:81/api --grace
+* root_url: host:82/api --test
+* root_url: host/api --kam
 * Need Auth: no
 * HEADERS Content-Type: application/x-www-form-urlencoded
 
 ## 交易类 trade_orders
 ### 下单
 * POST root_url/trade_orders/order
-* params {order_type: 'BUY', amount: 500, price: 5.0, rand_code: 1111}
+* params {order_type: 'BUY', amount: 4, price: 0, rand_code: 1111}     --buy open
+* params {order_type: 'SELL', amount: 4, price: 0, rand_code: 1111}    --sell open
+* params {order_type: 'CLOSE', amount: 4, price: 0, rand_code: 1111}   --close
 * {
     "status": 0,
     "message": "下单成功"
