@@ -109,8 +109,23 @@ module TradeOrdersHelper
       end
     rescue Exception => e
       error_message = e
-    # ensure
-    #   ib_disconnect(ib)
+    ensure
+      # ib_disconnect(ib)
+      contract = case ENV['backtrader_version']
+      when '15sec'
+        'hsi_15secs'
+      else
+        'hsi'
+      end
+      position = case order_type
+      when 'SELL'
+        amount * -1
+      when 'BUY'
+        amount
+      end
+      tp = TraderPosition.find_or_initialize_by(contract: contract)
+      tp.position = position
+      tp.save
     end
 
     return order_status

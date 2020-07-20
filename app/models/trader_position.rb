@@ -1,0 +1,2 @@
+class TraderPosition < ApplicationRecord
+end
