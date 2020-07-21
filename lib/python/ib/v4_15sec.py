@@ -18,15 +18,15 @@ from tqdm import tqdm
 
 starttime = time.time()
 
-reg_buy_open = joblib.load('reg_buy_open3.pkl')
-reg_buy_break = joblib.load('reg_buy_break3.pkl')
-reg_sale_open = joblib.load('reg_sale_open3.pkl')
-reg_sale_break = joblib.load('reg_sale_break3.pkl')
+# reg_buy_open = joblib.load('reg_buy_open3.pkl')
+# reg_buy_break = joblib.load('reg_buy_break3.pkl')
+# reg_sale_open = joblib.load('reg_sale_open3.pkl')
+# reg_sale_break = joblib.load('reg_sale_break3.pkl')
 
-# reg_buy_open = joblib.load('hsi_buy_open05.pkl')
-# reg_buy_break = joblib.load('hsi_buy_break05.pkl')
-# reg_sale_open = joblib.load('hsi_sale_open05.pkl')
-# reg_sale_break = joblib.load('hsi_sale_break05.pkl')
+reg_buy_open = joblib.load('hsi_buy_open05.pkl')
+reg_buy_break = joblib.load('hsi_buy_break05.pkl')
+reg_sale_open = joblib.load('hsi_sale_open05.pkl')
+reg_sale_break = joblib.load('hsi_sale_break05.pkl')
 
 
 
