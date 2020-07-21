@@ -15,15 +15,15 @@ from tqdm import tqdm
 
 starttime = time.time()
 
-reg_buy_open = joblib.load('reg_buy_open3.pkl')
-reg_buy_break = joblib.load('reg_buy_break3.pkl')
-reg_sale_open = joblib.load('reg_sale_open3.pkl')
-reg_sale_break = joblib.load('reg_sale_break3.pkl')
+# reg_buy_open = joblib.load('reg_buy_open3.pkl')
+# reg_buy_break = joblib.load('reg_buy_break3.pkl')
+# reg_sale_open = joblib.load('reg_sale_open3.pkl')
+# reg_sale_break = joblib.load('reg_sale_break3.pkl')
 
-# reg_buy_open = joblib.load('hsi_buy_open05.pkl')
-# reg_buy_break = joblib.load('hsi_buy_break05.pkl')
-# reg_sale_open = joblib.load('hsi_sale_open05.pkl')
-# reg_sale_break = joblib.load('hsi_sale_break05.pkl')
+reg_buy_open = joblib.load('hsi_buy_open05.pkl')
+reg_buy_break = joblib.load('hsi_buy_break05.pkl')
+reg_sale_open = joblib.load('hsi_sale_open05.pkl')
+reg_sale_break = joblib.load('hsi_sale_break05.pkl')
 
 class dual_trust(bt.Indicator):
     lines = (   'dual_buy_open','dual_buy_break','dual_sale_open','dual_sale_break', 'close_resample',
@@ -105,7 +105,7 @@ class MyStrategy(bt.Strategy):
         ('maperiod', 12),
         ('printlog', True),
         ('dual_window',12),
-        ('dual_period', '03T'),
+        ('dual_period', '05T'),
         ('max_price', 0),
         ('min_price', 0)
     )
@@ -128,6 +128,7 @@ class MyStrategy(bt.Strategy):
         self.buycomm = None
         self.sellprice = None
         self.sellcomm = None
+        self.openstate = False
 
         self.dual_lines = dual_trust(dual_window=self.params.dual_window, dual_period= self.params.dual_period, subplot=False)
     def start(self):
@@ -192,15 +193,17 @@ class MyStrategy(bt.Strategy):
             return
 
         # Check if we are in the market
-        if not self.position:
+        if not self.position and not self.openstate:
 
             if self.dataclose[0] > self.dual_lines.dual_buy_open[0]:
                  self.log('BUY CREATE, %.2f' % self.dataclose[0])
                  self.order = self.buy()
+                 self.openstate = True
 
             elif self.dataclose[0] < self.dual_lines.dual_sale_open[0]:
                  self.log('SELL CREATE, %.2f' % self.dataclose[0])
                  self.order = self.sell()
+                 self.openstate = True
 
         else:
             '''
@@ -208,10 +211,13 @@ class MyStrategy(bt.Strategy):
             == 0 is no position
             < 0 is short (you have given)
             '''
+            if len(self) >= (self.bar_executed + 1):
+                self.openstate = False
             if self. position.size > 0:
+                if self.params.max_price < self.dataclose[0]:
+                    self.params.max_price = self.dataclose[0]
                 if len(self) >= (self.bar_executed + 1):
-                    if self.params.max_price < self.dataclose[0]:
-                        self.params.max_price = self.dataclose[0]
+
                     # 冲高回落
                     if self.params.max_price > self.dual_lines.dual_buy_break[0] and self.dataclose[0] < self.dual_lines.dual_buy_open[0]:
                         self.log('BUY CLOSE HIT, %.2f' % self.dataclose[0])
@@ -219,20 +225,22 @@ class MyStrategy(bt.Strategy):
                         self.params.max_price = 0
 
                     # # 移动平仓
-                    elif self.dataclose[0] < self.dual_lines.close_resample[-1]:
+                    elif self.dataclose[0] < self.dual_lines.close_resample[0]:
                         self.log('BUY CLOSE MOV, %.2f' % self.dataclose[0])
                         self.order = self.sell()
                         self.params.max_price = 0
                 else:
-                    if self.dataclose[0] < self.dual_lines.close_resample[-1]:
+                    if self.dataclose[0] < self.dual_lines.close_resample[0]:
                         self.log('BUY CLOSE MOV2, %.2f' % self.dataclose[0])
                         self.order = self.sell()
                         self.params.max_price = 0
 
             if self. position.size < 0:
-                if len(self) >= (self.bar_executed + 1):
-                    if self.params.min_price > -self.dataclose[0]:
+                if self.params.min_price > -self.dataclose[0]:
                         self.params.min_price = -self.dataclose[0]
+
+                if len(self) >= (self.bar_executed + 1):
+
                     # 冲低回升
 
                     if abs(self.params.min_price) < self.dual_lines.dual_sale_break[0] and self.dataclose[0] > self.dual_lines.dual_sale_open[0]:
@@ -241,12 +249,12 @@ class MyStrategy(bt.Strategy):
                         self.params.min_price = 0
 
                     # 移动平仓
-                    elif self.dataclose[0] > self.dual_lines.close_resample[-1]:
+                    elif self.dataclose[0] > self.dual_lines.close_resample[0]:
                         self.log('SALE CLOSE MOV, %.2f' % self.dataclose[0])
                         self.order = self.buy()
                         self.params.min_price = 0
                 else:
-                    if self.dataclose[0] > self.dual_lines.close_resample[-1]:
+                    if self.dataclose[0] > self.dual_lines.close_resample[0]:
                         self.log('SALE CLOSE MOV2, %.2f' % self.dataclose[0])
                         self.order = self.buy()
                         self.params.min_price = 0
@@ -267,8 +275,8 @@ if __name__ == '__main__':
     dataframe = pd.read_csv('./data/hsi_15s.csv', index_col=0, parse_dates=True, usecols=['date', 'open', 'high', 'low', 'close', 'volume'])
     dataframe['openinterest'] = 0
     data = bt.feeds.PandasData(dataname=dataframe,
-                            fromdate = datetime.datetime(2020, 7, 1, 9, 45),
-                            todate = datetime.datetime(2020, 7, 31, 10,15)
+                            fromdate = datetime.datetime(2020, 4, 1, 9, 45),
+                            todate = datetime.datetime(2020, 6, 29, 10,15)
                             ) # 年月日, 小时, 分钟, 实盘就传参数吧
     # Add the Data Feed to Cerebro
     cerebro.adddata(data)
