@@ -119,9 +119,9 @@ module TradeOrdersHelper
       end
       position = case order_type
       when 'SELL'
-        amount * -1
+        amount.to_i * -1
       when 'BUY'
-        amount
+        amount.to_i
       end
       tp = TraderPosition.find_or_initialize_by(contract: contract)
       previous_position = 0
