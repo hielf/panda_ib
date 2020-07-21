@@ -110,7 +110,7 @@ class MyStrategy(bt.Strategy):
         ('maperiod', 12),
         ('printlog', True),
         ('dual_window',12),
-        ('dual_period', '03T'),
+        ('dual_period', '05T'),
         ('max_price', 0),
         ('min_price', 0)
     )
@@ -203,11 +203,13 @@ class MyStrategy(bt.Strategy):
             if self.dataclose[0] > self.dual_lines.dual_buy_open[0]:
                  self.log('BUY CREATE, %.2f' % self.dataclose[0])
                  self.order = self.buy()
+                 self.openstate = True
                  trades.append({'order': 'buy', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
             elif self.dataclose[0] < self.dual_lines.dual_sale_open[0]:
                  self.log('SELL CREATE, %.2f' % self.dataclose[0])
                  self.order = self.sell()
+                 self.openstate = True
                  trades.append({'order': 'sell', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
         else:
