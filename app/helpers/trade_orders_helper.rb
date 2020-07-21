@@ -122,6 +122,8 @@ module TradeOrdersHelper
         amount.to_i * -1
       when 'BUY'
         amount.to_i
+      else
+        0
       end
       tp = TraderPosition.find_or_initialize_by(contract: contract)
       previous_position = 0
