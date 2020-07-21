@@ -236,7 +236,7 @@ module ContractsHelper
         120
       end
       if time_diff.abs <= ot
-        position = ib_positions
+        position = ApplicationController.helpers.ib_positions
         amount = position["position"].abs if (position && position != {} && !position["position"].nil?)
         Rails.logger.warn "ib position: #{position}"
         if !position["position"].nil? && data.last["order"].upcase == "CLOSE"

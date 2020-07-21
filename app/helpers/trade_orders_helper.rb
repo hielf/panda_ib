@@ -124,7 +124,9 @@ module TradeOrdersHelper
         amount
       end
       tp = TraderPosition.find_or_initialize_by(contract: contract)
-      tp.position = position
+      previous_position = 0
+      previous_position = tp.position if (tp && !tp.position.nil?)
+      tp.position = position + previous_position
       tp.save
     end
 
