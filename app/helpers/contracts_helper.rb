@@ -237,6 +237,8 @@ module ContractsHelper
       end
       if time_diff.abs <= ot
         position = ApplicationController.helpers.ib_positions
+        tp = TraderPosition.find_by(contract: contract)
+        position["position"] = tp.position if (tp && tp.position != 0)
         amount = position["position"].abs if (position && position != {} && !position["position"].nil?)
         Rails.logger.warn "ib position: #{position}"
         if !position["position"].nil? && data.last["order"].upcase == "CLOSE"
@@ -339,9 +341,17 @@ module ContractsHelper
   end
 
   def close_position
+    contract = case ENV['backtrader_version']
+    when '15sec'
+      'hsi_15secs'
+    else
+      'hsi'
+    end
     order = ""
-    position = ib_positions
+    position = {}
     amount = 0
+    tp = TraderPosition.find_by(contract: contract)
+    position["position"] = tp.position if (tp && tp.position != 0)
 
     if !position["position"].nil? && position["position"] > 0 # buy
       order = "SELL"
