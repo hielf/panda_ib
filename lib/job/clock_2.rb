@@ -24,7 +24,7 @@ module Clockwork
         contract = 'hsi'
       end
       stop_time = Time.zone.now + 3.minutes - 5.seconds
-      180.times do
+      60.times do
         if Time.zone.now > stop_time
           ApplicationController.helpers.ib_disconnect(@ib) if @ib.isConnected()
           break
@@ -32,7 +32,7 @@ module Clockwork
         @ib = ApplicationController.helpers.ib_connect if @ib.nil?
         @ib = ApplicationController.helpers.ib_connect if !@ib.nil? && !@ib.isConnected()
         RisksJob.perform_now @ib, contract if @ib
-        sleep 5
+        sleep 4
       end
     end
   end
