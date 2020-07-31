@@ -13,7 +13,7 @@ class RisksJob < ApplicationJob
 
     current_time = Time.zone.now.strftime('%H:%M')
     @order = ""
-    if (current_time > "09:45" && current_time < "12:00") || (current_time > "13:00" && current_time < "15:45")
+    if (current_time >= "09:45" && current_time =< "12:00") || (current_time >= "13:00" && current_time =< "16:30")
       # @ib = ApplicationController.helpers.ib_connect
       # Rails.logger.warn "ib risk start: #{@ib}"
       if @ib.isConnected()
