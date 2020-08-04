@@ -19,7 +19,7 @@ class OrdersJob < ApplicationJob
       today_pnl = Trade.where("created_at >= ?", Date.today).sum(:realized_pnl)
       last_pnl = Trade.where("created_at >= ?", Date.today).last.realized_pnl
       if today_pnl >= (ENV["total_asset"].to_i * 0.12) && last_pnl == 0
-        @order, @amount = ApplicationController.helpers.close_position
+        # @order, @amount = ApplicationController.helpers.close_position
         break
       end
       if @order != "" && @amount != 0
