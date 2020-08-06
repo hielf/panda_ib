@@ -87,7 +87,7 @@ class TradersJob < ApplicationJob
         end
       end
 
-      OrdersJob.perform_now @order, @amount
+      OrdersJob.perform_now @order, @amount if (@order != "" && @amount != 0)
 
     elsif (current_time > "09:15" && current_time < "09:45") || (current_time > "15:45" && current_time < "16:30")
       ApplicationController.helpers.close_position
@@ -104,7 +104,7 @@ class TradersJob < ApplicationJob
 
   private
   def around_check
-    
+
   end
 
 end
