@@ -17,8 +17,8 @@ class OrdersJob < ApplicationJob
     @ib = ApplicationController.helpers.ib_connect
     if @ib.isConnected()
       today_pnl = Trade.where("created_at >= ?", Date.today).sum(:realized_pnl)
-      last_pnl = Trade.where("created_at >= ?", Date.today).last.realized_pnl
-      if today_pnl >= (ENV["total_asset"].to_i * 0.12) && last_pnl == 0
+      last_pnl = Trade.where("created_at >= ?", Date.today).last
+      if today_pnl >= (ENV["total_asset"].to_i * 0.12) && !last_pnl.nil? && last_pnl.realized_pnl == 0
         @order, @amount = ApplicationController.helpers.close_position
       else
         if @order != "" && @amount != 0
