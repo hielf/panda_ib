@@ -236,7 +236,7 @@ module ContractsHelper
         120
       end
       if time_diff.abs <= ot
-        position = ApplicationController.helpers.ib_positions
+        # position = ApplicationController.helpers.ib_positions
         tp = TraderPosition.find_by(contract: contract)
         position["position"] = tp.position if (tp && tp.position != 0)
         amount = position["position"].abs if (position && position != {} && !position["position"].nil?)
