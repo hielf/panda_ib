@@ -13,20 +13,16 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 import joblib
 import json
+import csv
 
 from tqdm import tqdm
 
 starttime = time.time()
 
-# reg_buy_open = joblib.load('reg_buy_open3.pkl')
-# reg_buy_break = joblib.load('reg_buy_break3.pkl')
-# reg_sale_open = joblib.load('reg_sale_open3.pkl')
-# reg_sale_break = joblib.load('reg_sale_break3.pkl')
-
-reg_buy_open = joblib.load('hsi_buy_open05.pkl')
-reg_buy_break = joblib.load('hsi_buy_break05.pkl')
-reg_sale_open = joblib.load('hsi_sale_open05.pkl')
-reg_sale_break = joblib.load('hsi_sale_break05.pkl')
+reg_buy_open = joblib.load('hsi_buy_open06.pkl')
+reg_buy_break = joblib.load('hsi_buy_break06.pkl')
+reg_sale_open = joblib.load('hsi_sale_open06.pkl')
+reg_sale_break = joblib.load('hsi_sale_break06.pkl')
 
 
 
@@ -90,7 +86,7 @@ class dual_trust(bt.Indicator):
         # lines 0 是当前, 1是未来, -1 是上一个 和pandas 不一样, pd 是 -1 为当前时间
         self.lines.close_resample[0] = pred_data.close[-2] # 当前价格和上一个close 价格比较
 
-        prenext_num = -2
+        prenext_num = -1
         #reg_buy_open = joblib.load('reg_buy_open.pkl')
         self.lines.dual_buy_open[0] = int(reg_buy_open.predict(pred_data)[prenext_num] * 100)/100
 
@@ -107,12 +103,13 @@ class dual_trust(bt.Indicator):
 # Create a Stratey
 class MyStrategy(bt.Strategy):
     params = (
-        ('maperiod', 12),
+        ('maperiod', 15),
         ('printlog', True),
-        ('dual_window',12),
+        ('dual_window',15),
         ('dual_period', '05T'),
         ('max_price', 0),
-        ('min_price', 0)
+        ('min_price', 0),
+        ('record_id',0)
     )
 
     def log(self, txt, dt=None, doprint=False):
@@ -134,6 +131,10 @@ class MyStrategy(bt.Strategy):
         self.sellprice = None
         self.sellcomm = None
         self.openstate = False
+        self.buy_open = None
+        self.buy_break = None
+        self.sale_open = None
+        self.sale_break = None
 
         self.dual_lines = dual_trust(dual_window=self.params.dual_window, dual_period= self.params.dual_period, subplot=False)
     def start(self):
@@ -159,6 +160,9 @@ class MyStrategy(bt.Strategy):
 
                 self.buyprice = order.executed.price
                 self.buycomm = order.executed.comm
+
+                row_list = [self.data.datetime.time(), 'buy', self.buyprice, self.buycomm, 0]
+                writer.writerow(row_list)
             else:  # Sell
                 self.log('SELL EXECUTED, Price: %.2f, Cost: %.2f, Comm %.2f' %
                          (order.executed.price,
@@ -166,6 +170,9 @@ class MyStrategy(bt.Strategy):
                           order.executed.comm))
                 self.sellprice = order.executed.price
                 self.sellcomm = order.executed.comm
+
+                row_list = [self.data.datetime.time(), 'sell', self.sellprice, self.sellcomm, 0]
+                writer.writerow(row_list)
 
             self.bar_executed = len(self)
 
@@ -182,15 +189,22 @@ class MyStrategy(bt.Strategy):
         self.log('OPERATION PROFIT, COMM %.2f, GROSS %.2f, NET %.2f \n\n' %
                  (trade.commission, trade.pnl, trade.pnlcomm))
 
+        row_list = [self.data.datetime.time(), 'profit', 0, 0, trade.pnlcomm]
+        writer.writerow(row_list)
+
     def next(self):
 
         # 9:45 - 15:45
         if self.data.datetime.time() > datetime.time(15, 45) or self.data.datetime.time() < datetime.time(9, 45):
             if self. position.size > 0:
                 self.order = self.sell()
+                self.log('BUY Close by Day end, %.2f' % self.dataclose[0])
+                trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
             if self. position.size < 0:
                 self.order = self.buy()
+                self.log('Sale Close by Day end, %.2f' % self.dataclose[0])
+                trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
             return
 
@@ -198,18 +212,22 @@ class MyStrategy(bt.Strategy):
             return
 
         # Check if we are in the market
-        if not self.position and not self.openstate:
+        if not self.position:
 
-            if self.dataclose[0] > self.dual_lines.dual_buy_open[0]:
+            if self.dataclose[0] > self.dual_lines.dual_buy_open[-1]:
                  self.log('BUY CREATE, %.2f' % self.dataclose[0])
                  self.order = self.buy()
-                 self.openstate = True
+                 self.params.max_price = self.dataclose[0]
+                 self.buy_open = self.dual_lines.dual_buy_open[0]
+                 self.buy_break = self.dual_lines.dual_buy_break[0]
                  trades.append({'order': 'buy', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
-            elif self.dataclose[0] < self.dual_lines.dual_sale_open[0]:
+            elif self.dataclose[0] < self.dual_lines.dual_sale_open[-1]:
                  self.log('SELL CREATE, %.2f' % self.dataclose[0])
                  self.order = self.sell()
-                 self.openstate = True
+                 self.params.min_price = self.dataclose[0]
+                 self.sale_open = self.dual_lines.dual_sale_open[0]
+                 self.sale_break = self.dual_lines.dual_sale_break[0]
                  trades.append({'order': 'sell', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
         else:
@@ -218,53 +236,60 @@ class MyStrategy(bt.Strategy):
             == 0 is no position
             < 0 is short (you have given)
             '''
-            if len(self) >= (self.bar_executed + 1):
-                self.openstate = False
             if self. position.size > 0:
                 if self.params.max_price < self.dataclose[0]:
                     self.params.max_price = self.dataclose[0]
-                if len(self) >= (self.bar_executed + 1):
+
+                if self.buy_break < self.dual_lines.dual_buy_break[0]:
+                    self.buy_break = self.dual_lines.dual_buy_break[0]
+                    self.buy_open = self.dual_lines.dual_buy_open[0]
+
+                if len(self) >= (self.bar_executed + 2): # 开仓后大于2分钟
+
                     # 冲高回落
-                    if self.params.max_price > self.dual_lines.dual_buy_break[0] and self.dataclose[0] < self.dual_lines.dual_buy_open[0]:
+                    if self.params.max_price > self.buy_break and self.dataclose[0] < self.buy_open:
                         self.log('BUY CLOSE HIT, %.2f' % self.dataclose[0])
                         self.order = self.sell()
-                        self.params.max_price = 0
+                        self.params.max_price = None
+                        self.buy_break = None
+                        self.buy_open = None
                         trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
+
                     # # 移动平仓
                     elif self.dataclose[0] < self.dual_lines.close_resample[0]:
                         self.log('BUY CLOSE MOV, %.2f' % self.dataclose[0])
                         self.order = self.sell()
-                        self.params.max_price = 0
-                        trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
-                else:
-                    if self.dataclose[0] < self.dual_lines.close_resample[0]:
-                        self.log('BUY CLOSE MOV2, %.2f' % self.dataclose[0])
-                        self.order = self.sell()
-                        self.params.max_price = 0
+                        self.params.max_price = None
+                        self.buy_break = None
+                        self.buy_open = None
                         trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
             if self. position.size < 0:
-                if self.params.min_price > -self.dataclose[0]:
-                        self.params.min_price = -self.dataclose[0]
+                if self.params.min_price > self.dataclose[0]:
+                        self.params.min_price = self.dataclose[0]
 
-                if len(self) >= (self.bar_executed + 1):
+                if self.sale_break < self.dual_lines.dual_sale_break[0]:
+                    self.sale_break = self.dual_lines.dual_sale_break[0]
+                    self.sale_open = self.dual_lines.dual_sale_open[0]
+
+                if len(self) >= (self.bar_executed + 2):
+
                     # 冲低回升
-                    if abs(self.params.min_price) < self.dual_lines.dual_sale_break[0] and self.dataclose[0] > self.dual_lines.dual_sale_open[0]:
+                    if self.params.min_price < self.sale_break and self.dataclose[0] > self.sale_open:
                         self.log('SALE CLOSE HIT, %.2f' % self.dataclose[0])
                         self.order = self.buy()
-                        self.params.min_price = 0
+                        self.params.min_price = None
+                        self.sale_open = None
+                        self.sale_break = None
                         trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
+
                     # 移动平仓
                     elif self.dataclose[0] > self.dual_lines.close_resample[0]:
                         self.log('SALE CLOSE MOV, %.2f' % self.dataclose[0])
                         self.order = self.buy()
-                        self.params.min_price = 0
-                        trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
-                else:
-                    if self.dataclose[0] > self.dual_lines.close_resample[0]:
-                        self.log('SALE CLOSE MOV2, %.2f' % self.dataclose[0])
-                        self.order = self.buy()
-                        self.params.min_price = 0
+                        self.params.min_price = None
+                        self.sale_open = None
+                        self.sale_break = None
                         trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
 
@@ -318,7 +343,13 @@ if __name__ == '__main__':
 
     cerebro.addanalyzer(bt.analyzers.SharpeRatio, _name = 'SharpeRatio')
     cerebro.addanalyzer(bt.analyzers.DrawDown, _name='DW')
-    results = cerebro.run()
+
+    with open(csv_path + '.csv', 'w') as f:
+        headers=['TIME','action', 'price', 'comm', 'pnl']
+        writer = csv.writer(f)
+        writer.writerow(headers)
+
+        results = cerebro.run()
 
     endtime = time.time()
     print('='*5, 'program running time', '='*5)
