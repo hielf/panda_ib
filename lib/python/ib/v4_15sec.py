@@ -39,7 +39,7 @@ class dual_trust(bt.Indicator):
 
         self.iteration_progress = tqdm(desc='Total runs', total=(self.datas[0].close.buflen()))
 
-    def DUAL(self, df2, period):
+    def DUAL(self, df2, period, bar_num):
 
         period_data = df2.resample(period).last()
 
@@ -49,8 +49,8 @@ class dual_trust(bt.Indicator):
         # 最低价
         period_data['low'] = df2['low'].resample(period).min()
 
-        period_data['hh'] = period_data['high'].rolling(1).max()
-        period_data['ll'] = period_data['low'].rolling(1).min()
+        period_data['hh'] = period_data['high'].rolling(bar_num).max()
+        period_data['ll'] = period_data['low'].rolling(bar_num).min()
 
         period_data = period_data[['open', 'high', 'hh', 'low', 'll', 'close' ]]
 
@@ -81,7 +81,7 @@ class dual_trust(bt.Indicator):
         dt['low'] = pd.DataFrame(data_serial_low)
 
         dt.set_index('datetime', inplace= True)
-        pred_data = self.DUAL(dt, self.params.dual_period)
+        pred_data = self.DUAL(dt, self.params.dual_period, 2)
 
         # lines 0 是当前, 1是未来, -1 是上一个 和pandas 不一样, pd 是 -1 为当前时间
         self.lines.close_resample[0] = pred_data.close[-2] # 当前价格和上一个close 价格比较
@@ -103,9 +103,9 @@ class dual_trust(bt.Indicator):
 # Create a Stratey
 class MyStrategy(bt.Strategy):
     params = (
-        ('maperiod', 15),
+        ('maperiod', 80),
         ('printlog', True),
-        ('dual_window',15),
+        ('dual_window',80),
         ('dual_period', '05T'),
         ('max_price', 0),
         ('min_price', 0),
@@ -268,7 +268,7 @@ class MyStrategy(bt.Strategy):
                 if self.params.min_price > self.dataclose[0]:
                         self.params.min_price = self.dataclose[0]
 
-                if self.sale_break < self.dual_lines.dual_sale_break[0]:
+                if self.sale_break > self.dual_lines.dual_sale_break[0]:
                     self.sale_break = self.dual_lines.dual_sale_break[0]
                     self.sale_open = self.dual_lines.dual_sale_open[0]
 
