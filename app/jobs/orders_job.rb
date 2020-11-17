@@ -16,16 +16,16 @@ class OrdersJob < ApplicationJob
 
     @ib = ApplicationController.helpers.ib_connect
     if @ib.isConnected()
-      today_pnl = Trade.where("created_at >= ?", Date.today).sum(:realized_pnl)
-      last_pnl = Trade.where("created_at >= ?", Date.today).last
-      if today_pnl >= (ENV["total_asset"].to_i * 0.012) && !last_pnl.nil?
-        @order, @amount = ApplicationController.helpers.close_position
-      else
+      # today_pnl = Trade.where("created_at >= ?", Date.today).sum(:realized_pnl)
+      # last_pnl = Trade.where("created_at >= ?", Date.today).last
+      # if today_pnl >= (ENV["total_asset"].to_i * 0.012) && !last_pnl.nil?
+      #   @order, @amount = ApplicationController.helpers.close_position
+      # else
         if @order != "" && @amount != 0
           ApplicationController.helpers.ib_order(@order, @amount, 0)
           @order, @amount = ApplicationController.helpers.close_position if @order == "CLOSE"
         end
-      end
+      # end
     else
       SmsJob.perform_later ENV["admin_phone"], ENV["superme_user"] + " " + ENV["backtrader_version"], "无法连接"
     end
