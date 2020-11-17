@@ -81,7 +81,7 @@ class dual_trust(bt.Indicator):
         dt['low'] = pd.DataFrame(data_serial_low)
 
         dt.set_index('datetime', inplace= True)
-        pred_data = self.DUAL(dt, self.params.dual_period, 2)
+        pred_data = self.DUAL(dt, self.params.dual_period, 1)
 
         # lines 0 是当前, 1是未来, -1 是上一个 和pandas 不一样, pd 是 -1 为当前时间
         self.lines.close_resample[0] = pred_data.close[-2] # 当前价格和上一个close 价格比较
@@ -244,7 +244,7 @@ class MyStrategy(bt.Strategy):
                     self.buy_break = self.dual_lines.dual_buy_break[0]
                     self.buy_open = self.dual_lines.dual_buy_open[0]
 
-                if len(self) >= (self.bar_executed + 2): # 开仓后大于2分钟
+                if len(self) >= (self.bar_executed + 1): # 开仓后大于2分钟
 
                     # 冲高回落
                     if self.params.max_price > self.buy_break and self.dataclose[0] < self.buy_open:
@@ -272,7 +272,7 @@ class MyStrategy(bt.Strategy):
                     self.sale_break = self.dual_lines.dual_sale_break[0]
                     self.sale_open = self.dual_lines.dual_sale_open[0]
 
-                if len(self) >= (self.bar_executed + 2):
+                if len(self) >= (self.bar_executed + 1):
 
                     # 冲低回升
                     if self.params.min_price < self.sale_break and self.dataclose[0] > self.sale_open:

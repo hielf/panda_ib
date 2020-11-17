@@ -195,15 +195,15 @@ def get_index_5min(end_date):
 #         s.enter(60, 1, get_index_1min, (date_time,))
 
 if __name__ == '__main__':
-    d1 = datetime.datetime(2020,10,22,0,0)
-    d2 = datetime.datetime(2020,11,9,0,0,0)
+    d1 = datetime.datetime(2020,11,9,0,0)
+    d2 = datetime.datetime(2020,11,17,0,0,0)
     diff = d2 - d1
     for i in range(diff.days + 1):
         end_date = (d1 + datetime.timedelta(i))
         print (end_date)
         print ("=========================")
-        # get_index_1min(end_date)
-        # get_index_5min(end_date)
+        get_index_1min(end_date)
+        get_index_5min(end_date)
         get_index_30sec(end_date)
         for j in range(6):
             end_datetime = (end_date + datetime.timedelta(j/6))
