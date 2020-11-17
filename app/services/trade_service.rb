@@ -9,7 +9,7 @@ class TradeService
 
   def check
     Rails.logger.warn "ib service start: #{@contract}, #{Time.zone.now}"
-    TradersJob.perform_now @contract
+    TradersJob.perform_later @contract
     # market_data = ApplicationController.helpers.market_data(@contract)
     # if market_data
     #   file = ApplicationController.helpers.index_to_csv(@contract)

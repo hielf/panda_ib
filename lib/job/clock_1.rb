@@ -23,7 +23,7 @@ module Clockwork
       contract = 'hsi'
     end
     # puts "ib.trader started at #{Time.zone.now}"
-    TradersJob.perform_now contract if job == 'ib.trader'
+    TradersJob.perform_later contract if job == 'ib.trader'
   end
 
   every(1.second, 'ib.trader', :if => lambda { |t| [11,26,41,56].include? t.sec }, :thread => true) if ENV["backtrader_version"] == "15sec"
