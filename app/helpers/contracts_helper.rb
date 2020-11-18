@@ -212,7 +212,7 @@ module ContractsHelper
     json = Rails.root.to_s + "/tmp/#{contract}_trades.json"
     # begin_date = Time.zone.now < (Time.parse "11:30 am") ? 1.business_day.ago.to_date : Date.today
     # end_date = 1.business_day.from_now.to_date
-    skip_minute = Time.zone.now < (Time.parse "10:45 am") ? 75 : 0
+    skip_minute = Time.zone.now < (Time.parse "10:15 am") ? 75 : 0
     #回溯1小时，舍去9:15-9:44 & 15:45-16:29交易时间
     # begin_time = CSV.read(csv)[CSV.read(csv).count-skip_minute-90][0].to_time
     end_time = (Time.zone.now + 1.minute).to_time

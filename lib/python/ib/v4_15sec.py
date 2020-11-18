@@ -194,8 +194,8 @@ class MyStrategy(bt.Strategy):
 
     def next(self):
 
-        # 9:45 - 15:45
-        if self.data.datetime.time() > datetime.time(15, 45) or self.data.datetime.time() < datetime.time(9, 45):
+        # 9:15 - 15:50
+        if self.data.datetime.time() > datetime.time(15, 50) or self.data.datetime.time() < datetime.time(9, 15):
             if self. position.size > 0:
                 self.order = self.sell()
                 self.log('BUY Close by Day end, %.2f' % self.dataclose[0])
