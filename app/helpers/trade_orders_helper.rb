@@ -93,14 +93,19 @@ module TradeOrdersHelper
     # order_type = 'SELL'
     # amount = 2
     # price = 0
+    contract = "hsi"
 
     begin
       # ib = ib_connect
       order_status = false
-
-      main_contract = ib_main_contract("hsi")
+      main_contract = ApplicationController.helpers.ib_main_contract(contract)
       PyCall.exec("contract = #{main_contract}")
-      PyCall.exec("order = MarketOrder('#{order_type}', #{amount})")
+      case price
+      when 0
+        PyCall.exec("order = MarketOrder('#{order_type}', #{amount})")
+      else
+        PyCall.exec("order = LimitOrder('#{order_type}', #{amount}, #{price})")
+      end
       PyCall.exec("trade = ib.placeOrder(contract, order)")
       PyCall.exec("trade")
       log = PyCall.eval("trade.log")
@@ -155,6 +160,25 @@ module TradeOrdersHelper
     return data
   end
 
+  def ib_cancelorder(order_type, amount, price)
+    begin
+      orders = PyCall.eval("ib.orders()")
+      orders.each do |order|
+        if order.action.upcase == order_type && order.totalQuantity == amount && order.lmtPrice == price && order.orderType == "LMT"
+          PyCall.exec("ib.cancelOrder(#{order})")
+          PyCall.eval("#{order}")
+        end
+      end
+    rescue Exception => e
+      data = false
+      error_message = e
+    # ensure
+    #   ib_disconnect(ib)
+    end
+
+    return true
+  end
+
   def ib_portfolio
     begin
       # ib = ib_connect
@@ -180,7 +204,7 @@ module TradeOrdersHelper
     begin
       # ib = ib_connect
       PyCall.exec("trades = ib.trades()")
-      PyCall.exec("print(trades)")
+      # PyCall.exec("print(trades)")
       PyCall.exec("array = []")
       PyCall.exec("list = {}")
       PyCall.exec("for t in trades: array.append(dict({'permId': t.order.permId, 'action': t.order.action, 'symbol': t.contract.symbol, 'lastTradeDateOrContractMonth': t.contract.lastTradeDateOrContractMonth, 'currency': t.contract.currency, 'fills': t.fills}))")
