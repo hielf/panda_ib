@@ -219,6 +219,7 @@ class MyStrategy(bt.Strategy):
                  self.params.max_price = self.dataclose[0]
                  self.buy_open = self.dual_lines.dual_buy_open[0]
                  self.buy_break = self.dual_lines.dual_buy_break[0]
+                 self.log('\n *buy move price %.2f\n' % (self.buy_open))
 
 
             elif self.dataclose[0] < self.dual_lines.dual_sale_open[0]:
@@ -227,6 +228,7 @@ class MyStrategy(bt.Strategy):
                  self.params.min_price = self.dataclose[0]
                  self.sale_open = self.dual_lines.dual_sale_open[0]
                  self.sale_break = self.dual_lines.dual_sale_break[0]
+                 self.log('\n *sell move price %.2f\n' % (self.sale_open))
 
 
         else:
@@ -246,6 +248,7 @@ class MyStrategy(bt.Strategy):
                 if self.buy_break < self.dual_lines.dual_buy_break[0]:
                     self.buy_break = self.dual_lines.dual_buy_break[0]
                     self.buy_open = self.dual_lines.dual_buy_open[0]
+                    self.log('\n *buy move price %.2f\n' % (self.buy_open))
 
                 if len(self) >= (self.bar_executed + 1): # 开仓后大于2分钟
 
@@ -272,6 +275,7 @@ class MyStrategy(bt.Strategy):
                 if self.sale_break > self.dual_lines.dual_sale_break[0]:
                     self.sale_break = self.dual_lines.dual_sale_break[0]
                     self.sale_open = self.dual_lines.dual_sale_open[0]
+                    self.log('\n *sell move price %.2f\n' % (self.sale_open))
 
                 if len(self) >= (self.bar_executed + 1):
 
