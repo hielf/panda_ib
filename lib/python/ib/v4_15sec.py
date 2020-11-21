@@ -221,6 +221,7 @@ class MyStrategy(bt.Strategy):
                  self.buy_open = self.dual_lines.dual_buy_open[0]
                  self.buy_break = self.dual_lines.dual_buy_break[0]
                  self.log('\n *buy move price %.2f\n' % (self.buy_open))
+                 moves.append({'order': 'sell', 'price': self.buy_open, 'time': self.data.datetime.time().strftime('%H:%M:%S')})
                  trades.append({'order': 'buy', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
             elif self.dataclose[0] < self.dual_lines.dual_sale_open[-1]:
@@ -230,6 +231,7 @@ class MyStrategy(bt.Strategy):
                  self.sale_open = self.dual_lines.dual_sale_open[0]
                  self.sale_break = self.dual_lines.dual_sale_break[0]
                  self.log('\n *sell move price %.2f\n' % (self.sale_open))
+                 moves.append({'order': 'buy', 'price': self.sale_open, 'time': self.data.datetime.time().strftime('%H:%M:%S')})
                  trades.append({'order': 'sell', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
         else:
@@ -246,6 +248,7 @@ class MyStrategy(bt.Strategy):
                     self.buy_break = self.dual_lines.dual_buy_break[0]
                     self.buy_open = self.dual_lines.dual_buy_open[0]
                     self.log('\n *buy move price %.2f\n' % (self.buy_open))
+                    moves.append({'order': 'sell', 'price': self.buy_open, 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
                 if len(self) >= (self.bar_executed + 1): # 开仓后大于2分钟
 
@@ -275,7 +278,8 @@ class MyStrategy(bt.Strategy):
                     self.sale_break = self.dual_lines.dual_sale_break[0]
                     self.sale_open = self.dual_lines.dual_sale_open[0]
                     self.log('\n *sell move price %.2f\n' % (self.sale_open))
-                    
+                    moves.append({'order': 'buy', 'price': self.sale_open, 'time': self.data.datetime.time().strftime('%H:%M:%S')})
+
                 if len(self) >= (self.bar_executed + 1):
 
                     # 冲低回升
@@ -315,6 +319,7 @@ if __name__ == '__main__':
         else None
     )
     trades = []
+    moves = []
     # Create a cerebro entity
     cerebro = bt.Cerebro()
     # Add a strategy
@@ -369,4 +374,6 @@ if __name__ == '__main__':
     print(trades)
     with open(json_path, 'w') as f:
         json.dump(trades, f)
+    with open(json_path + ".move.json", 'w') as f:
+        json.dump(moves, f)
     # cerebro.plot()
