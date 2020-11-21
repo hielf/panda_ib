@@ -167,6 +167,8 @@ module TradeOrdersHelper
         if order.action.upcase == order_type && order.totalQuantity == amount && order.lmtPrice == price && order.orderType == "LMT"
           PyCall.exec("ib.cancelOrder(#{order})")
           PyCall.eval("#{order}")
+
+          Rails.logger.warn "ib_cancelorder: #{order_type}@#{price}"
           sleep 0.1
         end
       end

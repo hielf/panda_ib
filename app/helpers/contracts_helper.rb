@@ -272,6 +272,7 @@ module ContractsHelper
       move_time = moves.last["time"].to_time
       begin
         Action.create!(order: move_order, amount: amount, price: move_price, action_time: move_time) if Action.find_by(action_time: move_time).nil?
+        Rails.logger.warn "ib move order: #{move_order} #{move_price} #{move_time}"
       rescue Exception => e
         Rails.logger.warn "Action create failed: #{e}"
       end
