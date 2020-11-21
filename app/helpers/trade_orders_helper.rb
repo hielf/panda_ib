@@ -133,7 +133,7 @@ module TradeOrdersHelper
       tp = TraderPosition.find_or_initialize_by(contract: contract)
       previous_position = 0
       previous_position = tp.position if (tp && !tp.position.nil?)
-      tp.position = position + previous_position
+      tp.position = position + previous_position if price > 0
       tp.save
     end
 
@@ -167,6 +167,7 @@ module TradeOrdersHelper
         if order.action.upcase == order_type && order.totalQuantity == amount && order.lmtPrice == price && order.orderType == "LMT"
           PyCall.exec("ib.cancelOrder(#{order})")
           PyCall.eval("#{order}")
+          sleep 0.1
         end
       end
     rescue Exception => e

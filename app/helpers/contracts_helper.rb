@@ -245,11 +245,11 @@ module ContractsHelper
           order = data.last["order"].upcase
         end
         if !position["position"].nil? && position["position"] < 0 && data.last["order"].upcase == "BUY"
-          OrdersJob.perform_now "CLOSE", amount
+          OrdersJob.perform_now "CLOSE", amount, "", 0
           order = data.last["order"].upcase
         end
         if !position["position"].nil? && position["position"] > 0 && data.last["order"].upcase == "SELL"
-          OrdersJob.perform_now "CLOSE", amount
+          OrdersJob.perform_now "CLOSE", amount, "", 0
           order = data.last["order"].upcase
         end
         if position == {}
@@ -262,12 +262,20 @@ module ContractsHelper
       end
     end
 
-    # temp for reverse test
-    # if order == "BUY"
-    #   order = "SELL"
-    # elsif order == "SELL"
-    #   order = "BUY"
-    # end
+    moves = JSON.parse(File.read(json + ".move.json"))
+    move_order = ""
+    move_price = 0
+    move_time = ""
+    if moves.last
+      move_order = moves.last["order"].upcase
+      move_price = moves.last["price"]
+      move_time = moves.last["time"].to_time
+      begin
+        Action.create!(order: move_order, amount: amount, price: move_price, action_time: move_time) if Action.find_by(action_time: move_time).nil?
+      rescue Exception => e
+        Rails.logger.warn "Action create failed: #{e}"
+      end
+    end
 
     Rails.logger.warn "ib order: #{order == "" ? "NO" : order} #{amount.to_s}"
     begin
@@ -276,7 +284,7 @@ module ContractsHelper
       Rails.logger.warn "Action create failed: #{e}"
     end
 
-    return order, amount
+    return order, amount, move_order, move_price
   end
 
   def check_position(data)

@@ -62,7 +62,7 @@ class TradersJob < ApplicationJob
 
     current_time = run_time.strftime('%H:%M')
     if (current_time >= "09:15" && current_time <= "15:50")
-      @order, @amount = ApplicationController.helpers.py_check_position(contract) if file
+      @order, @amount, @move_order, @move_price = ApplicationController.helpers.py_check_position(contract) if file
       ApplicationController.helpers.document_files(contract, file) if file
       Rails.logger.warn "ib py_check_position: #{@order} #{@amount.to_s}, #{Time.zone.now}"
 
@@ -87,7 +87,7 @@ class TradersJob < ApplicationJob
         end
       end
 
-      OrdersJob.perform_now @order, @amount if (@order != "" && @amount != 0)
+      OrdersJob.perform_now @order, @amount, @move_order, @move_price if ((@order != "" && @amount != 0) || @move_order != "" && @move_price != 0)
 
     elsif (current_time > "09:00" && current_time < "09:15") || (current_time > "15:50" && current_time < "16:30")
       ApplicationController.helpers.close_position
