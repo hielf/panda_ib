@@ -96,6 +96,13 @@ module TradeOrdersHelper
     contract = "hsi"
 
     begin
+      position = ApplicationController.helpers.ib_positions
+      tp = TraderPosition.find_or_initialize_by(contract: contract)
+      # previous_position = 0
+      # previous_position = tp.position if (tp && !tp.position.nil?)
+      # tp.position = position + previous_position if price > 0
+      tp.position = position["position"]
+      tp.save
       # ib = ib_connect
       order_status = false
       main_contract = ApplicationController.helpers.ib_main_contract(contract)
@@ -122,18 +129,20 @@ module TradeOrdersHelper
       else
         'hsi'
       end
-      position = case order_type
-      when 'SELL'
-        amount.to_i * -1
-      when 'BUY'
-        amount.to_i
-      else
-        0
-      end
+      # position = case order_type
+      # when 'SELL'
+      #   amount.to_i * -1
+      # when 'BUY'
+      #   amount.to_i
+      # else
+      #   0
+      # end
+      position = ApplicationController.helpers.ib_positions
       tp = TraderPosition.find_or_initialize_by(contract: contract)
-      previous_position = 0
-      previous_position = tp.position if (tp && !tp.position.nil?)
-      tp.position = position + previous_position if price > 0
+      # previous_position = 0
+      # previous_position = tp.position if (tp && !tp.position.nil?)
+      # tp.position = position + previous_position if price > 0
+      tp.position = position["position"]
       tp.save
     end
 
