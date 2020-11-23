@@ -171,10 +171,9 @@ module TradeOrdersHelper
 
   def ib_cancelorder(order_type, amount, price)
     begin
-      orders = PyCall.eval("ib.orders()")
+      orders = PyCall.eval("ib.openOrders()")
       orders.each do |order|
-        print (order)
-        if order.orderType == "LMT"  #&& order.action.upcase == order_type && order.totalQuantity == amount && order.lmtPrice == price
+        if order.orderType == "LMT" #&& order.action.upcase == order_type && order.totalQuantity == amount && order.lmtPrice == price
           PyCall.exec("ib.cancelOrder(#{order})")
           PyCall.eval("#{order}")
 
