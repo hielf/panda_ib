@@ -18,6 +18,7 @@ class OrdersJob < ApplicationJob
 
     @ib = ApplicationController.helpers.ib_connect
     if @ib.isConnected()
+      Rails.logger.warn "ib placing order: #{@order}, amount:#{@amount.to_s}, move_order:#{@move_order}, move_price:#{@move_price}"
       # today_pnl = Trade.where("created_at >= ?", Date.today).sum(:realized_pnl)
       # last_pnl = Trade.where("created_at >= ?", Date.today).last
       # if today_pnl >= (ENV["total_asset"].to_i * 0.012) && !last_pnl.nil?
