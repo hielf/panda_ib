@@ -171,16 +171,23 @@ module TradeOrdersHelper
 
   def ib_cancelorder(order_type, amount, price)
     begin
-      orders = PyCall.eval("ib.openOrders()")
-      orders.each do |order|
-        if order.orderType == "LMT" #&& order.action.upcase == order_type && order.totalQuantity == amount && order.lmtPrice == price
-          PyCall.exec("ib.cancelOrder(#{order})")
-          PyCall.eval("#{order}")
-
-          Rails.logger.warn "ib_cancelorder: #{order_type}@#{price}"
-          sleep 0.1
-        end
-      end
+      PyCall.eval("ib.reqGlobalCancel()")
+      # PyCall.exec("import asyncio")
+      # PyCall.exec("future = ib.reqCurrentTimeAsync()")
+      # PyCall.exec("loop = asyncio.get_event_loop()")
+      # PyCall.exec("loop.run_until_complete(future)")
+      # PyCall.exec("print(future.result())")
+      # orders = PyCall.eval("ib.reqGlobalCancel()")
+      # orders.each do |order|
+      #   if order.orderType == "LMT" #&& order.action.upcase == order_type && order.totalQuantity == amount && order.lmtPrice == price
+      #     p order
+      #     PyCall.exec("ib.cancelOrder(#{order})")
+      #     PyCall.eval("#{order}")
+      #
+      #     Rails.logger.warn "ib_cancelorder: #{order_type}@#{price}"
+      #     sleep 0.1
+      #   end
+      # end
     rescue Exception => e
       data = false
       error_message = e
