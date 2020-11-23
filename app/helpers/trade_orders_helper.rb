@@ -101,7 +101,7 @@ module TradeOrdersHelper
       # previous_position = 0
       # previous_position = tp.position if (tp && !tp.position.nil?)
       # tp.position = position + previous_position if price > 0
-      tp.position = position["position"]
+      tp.position = tp.position = position["position"].nil? ? 0 : position["position"]
       tp.save
       # ib = ib_connect
       order_status = false
@@ -142,7 +142,7 @@ module TradeOrdersHelper
       # previous_position = 0
       # previous_position = tp.position if (tp && !tp.position.nil?)
       # tp.position = position + previous_position if price > 0
-      tp.position = position["position"]
+      tp.position = position["position"].nil? ? 0 : position["position"]
       tp.save
     end
 

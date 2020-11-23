@@ -366,7 +366,7 @@ module ContractsHelper
     # previous_position = 0
     # previous_position = tp.position if (tp && !tp.position.nil?)
     # tp.position = position + previous_position if price > 0
-    tp.position = position["position"]
+    tp.position = position["position"].nil? ? 0 : position["position"]
     tp.save
 
     if !position["position"].nil? && position["position"] > 0 # buy
