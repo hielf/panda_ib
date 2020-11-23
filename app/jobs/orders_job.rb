@@ -25,7 +25,11 @@ class OrdersJob < ApplicationJob
       # else
         if @order != "" && @amount != 0
           ApplicationController.helpers.ib_order(@order, @amount, 0)
-          @order, @amount = ApplicationController.helpers.close_position if @order == "CLOSE"
+          if @order == "CLOSE"
+            privious_move = Action.where.not(price: 0).last(2).first
+            ApplicationController.helpers.ib_cancelorder(privious_move.order, privious_move.amount, privious_move.price)
+            @order, @amount = ApplicationController.helpers.close_position
+          end
         end
 
         if @move_order != "" && @move_price != 0
