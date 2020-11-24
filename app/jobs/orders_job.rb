@@ -24,19 +24,20 @@ class OrdersJob < ApplicationJob
       # if today_pnl >= (ENV["total_asset"].to_i * 0.012) && !last_pnl.nil?
       #   @order, @amount = ApplicationController.helpers.close_position
       # else
-        if @order != "" && @amount != 0
+
+      ApplicationController.helpers.ib_cancelorder("", 0, 0)
+      sleep 0.25
+      
+        if @order != "" && @amount != 0 && @order != "CLOSE"
           ApplicationController.helpers.ib_order(@order, @amount, 0)
-          if @order == "CLOSE"
-            ApplicationController.helpers.ib_cancelorder("", 0, 0)
-            sleep 0.5
-            @order, @amount = ApplicationController.helpers.close_position
-          end
+        elsif @order == "CLOSE"
+          @order, @amount = ApplicationController.helpers.close_position
         end
 
         if @move_order != "" && @move_price != 0
-          privious_move = Action.where.not(price: 0).last(2).first if Action.where.not(price: 0).last(2).count == 2
-          ApplicationController.helpers.ib_cancelorder(privious_move.order, privious_move.amount, privious_move.price) if privious_move
-          sleep 0.5
+          sleep 0.25
+          # privious_move = Action.where.not(price: 0).last(2).first if Action.where.not(price: 0).last(2).count == 2
+          # ApplicationController.helpers.ib_cancelorder(privious_move.order, privious_move.amount, privious_move.price) if privious_move
           ApplicationController.helpers.ib_order(@move_order, @amount, @move_price)
         end
       # end
