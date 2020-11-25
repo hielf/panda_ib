@@ -118,6 +118,7 @@ module TradeOrdersHelper
       log = PyCall.eval("trade.log")
       if log.first.status && log.first.status != ''
         order_status = true
+        PyCall.exec("ib.sleep(0)")
       end
     rescue Exception => e
       error_message = e

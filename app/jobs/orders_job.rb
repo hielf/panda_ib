@@ -26,8 +26,8 @@ class OrdersJob < ApplicationJob
       # else
 
       ApplicationController.helpers.ib_cancelorder("", 0, 0)
-      sleep 0.25
-      
+      sleep 0.5
+
         if @order != "" && @amount != 0 && @order != "CLOSE"
           ApplicationController.helpers.ib_order(@order, @amount, 0)
         elsif @order == "CLOSE"
@@ -35,7 +35,7 @@ class OrdersJob < ApplicationJob
         end
 
         if @move_order != "" && @move_price != 0
-          sleep 0.25
+          sleep 0.5
           # privious_move = Action.where.not(price: 0).last(2).first if Action.where.not(price: 0).last(2).count == 2
           # ApplicationController.helpers.ib_cancelorder(privious_move.order, privious_move.amount, privious_move.price) if privious_move
           ApplicationController.helpers.ib_order(@move_order, @amount, @move_price)
