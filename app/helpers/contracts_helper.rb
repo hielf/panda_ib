@@ -270,7 +270,7 @@ module ContractsHelper
     if moves.last
       time_diff = Time.zone.now.beginning_of_minute - moves.last["time"].to_time
       Rails.logger.warn "ib check move time_diff: #{time_diff}"
-      if time_diff.abs <= 15
+      if time_diff.abs <= 30
         move_order = moves.last["order"].upcase
         move_price = moves.last["price"]
         move_time = moves.last["time"].to_time
