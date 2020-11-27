@@ -266,15 +266,20 @@ module ContractsHelper
     move_order = ""
     move_price = 0
     move_time = ""
+
     if moves.last
-      move_order = moves.last["order"].upcase
-      move_price = moves.last["price"]
-      move_time = moves.last["time"].to_time
-      begin
-        Action.create!(order: move_order, amount: amount, price: move_price, action_time: move_time) if Action.find_by(action_time: move_time).nil?
-        Rails.logger.warn "ib move order: #{move_order} #{move_price} #{move_time}"
-      rescue Exception => e
-        Rails.logger.warn "Action create failed: #{e}"
+      time_diff = Time.zone.now.beginning_of_minute - moves.last["time"].to_time
+      Rails.logger.warn "ib check move time_diff: #{time_diff}"
+      if time_diff.abs <= 15
+        move_order = moves.last["order"].upcase
+        move_price = moves.last["price"]
+        move_time = moves.last["time"].to_time
+        begin
+          Action.create!(order: move_order, amount: amount, price: move_price, action_time: move_time) if Action.find_by(action_time: move_time).nil?
+          Rails.logger.warn "ib move order: #{move_order} #{move_price} #{move_time}"
+        rescue Exception => e
+          Rails.logger.warn "Action create failed: #{e}"
+        end
       end
     end
 

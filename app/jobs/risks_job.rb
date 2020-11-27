@@ -46,7 +46,7 @@ class RisksJob < ApplicationJob
             Rails.logger.warn "profit_losses create error: #{e}"
           end
 
-          Rails.logger.warn "ib risk loss_limit: #{loss_limit}, position: #{last_trade[:action]}, open: #{last_trade[:price]}, close: #{close}, unrealized_pnl: #{unrealized_pnl}, #{Time.zone.now}" if unrealized_pnl != 0
+          # Rails.logger.warn "ib risk loss_limit: #{loss_limit}, position: #{last_trade[:action]}, open: #{last_trade[:price]}, close: #{close}, unrealized_pnl: #{unrealized_pnl}, #{Time.zone.now}" if unrealized_pnl != 0
 
           if ENV['backtrader_version'] != "15sec"
             @profit_losses = ProfitLoss.latest(4)
