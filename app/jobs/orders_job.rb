@@ -24,9 +24,9 @@ class OrdersJob < ApplicationJob
       # if today_pnl >= (ENV["total_asset"].to_i * 0.012) && !last_pnl.nil?
       #   @order, @amount = ApplicationController.helpers.close_position
       # else
-      sleep 0.1
-      ApplicationController.helpers.ib_cancelorder("", 0, 0)
-      sleep 0.3
+      # sleep 0.1
+      # ApplicationController.helpers.ib_cancelorder("", 0, 0)
+      # sleep 0.3
 
         if @order != "" && @amount != 0 && @order != "CLOSE"
           ApplicationController.helpers.ib_order(@order, @amount, 0)
@@ -34,12 +34,12 @@ class OrdersJob < ApplicationJob
           @order, @amount = ApplicationController.helpers.close_position
         end
 
-        if @move_order != "" && @move_price != 0
-          sleep 0.2
-          # privious_move = Action.where.not(price: 0).last(2).first if Action.where.not(price: 0).last(2).count == 2
-          # ApplicationController.helpers.ib_cancelorder(privious_move.order, privious_move.amount, privious_move.price) if privious_move
-          ApplicationController.helpers.ib_order(@move_order, @amount, @move_price)
-        end
+        # if @move_order != "" && @move_price != 0
+        #   sleep 0.2
+        #   # privious_move = Action.where.not(price: 0).last(2).first if Action.where.not(price: 0).last(2).count == 2
+        #   # ApplicationController.helpers.ib_cancelorder(privious_move.order, privious_move.amount, privious_move.price) if privious_move
+        #   ApplicationController.helpers.ib_order(@move_order, @amount, @move_price)
+        # end
       # end
     else
       SmsJob.perform_later ENV["admin_phone"], ENV["superme_user"] + " " + ENV["backtrader_version"], "无法连接"

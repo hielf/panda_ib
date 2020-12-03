@@ -4,6 +4,8 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 import sys
+import talib
+from backtrader.feeds import PandasData  # 用于扩展DataFeed
 import datetime  # For datetime objects
 from dateutil.relativedelta import relativedelta
 import time
@@ -24,7 +26,46 @@ reg_buy_break = joblib.load('hsi_buy_break06.pkl')
 reg_sale_open = joblib.load('hsi_sale_open06.pkl')
 reg_sale_break = joblib.load('hsi_sale_break06.pkl')
 
+def format_data(dataframe):
+    dataframe['datetime'] = pd.to_datetime(dataframe.index)
 
+    dataframe= dataframe.resample('5T').agg({'open': 'first',
+                                'high': 'max',
+                                'low': 'min',
+                                'close': 'last', 'volume': 'sum'})
+    dataframe.dropna(inplace=True)
+    dataframe['openinterest'] = 0
+    dataframe['hh'] = dataframe['high']
+    dataframe['ll'] = dataframe['low']
+
+    pred_data = dataframe[['open', 'high', 'hh', 'low', 'll', 'close' ]]
+    dataframe['dual_buy_open'] = reg_buy_open.predict(pred_data)
+    dataframe['dual_buy_break'] = reg_buy_break.predict(pred_data)
+    dataframe['dual_sale_open'] = reg_sale_open.predict(pred_data)
+    dataframe['dual_sale_break'] = reg_sale_break.predict(pred_data)
+    dataframe['atr'] = talib.ATR(dataframe['high'],dataframe['low'], dataframe['close'], timeperiod=6)
+    dataframe['macd'], dataframe['macdsignal'], dataframe['macdhist'] = talib.MACD(dataframe['close'], fastperiod=4, slowperiod=24, signalperiod=2)
+    dataframe['macd2'], dataframe['macdsignal2'], dataframe['macdhist2'] = talib.MACD(dataframe['close'], fastperiod=6, slowperiod=24, signalperiod=3)
+    dataframe.reset_index(inplace=True)
+
+    return dataframe
+
+
+class PandasDataExtend(PandasData):
+    # 增加线
+    lines = ('atr', 'macd','macd2', 'macdsignal', 'macdsignal2','macdhist','dual_buy_open','dual_buy_break','dual_sale_open','dual_sale_break',)
+
+    # 第几列, 或者直接给列名
+    params = (  ('atr', 'atr'),
+                ('macd', 'macd'),
+                ('macd2', 'macd2'),
+                ('macdhist', 'macdhist'),
+                ('macdsignal', 'macdsignal'),
+                ('macdsignal2', 'macdsignal2'),
+                ('dual_buy_open','dual_buy_open'),
+                ('dual_buy_break','dual_buy_break'),
+                ('dual_sale_open','dual_sale_open'),
+                ('dual_sale_break','dual_sale_break'),                 )  # 上市天数
 
 class dual_trust(bt.Indicator):
     lines = (   'dual_buy_open','dual_buy_break','dual_sale_open','dual_sale_break', 'close_resample',
@@ -103,7 +144,7 @@ class dual_trust(bt.Indicator):
 # Create a Stratey
 class MyStrategy(bt.Strategy):
     params = (
-        ('maperiod', 80),
+        ('maperiod', 24),
         ('printlog', True),
         ('dual_window',80),
         ('dual_period', '05T'),
@@ -136,7 +177,7 @@ class MyStrategy(bt.Strategy):
         self.sale_open = None
         self.sale_break = None
 
-        self.dual_lines = dual_trust(dual_window=self.params.dual_window, dual_period= self.params.dual_period, subplot=False)
+        #self.data = dual_trust(dual_window=self.params.dual_window, dual_period= self.params.dual_period, subplot=False)
     def start(self):
         print("the world call me!")
 
@@ -194,8 +235,8 @@ class MyStrategy(bt.Strategy):
 
     def next(self):
 
-        # 9:15 - 15:50
-        if self.data.datetime.time() > datetime.time(15, 50) or self.data.datetime.time() < datetime.time(9, 15):
+        # 9:45 - 15:45
+        if self.data.datetime.time() > datetime.time(15, 45) or self.data.datetime.time() < datetime.time(9, 45):
             if self. position.size > 0:
                 self.order = self.sell()
                 self.log('BUY Close by Day end, %.2f' % self.dataclose[0])
@@ -214,24 +255,24 @@ class MyStrategy(bt.Strategy):
         # Check if we are in the market
         if not self.position:
 
-            if self.dataclose[0] > self.dual_lines.dual_buy_open[-1]:
-                 self.log('BUY CREATE, %.2f' % self.dataclose[0])
+            if  self.data.macdhist[-1] > self.data.macdhist[-2] - 0.01 and self.dataclose[0] > self.data.high[-1] + self.data.atr[-1]*0.25:
+                 self.log('BUY CREATE, %.2f, MACD %.2f, macd2 %.2f' % (self.dataclose[0], self.data.macd[0], self.data.macd2[0]))
                  self.order = self.buy()
                  self.params.max_price = self.dataclose[0]
-                 self.buy_open = self.dual_lines.dual_buy_open[0]
-                 self.buy_break = self.dual_lines.dual_buy_break[0]
-                 self.log('\n *buy move price %.2f\n' % (self.buy_open))
-                 moves.append({'order': 'sell', 'price': self.buy_open, 'time': self.data.datetime.time().strftime('%H:%M:%S')})
+                 self.buy_open = self.data.dual_buy_open[-1]
+                 self.buy_break = self.data.dual_buy_break[-1]
+                 # self.log('\n *buy move price %.2f\n' % (self.buy_open))
+                 # moves.append({'order': 'sell', 'price': self.buy_open, 'time': self.data.datetime.time().strftime('%H:%M:%S')})
                  trades.append({'order': 'buy', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
-            elif self.dataclose[0] < self.dual_lines.dual_sale_open[-1]:
+            elif  self.data.macdhist[-1] < self.data.macdhist[-2] + 0.01 and self.dataclose[0] < self.data.low[-1] - self.data.atr[-1]*0.25:
                  self.log('SELL CREATE, %.2f' % self.dataclose[0])
                  self.order = self.sell()
                  self.params.min_price = self.dataclose[0]
-                 self.sale_open = self.dual_lines.dual_sale_open[0]
-                 self.sale_break = self.dual_lines.dual_sale_break[0]
-                 self.log('\n *sell move price %.2f\n' % (self.sale_open))
-                 moves.append({'order': 'buy', 'price': self.sale_open, 'time': self.data.datetime.time().strftime('%H:%M:%S')})
+                 self.sale_open = self.data.dual_sale_open[-1]
+                 self.sale_break = self.data.dual_sale_break[-1]
+                 # self.log('\n *sell move price %.2f\n' % (self.sale_open))
+                 # moves.append({'order': 'buy', 'price': self.sale_open, 'time': self.data.datetime.time().strftime('%H:%M:%S')})
                  trades.append({'order': 'sell', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
         else:
@@ -241,14 +282,14 @@ class MyStrategy(bt.Strategy):
             < 0 is short (you have given)
             '''
             if self. position.size > 0:
-                if self.params.max_price < self.dataclose[0]:
-                    self.params.max_price = self.dataclose[0]
+                if self.params.max_price < self.datahigh[0]:
+                    self.params.max_price = self.datahigh[0]
 
-                if self.buy_break < self.dual_lines.dual_buy_break[0]:
-                    self.buy_break = self.dual_lines.dual_buy_break[0]
-                    self.buy_open = self.dual_lines.dual_buy_open[0]
-                    self.log('\n *buy move price %.2f\n' % (self.buy_open))
-                    moves.append({'order': 'sell', 'price': self.buy_open, 'time': self.data.datetime.time().strftime('%H:%M:%S')})
+                if self.buy_break < self.data.dual_buy_break[-1]:
+                    self.buy_break = self.data.dual_buy_break[-1]
+                    self.buy_open = self.data.dual_buy_open[-1]
+                    # self.log('\n *buy move price %.2f\n' % (self.buy_open))
+                    # moves.append({'order': 'sell', 'price': self.buy_open, 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
                 if len(self) >= (self.bar_executed + 1): # 开仓后大于2分钟
 
@@ -262,7 +303,7 @@ class MyStrategy(bt.Strategy):
                         trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
                     # # 移动平仓
-                    elif self.dataclose[0] < self.dual_lines.close_resample[0]:
+                    elif self.dataclose[0] + self.data.atr[-1]/2 < self.dataclose[-1]:
                         self.log('BUY CLOSE MOV, %.2f' % self.dataclose[0])
                         self.order = self.sell()
                         self.params.max_price = None
@@ -271,14 +312,14 @@ class MyStrategy(bt.Strategy):
                         trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
             if self. position.size < 0:
-                if self.params.min_price > self.dataclose[0]:
-                        self.params.min_price = self.dataclose[0]
+                if self.params.min_price > self.datalow[0]:
+                        self.params.min_price = self.datalow[0]
 
-                if self.sale_break > self.dual_lines.dual_sale_break[0]:
-                    self.sale_break = self.dual_lines.dual_sale_break[0]
-                    self.sale_open = self.dual_lines.dual_sale_open[0]
-                    self.log('\n *sell move price %.2f\n' % (self.sale_open))
-                    moves.append({'order': 'buy', 'price': self.sale_open, 'time': self.data.datetime.time().strftime('%H:%M:%S')})
+                if self.sale_break > self.data.dual_sale_break[-1]:
+                    self.sale_break = self.data.dual_sale_break[-1]
+                    self.sale_open = self.data.dual_sale_open[-1]
+                    # self.log('\n *sell move price %.2f\n' % (self.sale_open))
+                    # moves.append({'order': 'buy', 'price': self.sale_open, 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
                 if len(self) >= (self.bar_executed + 1):
 
@@ -292,7 +333,7 @@ class MyStrategy(bt.Strategy):
                         trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
                     # 移动平仓
-                    elif self.dataclose[0] > self.dual_lines.close_resample[0]:
+                    elif self.dataclose[0] - self.data.atr[-1]/2  > self.dataclose[-1]:
                         self.log('SALE CLOSE MOV, %.2f' % self.dataclose[0])
                         self.order = self.buy()
                         self.params.min_price = None
@@ -319,7 +360,7 @@ if __name__ == '__main__':
         else None
     )
     trades = []
-    moves = []
+    # moves = []
     # Create a cerebro entity
     cerebro = bt.Cerebro()
     # Add a strategy
@@ -329,11 +370,21 @@ if __name__ == '__main__':
     # 注意，这里最后的pandas要符合backtrader的要求的格式
     #dataframe = pd.read_csv('./data/hsi202003.csv', index_col=0, parse_dates=True)
     dataframe = pd.read_csv(csv_path, index_col=0, parse_dates=True, usecols=['date', 'open', 'high', 'low', 'close', 'volume'])
-    dataframe['openinterest'] = 0
-    data = bt.feeds.PandasData(dataname=dataframe,
-                            fromdate = begin_time,
-                            todate = end_time
-                            )
+    dataframe = format_data(dataframe)
+
+    data = PandasDataExtend(
+            dataname=dataframe,
+            datetime=0,  # 日期列
+            open=1,  # 开盘价所在列
+            high=2,  # 最高价所在列
+            low=3,  # 最低价所在列
+            close=4,  # 收盘价价所在列
+            volume=5,  # 成交量所在列
+            openinterest=6,
+            fromdate=from_date,  # 起始日2002, 4, 1
+            todate=to_date,  # 结束日 2015, 12, 31
+            plot=False
+        )
     # Add the Data Feed to Cerebro
     cerebro.adddata(data)
     # Set our desired cash start
@@ -374,6 +425,6 @@ if __name__ == '__main__':
     print(trades)
     with open(json_path, 'w') as f:
         json.dump(trades, f)
-    with open(json_path + ".move.json", 'w') as f:
-        json.dump(moves, f)
+    # with open(json_path + ".move.json", 'w') as f:
+    #     json.dump(moves, f)
     # cerebro.plot()
