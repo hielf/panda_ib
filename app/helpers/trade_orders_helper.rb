@@ -300,7 +300,7 @@ module TradeOrdersHelper
     when "hsi"
       (db_collect == "true" ? "72000" : (Time.zone.now - today_start + 7200).to_i.to_s)
     when "hsi_15secs"
-      duration = (db_collect == "true" ? "14400" : 3600.to_s)
+      duration = (db_collect == "true" ? "14400" : 9000.to_s)
     end
     result = true
     list = nil
