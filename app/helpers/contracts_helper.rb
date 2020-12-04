@@ -262,12 +262,17 @@ module ContractsHelper
       end
     end
 
-    moves = JSON.parse(File.read(json + ".move.json"))
+    begin
+      moves = JSON.parse(File.read(json + ".move.json"))
+    rescue Exception => e
+      p e
+    end
+
     move_order = ""
     move_price = 0
     move_time = ""
 
-    if moves.last
+    if moves && moves.last
       time_diff = Time.zone.now.beginning_of_minute - moves.last["time"].to_time
       Rails.logger.warn "ib check move time_diff: #{time_diff}"
       if time_diff.abs <= 30
