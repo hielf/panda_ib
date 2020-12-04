@@ -235,7 +235,7 @@ module ContractsHelper
       else
         120
       end
-      if time_diff.abs <= ot
+      if time_diff.abs <= ot || data.last["order"].upcase == "CLOSE"
         # position = ApplicationController.helpers.ib_positions
         tp = TraderPosition.find_by(contract: contract)
         position["position"] = tp.position if (tp && tp.position != 0)
