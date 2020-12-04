@@ -382,7 +382,7 @@ if __name__ == '__main__':
             volume=5,  # 成交量所在列
             openinterest=6,
             fromdate=begin_time,  # 起始日2002, 4, 1
-            todate=end_date,  # 结束日 2015, 12, 31
+            todate=end_time,  # 结束日 2015, 12, 31
             plot=False
         )
     # Add the Data Feed to Cerebro
