@@ -259,8 +259,8 @@ class MyStrategy(bt.Strategy):
                  self.log('BUY CREATE, %.2f, MACD %.2f, macd2 %.2f' % (self.dataclose[0], self.data.macd[0], self.data.macd2[0]))
                  self.order = self.buy()
                  self.params.max_price = self.dataclose[0]
-                 self.buy_open = self.data.dual_buy_open[-1]
-                 self.buy_break = self.data.dual_buy_break[-1]
+                 self.buy_open = self.data.dual_buy_open[0]
+                 self.buy_break = self.data.dual_buy_break[0]
                  # self.log('\n *buy move price %.2f\n' % (self.buy_open))
                  # moves.append({'order': 'sell', 'price': self.buy_open, 'time': self.data.datetime.time().strftime('%H:%M:%S')})
                  trades.append({'order': 'buy', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
@@ -269,8 +269,8 @@ class MyStrategy(bt.Strategy):
                  self.log('SELL CREATE, %.2f' % self.dataclose[0])
                  self.order = self.sell()
                  self.params.min_price = self.dataclose[0]
-                 self.sale_open = self.data.dual_sale_open[-1]
-                 self.sale_break = self.data.dual_sale_break[-1]
+                 self.sale_open = self.data.dual_sale_open[0]
+                 self.sale_break = self.data.dual_sale_break[0]
                  # self.log('\n *sell move price %.2f\n' % (self.sale_open))
                  # moves.append({'order': 'buy', 'price': self.sale_open, 'time': self.data.datetime.time().strftime('%H:%M:%S')})
                  trades.append({'order': 'sell', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
@@ -282,12 +282,12 @@ class MyStrategy(bt.Strategy):
             < 0 is short (you have given)
             '''
             if self. position.size > 0:
-                if self.params.max_price < self.datahigh[0]:
-                    self.params.max_price = self.datahigh[0]
+                if self.params.max_price < self.datahigh[-1]:
+                    self.params.max_price = self.datahigh[-1]
 
-                if self.buy_break < self.data.dual_buy_break[-1]:
-                    self.buy_break = self.data.dual_buy_break[-1]
-                    self.buy_open = self.data.dual_buy_open[-1]
+                if self.buy_break < self.data.dual_buy_break[0]:
+                    self.buy_break = self.data.dual_buy_break[0]
+                    self.buy_open = self.data.dual_buy_open[0]
                     # self.log('\n *buy move price %.2f\n' % (self.buy_open))
                     # moves.append({'order': 'sell', 'price': self.buy_open, 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
@@ -303,7 +303,7 @@ class MyStrategy(bt.Strategy):
                         trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
                     # # 移动平仓
-                    elif self.dataclose[0] + self.data.atr[-1]/2 < self.dataclose[-1]:
+                    elif self.dataclose[0] + self.data.atr[-2]/2 < self.dataclose[-2]:
                         self.log('BUY CLOSE MOV, %.2f' % self.dataclose[0])
                         self.order = self.sell()
                         self.params.max_price = None
@@ -312,12 +312,12 @@ class MyStrategy(bt.Strategy):
                         trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
             if self. position.size < 0:
-                if self.params.min_price > self.datalow[0]:
-                        self.params.min_price = self.datalow[0]
+                if self.params.min_price > self.datalow[-1]:
+                        self.params.min_price = self.datalow[-1]
 
-                if self.sale_break > self.data.dual_sale_break[-1]:
-                    self.sale_break = self.data.dual_sale_break[-1]
-                    self.sale_open = self.data.dual_sale_open[-1]
+                if self.sale_break > self.data.dual_sale_break[0]:
+                    self.sale_break = self.data.dual_sale_break[0]
+                    self.sale_open = self.data.dual_sale_open[0]
                     # self.log('\n *sell move price %.2f\n' % (self.sale_open))
                     # moves.append({'order': 'buy', 'price': self.sale_open, 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
@@ -333,7 +333,7 @@ class MyStrategy(bt.Strategy):
                         trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
                     # 移动平仓
-                    elif self.dataclose[0] - self.data.atr[-1]/2  > self.dataclose[-1]:
+                    elif self.dataclose[0] - self.data.atr[-2]/2  > self.dataclose[-2]:
                         self.log('SALE CLOSE MOV, %.2f' % self.dataclose[0])
                         self.order = self.buy()
                         self.params.min_price = None

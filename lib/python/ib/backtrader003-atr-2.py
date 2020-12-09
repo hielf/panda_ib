@@ -2,10 +2,10 @@
 
 # 用法
 # python backtrader003.py ./data/hsi_15s.csv '2020-11-01 09:00:00' '2020-11-01 15:55:00'
- 
+# 考虑5分钟数据, 实际给的是5+1.5, 所以current price 并不完整
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
- 
+
 import datetime  # For datetime objects
 import time
 import pandas as pd
@@ -16,7 +16,7 @@ import joblib
 import csv
 from tqdm import tqdm
 import sys
-import talib 
+import talib
 from backtrader.feeds import PandasData  # 用于扩展DataFeed
 starttime = time.time()
 
@@ -32,20 +32,20 @@ to_date = datetime.datetime.strptime(sys.argv[3],'%Y-%m-%d %H:%M:%S')
 
 def format_data(dataframe):
     dataframe['datetime'] = pd.to_datetime(dataframe.index)
-    
-    dataframe= dataframe.resample('5T').agg({'open': 'first', 
-                                'high': 'max', 
-                                'low': 'min', 
+
+    dataframe= dataframe.resample('5T').agg({'open': 'first',
+                                'high': 'max',
+                                'low': 'min',
                                 'close': 'last', 'volume': 'sum'})
     dataframe.dropna(inplace=True)
     dataframe['openinterest'] = 0
     dataframe['hh'] = dataframe['high']
     dataframe['ll'] = dataframe['low']
-    
+
     pred_data = dataframe[['open', 'high', 'hh', 'low', 'll', 'close' ]]
     dataframe['dual_buy_open'] = reg_buy_open.predict(pred_data)
-    dataframe['dual_buy_break'] = reg_buy_break.predict(pred_data) 
-    dataframe['dual_sale_open'] = reg_sale_open.predict(pred_data) 
+    dataframe['dual_buy_break'] = reg_buy_break.predict(pred_data)
+    dataframe['dual_sale_open'] = reg_sale_open.predict(pred_data)
     dataframe['dual_sale_break'] = reg_sale_break.predict(pred_data)
     dataframe['atr'] = talib.ATR(dataframe['high'],dataframe['low'], dataframe['close'], timeperiod=6)
     dataframe['macd'], dataframe['macdsignal'], dataframe['macdhist'] = talib.MACD(dataframe['close'], fastperiod=4, slowperiod=24, signalperiod=2)
@@ -53,7 +53,7 @@ def format_data(dataframe):
     dataframe.reset_index(inplace=True)
 
     return dataframe
-    
+
 
 class PandasDataExtend(PandasData):
     # 增加线
@@ -72,8 +72,8 @@ class PandasDataExtend(PandasData):
                 ('dual_sale_break','dual_sale_break'),                 )  # 上市天数
 
 class dual_trust(bt.Indicator):
-    lines = (   'dual_buy_open','dual_buy_break','dual_sale_open','dual_sale_break', 'close_resample', 
-                'high_resample', 
+    lines = (   'dual_buy_open','dual_buy_break','dual_sale_open','dual_sale_break', 'close_resample',
+                'high_resample',
                 'low_resample', )
     def __init__(self, dual_window,  dual_period):
         self.params.dual_window = dual_window
@@ -85,7 +85,7 @@ class dual_trust(bt.Indicator):
         self.iteration_progress = tqdm(desc='Total runs', total=(self.datas[0].close.buflen()))
 
     def DUAL(self, df2, period, bar_num):
-        
+
         period_data = df2.resample(period).last()
 
         period_data['open'] = df2['open'].resample(period).first()
@@ -98,11 +98,11 @@ class dual_trust(bt.Indicator):
         period_data['ll'] = period_data['low'].rolling(bar_num).min()
 
         period_data = period_data[['open', 'high', 'hh', 'low', 'll', 'close' ]]
-        
+
         period_data.dropna(inplace=True)
 
         return period_data
-        
+
     def next(self):
 
         self.iteration_progress.update()
@@ -112,10 +112,10 @@ class dual_trust(bt.Indicator):
         data_serial_high = self.data.high.get(size=self.params.dual_window)
         data_serial_low = self.data.low.get(size=self.params.dual_window)
         data_serial_close = self.data.close.get(size=self.params.dual_window)
-    
+
         dt_date = self.datas[0].datetime.datetime()
 
-        dt1 = pd.date_range( end= dt_date, periods=self.params.dual_window, freq="min") 
+        dt1 = pd.date_range( end= dt_date, periods=self.params.dual_window, freq="min")
 
         dt = pd.DataFrame({})
 
@@ -124,7 +124,7 @@ class dual_trust(bt.Indicator):
         dt['close'] = pd.DataFrame(data_serial_close)
         dt['high'] = pd.DataFrame(data_serial_high)
         dt['low'] = pd.DataFrame(data_serial_low)
-    
+
         dt.set_index('datetime', inplace= True)
         pred_data = self.DUAL(dt, self.params.dual_period, 1)
 
@@ -156,13 +156,13 @@ class MyStrategy(bt.Strategy):
         ('min_price', 0),
         ('record_id',0)
     )
- 
+
     def log(self, txt, dt=None, doprint=False):
         ''' Logging function fot this strategy'''
         if self.params.printlog or doprint:
             dt = dt or self.datas[0].datetime.datetime(0)
             print('%s, %s' % (dt.isoformat(), txt))
- 
+
     def __init__(self):
         # Keep a reference to the "close" line in the data[0] dataseries
         self.dataclose = self.datas[0].close
@@ -180,19 +180,19 @@ class MyStrategy(bt.Strategy):
         self.buy_break = None
         self.sale_open = None
         self.sale_break = None
- 
+
         #self.data = dual_trust(dual_window=self.params.dual_window, dual_period= self.params.dual_period, subplot=False)
     def start(self):
         print("the world call me!")
- 
+
     def prenext(self):
         print("not mature")
- 
+
     def notify_order(self, order):
         if order.status in [order.Submitted, order.Accepted]:
             # Buy/Sell order submitted/accepted to/by broker - Nothing to do
             return
- 
+
         # Check if an order has been completed
         # Attention: broker could reject order if not enougth cash
         if order.status in [order.Completed]:
@@ -202,13 +202,13 @@ class MyStrategy(bt.Strategy):
                     (order.executed.price,
                      order.executed.value,
                      order.executed.comm))
- 
+
                 self.buyprice = order.executed.price
                 self.buycomm = order.executed.comm
 
                 row_list = [self.data.datetime.time(), 'buy', self.buyprice, self.buycomm, 0]
                 writer.writerow(row_list)
-                
+
             else:  # Sell
                 self.log('SELL EXECUTED, Price: %.2f, Cost: %.2f, Comm %.2f' %
                          (order.executed.price,
@@ -221,23 +221,23 @@ class MyStrategy(bt.Strategy):
                 writer.writerow(row_list)
 
             self.bar_executed = len(self)
- 
+
         elif order.status in [order.Canceled, order.Margin, order.Rejected]:
             pass
             #self.log('Order Canceled/Margin/Rejected')
- 
+
         self.order = None
- 
+
     def notify_trade(self, trade):
         if not trade.isclosed:
             return
- 
+
         self.log('OPERATION PROFIT, COMM %.2f, GROSS %.2f, NET %.2f \n\n' %
                  (trade.commission, trade.pnl, trade.pnlcomm))
         row_list = [self.data.datetime.time(), 'profit', 0, 0, trade.pnlcomm]
         writer.writerow(row_list)
     def next(self):
-        
+
         # 9:45 - 15:45
         if self.data.datetime.time() > datetime.time(15, 45) or self.data.datetime.time() < datetime.time(9, 45):
             if self. position.size > 0:
@@ -248,10 +248,10 @@ class MyStrategy(bt.Strategy):
                 self.order = self.buy()
                 self.log('Sale Close by Day end, %.2f' % self.dataclose[0])
             return
-        
+
         if self.order:
             return
- 
+
         # Check if we are in the market
         if not self.position:
 
@@ -259,16 +259,16 @@ class MyStrategy(bt.Strategy):
                  self.log('BUY CREATE, %.2f, MACD %.2f, macd2 %.2f' % (self.dataclose[0], self.data.macd[0], self.data.macd2[0]))
                  self.order = self.buy()
                  self.params.max_price = self.dataclose[0]
-                 self.buy_open = self.data.dual_buy_open[-1]
-                 self.buy_break = self.data.dual_buy_break[-1]
+                 self.buy_open = self.data.dual_buy_open[0]
+                 self.buy_break = self.data.dual_buy_break[0]
 
-                 
+
             elif  self.data.macdhist[-1] < self.data.macdhist[-2] + 0.01 and self.dataclose[0] < self.data.low[-1] - self.data.atr[-1]*0.25:
                  self.log('SELL CREATE, %.2f' % self.dataclose[0])
                  self.order = self.sell()
                  self.params.min_price = self.dataclose[0]
-                 self.sale_open = self.data.dual_sale_open[-1]
-                 self.sale_break = self.data.dual_sale_break[-1]
+                 self.sale_open = self.data.dual_sale_open[0]
+                 self.sale_break = self.data.dual_sale_break[0]
 
         else:
             '''
@@ -281,15 +281,15 @@ class MyStrategy(bt.Strategy):
 
 
             if self. position.size > 0:
-                if self.params.max_price < self.datahigh[0]:
-                    self.params.max_price = self.datahigh[0]
+                if self.params.max_price < self.datahigh[-1]:
+                    self.params.max_price = self.datahigh[-1]
 
-                if self.buy_break < self.data.dual_buy_break[-1]:
-                    self.buy_break = self.data.dual_buy_break[-1]
-                    self.buy_open = self.data.dual_buy_open[-1]
-                
+                if self.buy_break < self.data.dual_buy_break[0]:
+                    self.buy_break = self.data.dual_buy_break[0]
+                    self.buy_open = self.data.dual_buy_open[0]
+
                 if len(self) >= (self.bar_executed + 1):
-                   
+
                     # 冲高回落
                     if self.params.max_price > self.buy_break and self.dataclose[0] < self.buy_open:
                         self.log('BUY CLOSE HIT, %.2f' % self.dataclose[0])
@@ -297,45 +297,45 @@ class MyStrategy(bt.Strategy):
                         self.params.max_price = None
                         self.buy_break = None
                         self.buy_open = None
-                        
+
                     # # 移动平仓
-                    elif self.dataclose[0] + self.data.atr[-1]/2 < self.dataclose[-1]:
+                    elif self.dataclose[0] + self.data.atr[-2]/2 < self.dataclose[-2]:
                         self.log('BUY CLOSE MOV, %.2f' % self.dataclose[0])
                         self.order = self.sell()
                         self.params.max_price = None
                         self.buy_break = None
                         self.buy_open = None
 
-            if self. position.size < 0: 
-                if self.params.min_price > self.datalow[0]:
-                        self.params.min_price = self.datalow[0]
+            if self. position.size < 0:
+                if self.params.min_price > self.datalow[-1]:
+                        self.params.min_price = self.datalow[-1]
 
-                if self.sale_break > self.data.dual_sale_break[-1]:
-                    self.sale_break = self.data.dual_sale_break[-1]
-                    self.sale_open = self.data.dual_sale_open[-1]
-                    
+                if self.sale_break > self.data.dual_sale_break[0]:
+                    self.sale_break = self.data.dual_sale_break[0]
+                    self.sale_open = self.data.dual_sale_open[0]
+
                 if len(self) >= (self.bar_executed + 1):
-                    
-                    # 冲低回升       
+
+                    # 冲低回升
                     if self.params.min_price < self.sale_break and self.dataclose[0] > self.sale_open:
                         self.log('SALE CLOSE HIT, %.2f' % self.dataclose[0])
                         self.order = self.buy()
                         self.params.min_price = None
                         self.sale_open = None
                         self.sale_break = None
-                        
+
                     # 移动平仓
-                    elif self.dataclose[0] - self.data.atr[-1]/2  > self.dataclose[-1]:
+                    elif self.dataclose[0] - self.data.atr[-2]/2  > self.dataclose[-2]:
                         self.log('SALE CLOSE MOV, %.2f' % self.dataclose[0])
                         self.order = self.buy()
                         self.params.min_price = None
                         self.sale_open = None
                         self.sale_break = None
 
-            
+
     def stop(self):
         print("death")
- 
+
 if __name__ == '__main__':
     # Create a cerebro entity
     cerebro = bt.Cerebro()
@@ -347,9 +347,9 @@ if __name__ == '__main__':
     #dataframe = pd.read_csv('./data/hsi202003.csv', index_col=0, parse_dates=True)
     # dataframe = pd.read_csv('./20201113/hsi_15secs_202011131546.csv', index_col=0, parse_dates=True, usecols=['date', 'open', 'high', 'low', 'close', 'volume'])
     dataframe = pd.read_csv(data_source, index_col=0, parse_dates=True, usecols=['date', 'open', 'high', 'low', 'close', 'volume'])
-    
+
     dataframe = format_data(dataframe)
-    
+
     data = PandasDataExtend(
             dataname=dataframe,
             datetime=0,  # 日期列
@@ -373,7 +373,7 @@ if __name__ == '__main__':
     cerebro.addsizer(bt.sizers.FixedSize, stake=1)
     # Set the commission
     cerebro.broker.setcommission(
-        commission=30, 
+        commission=30,
         commtype = bt.CommInfoBase.COMM_FIXED, # 固定手续费
         automargin = 5, # 保证金10% , 这里5是因为hsi 指数 一个点50元, 10%保证金, 交易一次30元
         mult = 50  # 利润乘数, hsi 是1个点50
@@ -384,12 +384,12 @@ if __name__ == '__main__':
     cerebro.addanalyzer(bt.analyzers.SharpeRatio, _name = 'SharpeRatio')
     cerebro.addanalyzer(bt.analyzers.DrawDown, _name='DW')
 
-    
+
     with open('./TraderOutput.csv', 'w') as f:
         headers=['TIME','action', 'price', 'comm', 'pnl']
         writer = csv.writer(f)
         writer.writerow(headers)
-    
+
         results = cerebro.run()
 
     endtime = time.time()
@@ -403,7 +403,7 @@ if __name__ == '__main__':
     print('Final Portfolio Value: %.2f' % cerebro.broker.getvalue())
     print('SR:', strat.analyzers.SharpeRatio.get_analysis())
     print('DW:', strat.analyzers.DW.get_analysis())
-    
+
     # print("夏普比例:", results[0].analyzers.sharpe.get_analysis()["sharperatio"])
     # print("年化收益率:", results[0].analyzers.AR.get_analysis())
     # print("最大回撤:%.2f，最大回撤周期%d" % (results[0].analyzers.DD.get_analysis().max.drawdown, results[0].analyzers.DD.get_analysis().max.len))
