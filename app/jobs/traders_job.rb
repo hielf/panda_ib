@@ -69,6 +69,8 @@ class TradersJob < ApplicationJob
       elr = EventLog.where("log_type = ? ", "RISK").last
       if elr
         ot = case ENV['backtrader_version']
+        when '1min'
+          60
         when '5min'
           60
         when '4min'

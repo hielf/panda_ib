@@ -224,6 +224,8 @@ module ContractsHelper
       time_diff = Time.zone.now.beginning_of_minute - data.last["time"].to_time
       Rails.logger.warn "ib check time_diff: #{time_diff}"
       ot = case ENV['backtrader_version']
+      when '1min'
+        60
       when '5min'
         60
       when '4min'

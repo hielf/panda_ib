@@ -298,9 +298,12 @@ module TradeOrdersHelper
     today_start = Time.zone.now.change({hour: 9, min: 15})
     duration = case contract
     when "hsi"
-      (db_collect == "true" ? "72000" : (Time.zone.now - today_start + 7200).to_i.to_s)
+      (db_collect == "true" ? "72000" : (Time.zone.now - today_start + 86400).to_i.to_s)
     when "hsi_15secs"
       duration = (db_collect == "true" ? "14400" : 9000.to_s)
+    end
+    if duration.to_i > 86400
+      duration = "86400"
     end
     result = true
     list = nil
