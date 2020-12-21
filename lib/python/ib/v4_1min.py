@@ -20,8 +20,8 @@ import talib as ta
 from backtrader.feeds import PandasData  # 用于扩展DataFeed
 starttime = time.time()
 
-buyAI = joblib.load('./pkl/buyAI006.pkl')
-sellAI = joblib.load('./pkl/sellAI006.pkl')
+buyAI = joblib.load('buyAI006.pkl')
+sellAI = joblib.load('sellAI006.pkl')
 
 # def set_label(row):
 #     if row['future_ema'] - row['current_ema']>row['atr10']*1.5:
