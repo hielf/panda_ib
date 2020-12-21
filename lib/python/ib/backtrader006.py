@@ -20,8 +20,8 @@ import talib as ta
 from backtrader.feeds import PandasData  # 用于扩展DataFeed
 starttime = time.time()
 
-buyAI = joblib.load('./pkl/buyAI006.pkl')
-sellAI = joblib.load('./pkl/sellAI006.pkl')
+buyAI = joblib.load('buyAI006.pkl')
+sellAI = joblib.load('sellAI006.pkl')
 
 data_source = sys.argv[1]
 from_date = datetime.datetime.strptime(sys.argv[2],'%Y-%m-%d %H:%M:%S')
