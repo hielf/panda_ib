@@ -185,8 +185,6 @@ class MyStrategy(bt.Strategy):
                 row_list = [self.data.datetime.time(), 'sell', self.sellprice, self.sellcomm, 0]
                 writer.writerow(row_list)
 
-            # self.bar_executed = len(self)
-
         elif order.status in [order.Canceled, order.Margin, order.Rejected]:
             pass
             #self.log('Order Canceled/Margin/Rejected')
@@ -235,12 +233,6 @@ class MyStrategy(bt.Strategy):
                  trades.append({'order': 'sell', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
         else:
-            # if self.clock1 == None:
-            #     self.clock1 = self.bar_executed
-
-            if self.data.buy_status[0] == 1:
-                self.clock1 = len(self)
-
             if self. position.size > 0:
                 self.params.max_price = max(self.datahigh[-5], self.params.max_price)
 
@@ -323,9 +315,9 @@ if __name__ == '__main__':
     # Add the Data Feed to Cerebro
     cerebro.adddata(data)
     # Set our desired cash start
-    cerebro.broker.setcash(350000.0)
+    cerebro.broker.setcash(1000000.0)
     # 设置每笔交易交易的股票数量
-    cerebro.addsizer(bt.sizers.FixedSize, stake=1)
+    cerebro.addsizer(bt.sizers.FixedSize, stake=4)
     # Set the commission
     cerebro.broker.setcommission(
         commission=30,
