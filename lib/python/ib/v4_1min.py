@@ -184,7 +184,7 @@ class MyStrategy(bt.Strategy):
                 row_list = [self.data.datetime.time(), 'sell', self.sellprice, self.sellcomm, 0]
                 writer.writerow(row_list)
 
-            self.bar_executed = len(self)
+            # self.bar_executed = len(self)
 
         elif order.status in [order.Canceled, order.Margin, order.Rejected]:
             pass
@@ -234,8 +234,8 @@ class MyStrategy(bt.Strategy):
                  trades.append({'order': 'sell', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
         else:
-            if self.clock1 == None:
-                self.clock1 = self.bar_executed
+            # if self.clock1 == None:
+            #     self.clock1 = self.bar_executed
 
             if self.data.buy_status[0] == 1:
                 self.clock1 = len(self)
