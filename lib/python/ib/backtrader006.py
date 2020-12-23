@@ -82,8 +82,8 @@ def format_data(df3):
     df3['slowk'] =slowk
     df3['slowd'] =slowd
 
-    df3['current_ema'] = (df3['ema5']  - df3['ema30']) * df3['close']
-    df3['future_ema'] = df3['current_ema'].rolling(15).mean().shift(-20)
+    # df3['current_ema'] = (df3['ema5']  - df3['ema30']) * df3['close']
+    # df3['future_ema'] = df3['current_ema'].rolling(15).mean().shift(-20)
 
     #60分钟后ema最大值大于当前close+atr*4 大概是50点
     # df3['ll']=df3.apply(set_label,axis=1)
@@ -188,8 +188,6 @@ class MyStrategy(bt.Strategy):
                 row_list = [self.data.datetime.time(), 'sell', self.sellprice, self.sellcomm, 0]
                 writer.writerow(row_list)
 
-            self.bar_executed = len(self)
-
         elif order.status in [order.Canceled, order.Margin, order.Rejected]:
             pass
             #self.log('Order Canceled/Margin/Rejected')
@@ -234,11 +232,7 @@ class MyStrategy(bt.Strategy):
                  self.params.min_price = self.dataclose[0]
 
         else:
-            if self.clock1 == None:
-                self.clock1 = self.bar_executed
 
-            if self.data.buy_status[0] == 1:
-                self.clock1 = len(self)
 
             if self. position.size > 0:
                 self.params.max_price = max(self.datahigh[-5], self.params.max_price)
@@ -253,8 +247,6 @@ class MyStrategy(bt.Strategy):
                     self.log('BUY CLOSE HIT, %.2f' % self.dataclose[0])
                     self.order = self.sell()
                     self.params.max_price = None
-                    self.clock1 = None
-
 
 
             if self. position.size < 0:
@@ -305,9 +297,9 @@ if __name__ == '__main__':
     # Add the Data Feed to Cerebro
     cerebro.adddata(data)
     # Set our desired cash start
-    cerebro.broker.setcash(350000.0)
+    cerebro.broker.setcash(1000000.0)
     # 设置每笔交易交易的股票数量
-    cerebro.addsizer(bt.sizers.FixedSize, stake=1)
+    cerebro.addsizer(bt.sizers.FixedSize, stake=4)
     # Set the commission
     cerebro.broker.setcommission(
         commission=30,

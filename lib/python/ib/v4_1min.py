@@ -79,8 +79,8 @@ def format_data(df3):
     df3['slowk'] =slowk
     df3['slowd'] =slowd
 
-    df3['current_ema'] = (df3['ema5']  - df3['ema30']) * df3['close']
-    df3['future_ema'] = df3['current_ema'].rolling(15).mean().shift(-20)
+    # df3['current_ema'] = (df3['ema5']  - df3['ema30']) * df3['close']
+    # df3['future_ema'] = df3['current_ema'].rolling(15).mean().shift(-20)
 
     #60分钟后ema最大值大于当前close+atr*4 大概是50点
     # df3['ll']=df3.apply(set_label,axis=1)
