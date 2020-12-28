@@ -225,7 +225,7 @@ module ContractsHelper
       Rails.logger.warn "ib check time_diff: #{time_diff}"
       ot = case ENV['backtrader_version']
       when '1min'
-        60
+        0
       when '5min'
         60
       when '4min'

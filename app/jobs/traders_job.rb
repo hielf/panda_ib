@@ -12,6 +12,11 @@ class TradersJob < ApplicationJob
     run_time = Time.zone.now
     Rails.logger.warn "ib job start: #{contract}, #{Time.zone.now}"
 
+    last_risk = EventLog.where(log_type: "RISK").last.created_at
+    risk_diff_time = (run_time.beginning_of_minute - last_risk.to_time).abs / 60
+
+    return if risk_diff_time <= 60
+
     attempt = 0
     market_data = nil
     file = Rails.root.to_s + "/tmp/csv/#{contract}.csv"
@@ -70,7 +75,7 @@ class TradersJob < ApplicationJob
       if elr
         ot = case ENV['backtrader_version']
         when '1min'
-          60
+          0
         when '5min'
           60
         when '4min'
