@@ -225,7 +225,7 @@ module ContractsHelper
       Rails.logger.warn "ib check time_diff: #{time_diff}"
       ot = case ENV['backtrader_version']
       when '1min'
-        0
+        60
       when '5min'
         60
       when '4min'
@@ -253,6 +253,12 @@ module ContractsHelper
         if !position["position"].nil? && position["position"] > 0 && data.last["order"].upcase == "SELL"
           OrdersJob.perform_now "CLOSE", amount, "", 0
           order = data.last["order"].upcase
+        end
+        if !position["position"].nil? && position["position"] > 0 && data.last["order"].upcase == "BUY"
+          order = ""
+        end
+        if !position["position"].nil? && position["position"] < 0 && data.last["order"].upcase == "SELL"
+          order = ""
         end
         if position == {}
           order = data.last["order"].upcase
