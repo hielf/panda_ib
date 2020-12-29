@@ -261,7 +261,7 @@ module ContractsHelper
           order = ""
         end
         if position == {}
-          order = data.last["order"].upcase
+          order = ""
         end
       end
     else

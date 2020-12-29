@@ -13,17 +13,14 @@ class RisksJob < ApplicationJob
 
     current_time = Time.zone.now.strftime('%H:%M')
     @order = ""
-    if (current_time >= "09:30" && current_time <= "12:00") || (current_time >= "13:00" && current_time <= "16:30")
-      # @ib = ApplicationController.helpers.ib_connect
-      # Rails.logger.warn "ib risk start: #{@ib}"
+    if (current_time >= "09:15" && current_time <= "12:00") || (current_time >= "13:00" && current_time <= "16:30")
       if @ib.isConnected()
-        # Rails.logger.warn "#{@ib}"
         loss_limit = ENV["total_asset"].to_f * 0.006 * -1
         @market_data = ApplicationController.helpers.market_data(@contract, true) unless ENV["remote_index"] == "true"
         trades = ApplicationController.helpers.ib_trades
         last_trade = trades.sort_by { |h| -h[:time] }.reverse.last
 
-        if last_trade.nil?
+        if last_trade && last_trade[:realized_pnl] != 0
           ProfitLoss.where(current: true).update_all(current: false)
         end
 
@@ -80,7 +77,6 @@ class RisksJob < ApplicationJob
 
   private
   def around_check
-    # ApplicationController.helpers.ib_disconnect(@ib) if @ib
     file = ApplicationController.helpers.index_to_csv(@contract, @market_data, true) if @market_data
     begin
       if @profit_losses && @profit_losses.count == 4
