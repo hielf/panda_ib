@@ -378,6 +378,16 @@ module ContractsHelper
     position = {}
     amount = 0
 
+    # tp = TraderPosition.find_by(contract: contract)
+    # position["position"] = tp.position if (tp && tp.position != 0)
+    position = ApplicationController.helpers.ib_positions
+    tp = TraderPosition.find_or_initialize_by(contract: contract)
+    # previous_position = 0
+    # previous_position = tp.position if (tp && !tp.position.nil?)
+    # tp.position = position + previous_position if price > 0
+    tp.position = position["position"].nil? ? 0 : position["position"]
+    tp.save
+
     if !position["position"].nil? && position["position"] > 0 # buy
       order = "SELL"
       amount = position["position"].abs
@@ -390,17 +400,17 @@ module ContractsHelper
 
     if order != "" && amount != 0
       ib_order(order, amount, 0)
-    end
 
-    # tp = TraderPosition.find_by(contract: contract)
-    # position["position"] = tp.position if (tp && tp.position != 0)
-    position = ApplicationController.helpers.ib_positions
-    tp = TraderPosition.find_or_initialize_by(contract: contract)
-    # previous_position = 0
-    # previous_position = tp.position if (tp && !tp.position.nil?)
-    # tp.position = position + previous_position if price > 0
-    tp.position = position["position"].nil? ? 0 : position["position"]
-    tp.save
+      # tp = TraderPosition.find_by(contract: contract)
+      # position["position"] = tp.position if (tp && tp.position != 0)
+      position = ApplicationController.helpers.ib_positions
+      tp = TraderPosition.find_or_initialize_by(contract: contract)
+      # previous_position = 0
+      # previous_position = tp.position if (tp && !tp.position.nil?)
+      # tp.position = position + previous_position if price > 0
+      tp.position = position["position"].nil? ? 0 : position["position"]
+      tp.save
+    end
 
     return order, amount
   end
