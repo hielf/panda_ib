@@ -244,7 +244,7 @@ module ContractsHelper
         amount = position["position"].abs if (position && position != {} && !position["position"].nil?)
         Rails.logger.warn "ib position: #{position}"
         if !position["position"].nil? && data.last["order"].upcase == "CLOSE"
-          order = data.last["order"].upcase
+          order = "CLOSE"
         end
         if !position["position"].nil? && position["position"] < 0 && data.last["order"].upcase == "BUY"
           OrdersJob.perform_now "CLOSE", amount, "", 0
@@ -260,8 +260,8 @@ module ContractsHelper
         if !position["position"].nil? && position["position"] < 0 && data.last["order"].upcase == "SELL"
           order = ""
         end
-        if position == {}
-          order = ""
+        if position == {} && data.last["order"].upcase != "CLOSE"
+          order = data.last["order"].upcase
         end
       end
     else
