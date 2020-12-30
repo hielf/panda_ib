@@ -382,4 +382,21 @@ module TradeOrdersHelper
     return result
   end
 
+  def trades_logger(data)
+    flag = false
+    if data && !data.empty?
+      # Rails.logger.warn "ib trades data: #{data}"
+      Rails.logger.warn "ib trades got: #{Time.zone.now}"
+      data.sort_by { |h| -h[:time] }.reverse.each do |d|
+        trade = Trade.find_or_initialize_by(exec_id: d[:exec_id])
+        trade.update(perm_id: d[:perm_id], action: d[:action], symbol: d[:symbol],
+          last_trade_date_or_contract_month: d[:last_trade_date_or_contract_month],
+          currency: d[:currency], shares: d[:shares], price: d[:price], time: Time.at(d[:time]),
+          commission: d[:commission], realized_pnl: d[:realized_pnl])
+      end
+      flag = true
+    end
+    return flag
+  end
+
 end

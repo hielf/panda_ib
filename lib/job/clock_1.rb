@@ -36,6 +36,8 @@ module Clockwork
   every(1.second, 'ib.trader', :if => lambda { |t| t.sec == 56 }, :thread => true) if ENV["backtrader_version"] == "4min"
   # every(1.second, 'ib.trader', :if => lambda { |t| (([4,9,14,19,24,29,34,39,44,49,54,59].include? t.min) && t.sec == 54) }, :thread => true) if ENV["backtrader_version"] == "5min"
   every(1.second, 'ib.trader', :if => lambda { |t| t.sec == 56 }, :thread => true) if ENV["backtrader_version"] == "5min"
+  # # trades
+  # every(5.minutes, 'ib.trades', :thread => true)
   # every(1.minute, 'timing', :skip_first_run => true, :thread => true)
   # every(1.hour, 'hourly.job')
   #
