@@ -207,7 +207,7 @@ module ContractsHelper
 
   def py_check_position(contract, amount = ENV["amount"])
     order = ""
-    position = {}
+    position = TraderPosition.find_or_initialize_by(contract: contract).position
     csv = Rails.root.to_s + "/tmp/csv/#{contract}.csv"
     json = Rails.root.to_s + "/tmp/#{contract}_trades.json"
     # begin_date = Time.zone.now < (Time.parse "11:30 am") ? 1.business_day.ago.to_date : Date.today
@@ -238,35 +238,32 @@ module ContractsHelper
         120
       end
       if time_diff.abs <= ot || data.last["order"].upcase == "CLOSE"
-        # position = ApplicationController.helpers.ib_positions
-        tp = TraderPosition.find_by(contract: contract)
-        position["position"] = tp.position if (tp && tp.position != 0)
-        amount = position["position"].abs if (position && position != {} && !position["position"].nil?)
+        amount = position.abs
         Rails.logger.warn "ib position: #{position}"
-        if !position["position"].nil? && data.last["order"].upcase == "CLOSE"
+        if position && data.last["order"].upcase == "CLOSE"
           order = "CLOSE"
         end
-        if !position["position"].nil? && position["position"] < 0 && data.last["order"].upcase == "BUY"
+        if position && position < 0 && data.last["order"].upcase == "BUY"
           OrdersJob.perform_now "CLOSE", amount, "", 0
           order = data.last["order"].upcase
         end
-        if !position["position"].nil? && position["position"] > 0 && data.last["order"].upcase == "SELL"
+        if position && position > 0 && data.last["order"].upcase == "SELL"
           OrdersJob.perform_now "CLOSE", amount, "", 0
           order = data.last["order"].upcase
         end
-        if !position["position"].nil? && position["position"] > 0 && data.last["order"].upcase == "BUY"
+        if position && position > 0 && data.last["order"].upcase == "BUY"
           order = ""
         end
-        if !position["position"].nil? && position["position"] < 0 && data.last["order"].upcase == "SELL"
+        if position && position < 0 && data.last["order"].upcase == "SELL"
           order = ""
         end
-        if position == {} && data.last["order"].upcase != "CLOSE"
+        if position == 0 && data.last["order"].upcase != "CLOSE"
           order = data.last["order"].upcase
         end
       end
     else
-      if position && position != {} && !position["position"].nil?
-        order = "CLOSE" if position["position"].abs > 0
+      if position && position != 0
+        order = "CLOSE"
       end
     end
 
@@ -375,25 +372,15 @@ module ContractsHelper
       'hsi'
     end
     order = ""
-    position = {}
     amount = 0
+    position = TraderPosition.find_or_initialize_by(contract: contract).position
 
-    # tp = TraderPosition.find_by(contract: contract)
-    # position["position"] = tp.position if (tp && tp.position != 0)
-    position = ApplicationController.helpers.ib_positions
-    tp = TraderPosition.find_or_initialize_by(contract: contract)
-    # previous_position = 0
-    # previous_position = tp.position if (tp && !tp.position.nil?)
-    # tp.position = position + previous_position if price > 0
-    tp.position = position["position"].nil? ? 0 : position["position"]
-    tp.save
-
-    if !position["position"].nil? && position["position"] > 0 # buy
+    if position > 0 # buy
       order = "SELL"
-      amount = position["position"].abs
-    elsif !position["position"].nil? && position["position"] < 0 # sell
+      amount = position.abs
+    elsif position < 0 # sell
       order = "BUY"
-      amount = position["position"].abs
+      amount = position.abs
     end
 
     Rails.logger.warn "ib close_position: #{order} #{amount.to_s}"

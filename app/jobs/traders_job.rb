@@ -97,7 +97,8 @@ class TradersJob < ApplicationJob
       OrdersJob.perform_now @order, @amount, @move_order, @move_price if ((@order != "" && @amount != 0) || @move_order != "" && @move_price != 0)
 
     elsif (current_time > "09:00" && current_time < "09:15") || (current_time > "15:50" && current_time < "16:30")
-      ApplicationController.helpers.close_position
+      position = TraderPosition.find_or_initialize_by(contract: contract).position
+      OrdersJob.perform_now "CLOSE", position, "", 0
     else
       return
     end
