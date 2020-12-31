@@ -25,15 +25,9 @@ module Clockwork
       end
       stop_time = Time.zone.now + 3.minutes - 5.seconds
       60.times do
-        last_action = Action.last
         if Time.zone.now > stop_time
           ApplicationController.helpers.ib_disconnect(@ib) if @ib.isConnected()
           break
-        end
-        if last_action.order == "CLOSE" && (Time.zone.now - last_action.action_time <= 7)
-          ApplicationController.helpers.ib_disconnect(@ib) if @ib.isConnected()
-          Rails.logger.warn "ib disconnect: CLOSE #{Time.zone.now}"
-          sleep 0.1
         end
         @ib = ApplicationController.helpers.ib_connect if @ib.nil?
         @ib = ApplicationController.helpers.ib_connect if !@ib.nil? && !@ib.isConnected()
