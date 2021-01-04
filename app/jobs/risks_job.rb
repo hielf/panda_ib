@@ -19,7 +19,7 @@ class RisksJob < ApplicationJob
         @market_data = ApplicationController.helpers.market_data(@contract, true) unless ENV["remote_index"] == "true"
         trades = ApplicationController.helpers.ib_trades
         last_trade = trades.sort_by { |h| -h[:time] }.reverse.last
-        position = TraderPosition.find_or_initialize_by(contract: contract).position
+        position = TraderPosition.find_or_initialize_by(contract: @contract).position
 
         if position == 0
           ProfitLoss.where(current: true).update_all(current: false)
