@@ -69,7 +69,7 @@ class TradersJob < ApplicationJob
     if (current_time >= "09:15" && current_time <= "15:50")
       @order, @amount, @move_order, @move_price = ApplicationController.helpers.py_check_position(contract) if file
       ApplicationController.helpers.document_files(contract, file) if file
-      Rails.logger.warn "ib py_check_position: #{@order} #{@amount.to_s}, #{Time.zone.now}"
+      Rails.logger.warn "ib py_check_position: #{@order} #{@amount.to_s}, #{Time.zone.now}" if @order != ""
 
       elr = EventLog.where("log_type = ? ", "RISK").last
       if elr
