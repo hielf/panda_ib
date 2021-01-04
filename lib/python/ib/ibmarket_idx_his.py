@@ -1,6 +1,6 @@
 from ib_insync import *
 from sqlalchemy import create_engine
-import os
+import os, sys
 import psycopg2
 import sched, time
 import datetime
@@ -11,9 +11,9 @@ ib = IB()
 # ib.connect('129.226.51.237', 7497, clientId=101)
 ib.connect(host='124.156.100.215', port=7497, clientId=1, timeout=10, readonly=False)
 
-# contracts = [Index(symbol = "HSI", exchange = "HKFE"), Index(symbol = "SPX", exchange = "CBOE"), Forex('USDJPY'), Forex('EURUSD')]
-contracts = [Index(symbol = "HSI", exchange = "HKFE")]
-
+# contracts = [Contract(exchange = "ECBOT", secType = "CONTFUT", symbol = "YM"), Index(symbol = "SPX", exchange = "CBOE"), Forex('USDJPY'), Forex('EURUSD')]
+contracts = [Contract(exchange = "ECBOT", secType = "CONTFUT", symbol = "YM")]
+# contracts = [Index(symbol = "HSI", exchange = "HKFE")]
 # bars = ib.reqHistoricalData(contract, endDateTime='', durationStr='1 D',
 #         barSizeSetting='1 min', whatToShow='TRADES', useRTH=True)
 
@@ -39,16 +39,25 @@ def get_index_15sec(end_datetime):
                 tmp_table = 'spx_15secs_tmp'
                 table = 'spx_15secs'
             bars = ib.reqHistoricalData(contract, endDateTime=end_datetime, durationStr='14400 S', barSizeSetting='15 secs', whatToShow='TRADES', useRTH=True)
+        elif contract.secType == 'CONTFUT':
+            if contract.symbol == 'YM':
+                tmp_table = 'ym_15secs_tmp'
+                table = 'ym_15secs'
+            bars = ib.reqHistoricalData(contract, endDateTime=end_datetime, durationStr='14400 S', barSizeSetting='15 secs', whatToShow='TRADES', useRTH=True)
         df = util.df(bars)
         print("got bars %s" % str(bars))
         print("got contract %s" % str(contract))
         engine = create_engine('postgresql+psycopg2://chesp:Chesp92J5@rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com:3432/panda_quant',echo=True,client_encoding='utf8')
         print("waiting for collect %s" % table)
-        df.to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');
-        sql = "insert into " + table + " select * from " + tmp_table +  " b where not exists (select 1 from " + table + " a where a.date = b.date);"
-        cur.execute(sql, (10, 1000000, False, False))
-        conn.commit()
-        conn.close()
+        try:
+            df.to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');
+            sql = "insert into " + table + " select * from " + tmp_table +  " b where not exists (select 1 from " + table + " a where a.date = b.date);"
+            cur.execute(sql, (10, 1000000, False, False))
+            conn.commit()
+            conn.close()
+        except:
+            print ("Unexpected error:", sys.exc_info()[0])
+            continue
 
 def get_index_30sec(end_date):
     print("start 30sec collect %s" % str(end_date))
@@ -72,16 +81,25 @@ def get_index_30sec(end_date):
                 tmp_table = 'spx_30secs_tmp'
                 table = 'spx_30secs'
             bars = ib.reqHistoricalData(contract, endDateTime=end_date, durationStr='1 D', barSizeSetting='30 secs', whatToShow='TRADES', useRTH=True)
+        elif contract.secType == 'CONTFUT':
+            if contract.symbol == 'YM':
+                tmp_table = 'ym_30secs_tmp'
+                table = 'ym_30secs'
+            bars = ib.reqHistoricalData(contract, endDateTime=end_date, durationStr='1 D', barSizeSetting='30 secs', whatToShow='TRADES', useRTH=True)
         df = util.df(bars)
         print("got bars %s" % str(bars))
         print("got contract %s" % str(contract))
         engine = create_engine('postgresql+psycopg2://chesp:Chesp92J5@rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com:3432/panda_quant',echo=True,client_encoding='utf8')
         print("waiting for collect %s" % table)
-        df.to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');
-        sql = "insert into " + table + " select * from " + tmp_table +  " b where not exists (select 1 from " + table + " a where a.date = b.date);"
-        cur.execute(sql, (10, 1000000, False, False))
-        conn.commit()
-        conn.close()
+        try:
+            df.to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');
+            sql = "insert into " + table + " select * from " + tmp_table +  " b where not exists (select 1 from " + table + " a where a.date = b.date);"
+            cur.execute(sql, (10, 1000000, False, False))
+            conn.commit()
+            conn.close()
+        except:
+            print ("Unexpected error:", sys.exc_info()[0])
+            continue
 
 def get_index_1min(end_date):
     print("start 1min collect %s" % str(end_date))
@@ -105,16 +123,25 @@ def get_index_1min(end_date):
                 tmp_table = 'spx_tmp'
                 table = 'spx'
             bars = ib.reqHistoricalData(contract, endDateTime=end_date, durationStr='1 D', barSizeSetting='1 min', whatToShow='TRADES', useRTH=True)
+        elif contract.secType == 'CONTFUT':
+            if contract.symbol == 'YM':
+                tmp_table = 'ym_tmp'
+                table = 'ym'
+            bars = ib.reqHistoricalData(contract, endDateTime=end_date, durationStr='1 D', barSizeSetting='1 min', whatToShow='TRADES', useRTH=True)
         df = util.df(bars)
         print("got bars %s" % str(bars))
         print("got contract %s" % str(contract))
         engine = create_engine('postgresql+psycopg2://chesp:Chesp92J5@rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com:3432/panda_quant',echo=True,client_encoding='utf8')
         print("waiting for collect %s" % table)
-        df.to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');
-        sql = "insert into " + table + " select * from " + tmp_table +  " b where not exists (select 1 from " + table + " a where a.date = b.date);"
-        cur.execute(sql, (10, 1000000, False, False))
-        conn.commit()
-        conn.close()
+        try:
+            df.to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');
+            sql = "insert into " + table + " select * from " + tmp_table +  " b where not exists (select 1 from " + table + " a where a.date = b.date);"
+            cur.execute(sql, (10, 1000000, False, False))
+            conn.commit()
+            conn.close()
+        except:
+            print ("Unexpected error:", sys.exc_info()[0])
+            continue
 
 
 def get_index_5min(end_date):
@@ -139,16 +166,25 @@ def get_index_5min(end_date):
                 tmp_table = 'spx_5mins_tmp'
                 table = 'spx_5mins'
             bars = ib.reqHistoricalData(contract, endDateTime=end_date, durationStr='1 D', barSizeSetting='5 mins', whatToShow='TRADES', useRTH=True)
+        elif contract.secType == 'CONTFUT':
+            if contract.symbol == 'YM':
+                tmp_table = 'ym_5mins_tmp'
+                table = 'ym_5mins'
+            bars = ib.reqHistoricalData(contract, endDateTime=end_date, durationStr='1 D', barSizeSetting='5 mins', whatToShow='TRADES', useRTH=True)
         df = util.df(bars)
         print("got bars %s" % str(bars))
         print("got contract %s" % str(contract))
         engine = create_engine('postgresql+psycopg2://chesp:Chesp92J5@rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com:3432/panda_quant',echo=True,client_encoding='utf8')
         print("waiting for collect %s" % table)
-        df.to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');
-        sql = "insert into " + table + " select * from " + tmp_table +  " b where not exists (select 1 from " + table + " a where a.date = b.date);"
-        cur.execute(sql, (10, 1000000, False, False))
-        conn.commit()
-        conn.close()
+        try:
+            df.to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');
+            sql = "insert into " + table + " select * from " + tmp_table +  " b where not exists (select 1 from " + table + " a where a.date = b.date);"
+            cur.execute(sql, (10, 1000000, False, False))
+            conn.commit()
+            conn.close()
+        except:
+            print ("Unexpected error:", sys.exc_info()[0])
+            continue
 
 
 # def get_index_30min(date_time):
@@ -195,8 +231,8 @@ def get_index_5min(end_date):
 #         s.enter(60, 1, get_index_1min, (date_time,))
 
 if __name__ == '__main__':
-    d1 = datetime.datetime(2020,12,4,0,0)
-    d2 = datetime.datetime(2020,12,7,0,0,0)
+    d1 = datetime.datetime(2020,1,27,0,0)
+    d2 = datetime.datetime(2021,1,1,0,0,0)
     diff = d2 - d1
     for i in range(diff.days + 1):
         end_date = (d1 + datetime.timedelta(i))
@@ -205,7 +241,7 @@ if __name__ == '__main__':
         get_index_1min(end_date)
         get_index_5min(end_date)
         get_index_30sec(end_date)
-        for j in range(6):
-            end_datetime = (end_date + datetime.timedelta(j/6))
-            print (end_datetime)
-            get_index_15sec(end_datetime)
+        # for j in range(6):
+        #     end_datetime = (end_date + datetime.timedelta(j/6))
+        #     print (end_datetime)
+        #     get_index_15sec(end_datetime)

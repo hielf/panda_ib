@@ -238,16 +238,18 @@ module ContractsHelper
         120
       end
       if time_diff.abs <= ot || data.last["order"].upcase == "CLOSE"
-        amount = position.abs
         Rails.logger.warn "ib position: #{position}"
         if position && data.last["order"].upcase == "CLOSE"
+          amount = position.abs
           order = "CLOSE"
         end
         if position && position < 0 && data.last["order"].upcase == "BUY"
+          amount = position.abs
           OrdersJob.perform_now "CLOSE", amount, "", 0
           order = data.last["order"].upcase
         end
         if position && position > 0 && data.last["order"].upcase == "SELL"
+          amount = position.abs
           OrdersJob.perform_now "CLOSE", amount, "", 0
           order = data.last["order"].upcase
         end
