@@ -26,36 +26,19 @@ class OrdersJob < ApplicationJob
     @ib = ApplicationController.helpers.ib_connect
     if @ib.isConnected()
       Rails.logger.warn "ib placing order: #{@order}, amount:#{@amount.to_s}, move_order:#{@move_order}, move_price:#{@move_price}"
-      # today_pnl = Trade.where("created_at >= ?", Date.today).sum(:realized_pnl)
-      # last_pnl = Trade.where("created_at >= ?", Date.today).last
-      # if today_pnl >= (ENV["total_asset"].to_i * 0.012) && !last_pnl.nil?
-      #   @order, @amount = ApplicationController.helpers.close_position
-      # else
-      # sleep 0.1
-      # ApplicationController.helpers.ib_cancelorder("", 0, 0)
-      # sleep 0.3
 
-        if @order != "" && @amount != 0 && @order != "CLOSE"
-          ApplicationController.helpers.ib_order(@order, @amount, 0)
-        elsif @order == "CLOSE"
-          @order, @amount = ApplicationController.helpers.close_position
-        end
-
-        # if @move_order != "" && @move_price != 0
-        #   sleep 0.2
-        #   # privious_move = Action.where.not(price: 0).last(2).first if Action.where.not(price: 0).last(2).count == 2
-        #   # ApplicationController.helpers.ib_cancelorder(privious_move.order, privious_move.amount, privious_move.price) if privious_move
-        #   ApplicationController.helpers.ib_order(@move_order, @amount, @move_price)
-        # end
-      # end
+      if @order != "" && @amount != 0 && @order != "CLOSE"
+        ApplicationController.helpers.ib_order(@order, @amount, 0)
+      elsif @order == "CLOSE"
+        @order, @amount = ApplicationController.helpers.close_position
+      end
     else
       SmsJob.perform_later ENV["admin_phone"], ENV["superme_user"] + " " + ENV["backtrader_version"], "无法连接"
     end
+    ApplicationController.helpers.ib_disconnect(@ib) if @ib.isConnected()
   end
 
   private
-  # ApplicationController.helpers.ib_disconnect(@ib) if @ib.isConnected()
-
   def event_log
     EventLog.create(log_type: "ORDER", order_type: @order, content: "#{@order} #{@amount.to_s} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}") if @order != "" && @amount != 0
     EventLog.create(log_type: "MOVE", order_type: @move_order, content: "#{@move_order} #{@move_price.to_s} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}") if @move_order != "" && @move_price != 0

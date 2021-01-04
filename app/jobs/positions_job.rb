@@ -5,11 +5,15 @@ class PositionsJob < ApplicationJob
 
   def perform(*args)
     @contract = args[0]
-    position = ApplicationController.helpers.position_update(@contract)
+
+    @ib = ApplicationController.helpers.ib_connect if @ib.nil?
   end
 
   private
   def around_check
+    position = ApplicationController.helpers.position_update(@contract)
+
+    ApplicationController.helpers.ib_disconnect(@ib) if @ib.isConnected()
   end
 
 end
