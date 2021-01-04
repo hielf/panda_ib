@@ -19,22 +19,21 @@ class RisksJob < ApplicationJob
         @market_data = ApplicationController.helpers.market_data(@contract, true) unless ENV["remote_index"] == "true"
         trades = ApplicationController.helpers.ib_trades
         last_trade = trades.sort_by { |h| -h[:time] }.reverse.last
+        position = TraderPosition.find_or_initialize_by(contract: contract).position
 
-        if last_trade && last_trade[:realized_pnl] != 0
+        if position == 0
           ProfitLoss.where(current: true).update_all(current: false)
         end
 
-        if last_trade && @market_data
+        if last_trade && position != 0 && @market_data
           @order = last_trade[:action]
           close = @market_data.iloc[-1].close
           unrealized_pnl = 0
-          if last_trade[:realized_pnl] == 0
-            case last_trade[:action]
-            when "BUY"
-              unrealized_pnl = (close - last_trade[:price]) * ENV['amount'].to_i * 50
-            when "SELL"
-              unrealized_pnl = -1 * (close - last_trade[:price]) * ENV['amount'].to_i * 50
-            end
+          case last_trade[:action]
+          when "BUY"
+            unrealized_pnl = (close - last_trade[:price]) * ENV['amount'].to_i * 50
+          when "SELL"
+            unrealized_pnl = -1 * (close - last_trade[:price]) * ENV['amount'].to_i * 50
           end
 
           begin
