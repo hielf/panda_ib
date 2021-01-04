@@ -30,7 +30,7 @@ module Clockwork
   # every(1.second, 'ib.trader', :if => lambda { |t| [11,26,41,56].include? t.sec }, :thread => true) if ENV["backtrader_version"] == "15sec"
   every(1.second, 'ib.trader', :if => lambda { |t| (([6,11,16,21,26,31,36,41,46,51,56,1].include? t.min) && t.sec == 54) }, :thread => true) if ENV["backtrader_version"] == "15sec"
   # -----------------------------------temp -----------------------------------
-  every(1.second, 'ib.trader', :if => lambda { |t| t.sec == 58 }, :thread => true) if ENV["backtrader_version"] == "1min"
+  every(1.second, 'ib.trader', :if => lambda { |t| t.sec == 56 }, :thread => true) if ENV["backtrader_version"] == "1min"
   every(1.second, 'ib.trader', :if => lambda { |t| (([0,3,6,9,12,15,18,21,24,27,30,33,36,39,42,45,48,51,54,57].include? t.min) && t.sec == 56) }, :thread => true) if ENV["backtrader_version"] == "3min"
   # every(1.second, 'ib.trader', :if => lambda {  |t| [0,15,30,45].include? t.sec }, :thread => true) if ENV["backtrader_version"] == "3min"
   every(1.second, 'ib.trader', :if => lambda { |t| t.sec == 56 }, :thread => true) if ENV["backtrader_version"] == "4min"
