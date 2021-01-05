@@ -17,8 +17,9 @@ class RisksJob < ApplicationJob
       if @ib_risk.isConnected()
         loss_limit = ENV["total_asset"].to_f * 0.006 * -1
         @market_data = ApplicationController.helpers.market_data(@contract, true) unless ENV["remote_index"] == "true"
-        trades = ApplicationController.helpers.ib_trades
-        last_trade = trades.sort_by { |h| -h[:time] }.reverse.last
+        # trades = ApplicationController.helpers.ib_trades
+        # last_trade = trades.sort_by { |h| -h[:time] }.reverse.last
+        last_trade = Trade.last
         position = TraderPosition.find_or_initialize_by(contract: @contract).position
 
         if position == 0
@@ -26,23 +27,23 @@ class RisksJob < ApplicationJob
         end
 
         if last_trade && position != 0 && @market_data
-          @order = last_trade[:action]
+          @order = last_trade.action
           close = @market_data.iloc[-1].close
           unrealized_pnl = 0
-          case last_trade[:action]
+          case last_trade.action
           when "BUY"
-            unrealized_pnl = (close - last_trade[:price]) * ENV['amount'].to_i * 50
+            unrealized_pnl = (close - last_trade.price) * ENV['amount'].to_i * 50
           when "SELL"
-            unrealized_pnl = -1 * (close - last_trade[:price]) * ENV['amount'].to_i * 50
+            unrealized_pnl = -1 * (close - last_trade.price) * ENV['amount'].to_i * 50
           end
 
           begin
-            ProfitLoss.create(open: last_trade[:price], close: close, unrealized_pnl: unrealized_pnl) if unrealized_pnl != 0
+            ProfitLoss.create(open: last_trade.price, close: close, unrealized_pnl: unrealized_pnl) if unrealized_pnl != 0
           rescue Exception => e
             Rails.logger.warn "profit_losses create error: #{e}"
           end
 
-          Rails.logger.warn "ib risk loss_limit: #{loss_limit}, position: #{last_trade[:action]}, open: #{last_trade[:price]}, close: #{close}, unrealized_pnl: #{unrealized_pnl}, #{Time.zone.now}" if unrealized_pnl != 0
+          Rails.logger.warn "ib risk loss_limit: #{loss_limit}, position: #{last_trade.action}, open: #{last_trade.price}, close: #{close}, unrealized_pnl: #{unrealized_pnl}, #{Time.zone.now}" if unrealized_pnl != 0
 
           if ENV['backtrader_version'] != "15sec"
             @profit_losses = ProfitLoss.latest(4)

@@ -342,6 +342,7 @@ module TradeOrdersHelper
       error_message = e
       result = false
       Rails.logger.warn "market_data error: #{error_message}, #{Time.zone.now}"
+      ApplicationController.helpers.ib_connect #test
     # ensure
       # ib_disconnect(ib)
     end
