@@ -5,8 +5,8 @@ class TradesJob < ApplicationJob
 
   def perform(*args)
     contract = args[0]
-    @ib = ApplicationController.helpers.ib_connect
-    if @ib.isConnected()
+    @ib_trade = ApplicationController.helpers.ib_connect
+    if @ib_trade.isConnected()
       data = ApplicationController.helpers.ib_trades
       ApplicationController.helpers.trades_logger(data)
     end
@@ -14,7 +14,7 @@ class TradesJob < ApplicationJob
 
   private
   def around_check
-    ApplicationController.helpers.ib_disconnect(@ib) if @ib.isConnected()
+    ApplicationController.helpers.ib_disconnect(@ib_trade) if @ib_trade.isConnected()
   end
 
 end

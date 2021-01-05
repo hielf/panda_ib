@@ -8,13 +8,13 @@ class RisksJob < ApplicationJob
   end
 
   def perform(*args)
-    @ib = args[0]
+    @ib_risk = args[0]
     @contract = args[1]
 
     current_time = Time.zone.now.strftime('%H:%M')
     @order = ""
     if (current_time >= "09:15" && current_time <= "12:00") || (current_time >= "13:00" && current_time <= "16:30")
-      if @ib.isConnected()
+      if @ib_risk.isConnected()
         loss_limit = ENV["total_asset"].to_f * 0.006 * -1
         @market_data = ApplicationController.helpers.market_data(@contract, true) unless ENV["remote_index"] == "true"
         trades = ApplicationController.helpers.ib_trades
