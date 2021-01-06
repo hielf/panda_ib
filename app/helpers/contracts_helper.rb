@@ -245,12 +245,12 @@ module ContractsHelper
         end
         if position && position < 0 && data.last["order"].upcase == "BUY"
           amount = position.abs
-          OrdersJob.perform_later "CLOSE", amount, "", 0
+          OrdersJob.perform_later("CLOSE", amount, "", 0)
           order = data.last["order"].upcase
         end
         if position && position > 0 && data.last["order"].upcase == "SELL"
           amount = position.abs
-          OrdersJob.perform_later "CLOSE", amount, "", 0
+          OrdersJob.perform_later("CLOSE", amount, "", 0)
           order = data.last["order"].upcase
         end
         if position && position > 0 && data.last["order"].upcase == "BUY"

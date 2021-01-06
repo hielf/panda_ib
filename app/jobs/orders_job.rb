@@ -1,5 +1,5 @@
 class OrdersJob < ApplicationJob
-  queue_as :default
+  queue_as :first
 
   after_perform :event_log
 
@@ -19,12 +19,12 @@ class OrdersJob < ApplicationJob
     else
       'hsi'
     end
-    # @ib_order = args[2]
+    # @ib = args[2]
 
-    # @ib_order = ApplicationController.helpers.ib_connect if @ib_order.nil?
+    # @ib = ApplicationController.helpers.ib_connect if @ib.nil?
 
-    @ib_order = ApplicationController.helpers.ib_connect
-    if @ib_order.isConnected()
+    @ib = ApplicationController.helpers.ib_connect
+    if @ib.isConnected()
       Rails.logger.warn "ib placing order: #{@order}, amount:#{@amount.to_s}, move_order:#{@move_order}, move_price:#{@move_price}"
 
       if @order != "" && @amount != 0 && @order != "CLOSE"
@@ -35,7 +35,7 @@ class OrdersJob < ApplicationJob
     else
       SmsJob.perform_later ENV["admin_phone"], ENV["superme_user"] + " " + ENV["backtrader_version"], "无法连接"
     end
-    ApplicationController.helpers.ib_disconnect(@ib_order) if @ib_order.isConnected()
+    ApplicationController.helpers.ib_disconnect(@ib) if @ib.isConnected()
   end
 
   private

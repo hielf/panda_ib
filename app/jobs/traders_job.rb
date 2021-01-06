@@ -94,11 +94,11 @@ class TradersJob < ApplicationJob
         end
       end
 
-      OrdersJob.perform_later @order, @amount, @move_order, @move_price if ((@order != "" && @amount != 0) || @move_order != "" && @move_price != 0)
+      OrdersJob.perform_later(@order, @amount, @move_order, @move_price) if ((@order != "" && @amount != 0) || @move_order != "" && @move_price != 0)
 
     elsif (current_time > "09:00" && current_time < "09:15") || (current_time > "15:50" && current_time < "16:30")
       position = TraderPosition.find_or_initialize_by(contract: contract).position
-      OrdersJob.perform_later "CLOSE", position, "", 0
+      OrdersJob.perform_later("CLOSE", amount, "", 0)
     else
       return
     end

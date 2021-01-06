@@ -6,14 +6,14 @@ class PositionsJob < ApplicationJob
   def perform(*args)
     @contract = args[0]
 
-    @ib_position = ApplicationController.helpers.ib_connect if @ib_position.nil?
+    @ib = ApplicationController.helpers.ib_connect if @ib.nil?
   end
 
   private
   def around_check
     position = ApplicationController.helpers.position_update(@contract)
 
-    ApplicationController.helpers.ib_disconnect(@ib_position) if @ib_position.isConnected()
+    ApplicationController.helpers.ib_disconnect(@ib) if @ib.isConnected()
   end
 
 end

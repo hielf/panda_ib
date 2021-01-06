@@ -8,13 +8,13 @@ class RisksJob < ApplicationJob
   end
 
   def perform(*args)
-    @ib_risk = args[0]
+    @ib = args[0]
     @contract = args[1]
 
     current_time = Time.zone.now.strftime('%H:%M')
     @order = ""
     if (current_time >= "09:15" && current_time <= "12:00") || (current_time >= "13:00" && current_time <= "16:30")
-      if @ib_risk.isConnected()
+      if @ib.isConnected()
         loss_limit = ENV["total_asset"].to_f * 0.006 * -1
         @market_data = ApplicationController.helpers.market_data(@contract, true) unless ENV["remote_index"] == "true"
         # trades = ApplicationController.helpers.ib_trades
@@ -52,7 +52,7 @@ class RisksJob < ApplicationJob
             if unrealized_pnl.to_f < loss_limit.to_f
               amount = position
               order = "CLOSE"
-              OrdersJob.perform_later order, amount, "", 0
+              OrdersJob.perform_later("CLOSE", amount, "", 0)
               begin
                 EventLog.create(log_type: "RISK", order_type: @order, content: "RISK unrealized_pnl: #{unrealized_pnl} CLOSE #{@order} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}") if order != "" && amount != 0
               rescue Exception => e
