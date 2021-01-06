@@ -23,7 +23,7 @@ class Api::TradeOrdersController < Api::ApplicationController
       ApplicationController.helpers.ib_order(@order, @amount, price)
 
       EventLog.create(log_type: "ORDER", order_type: @order, content: "#{@order} #{@amount.to_s} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}") if @order != "" && @amount != 0
-      # OrdersJob.perform_now @order, @amount
+      # OrdersJob.perform_later @order, @amount
     rescue Exception => e
       result = [1, '下单失败']
     end

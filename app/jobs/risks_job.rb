@@ -52,7 +52,7 @@ class RisksJob < ApplicationJob
             if unrealized_pnl.to_f < loss_limit.to_f
               amount = position
               order = "CLOSE"
-              OrdersJob.perform_now order, amount, "", 0
+              OrdersJob.perform_later order, amount, "", 0
               begin
                 EventLog.create(log_type: "RISK", order_type: @order, content: "RISK unrealized_pnl: #{unrealized_pnl} CLOSE #{@order} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}") if order != "" && amount != 0
               rescue Exception => e
