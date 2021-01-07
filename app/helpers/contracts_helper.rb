@@ -221,7 +221,7 @@ module ContractsHelper
     data = JSON.parse(File.read(json))
     if data.last
       Rails.logger.warn("ib check last data: " + Rainbow("#{data.last}").blue)
-      time_diff = Time.zone.now.beginning_of_minute - data.last["time"].to_time
+      time_diff = 1.minute.ago(Time.zone.now.beginning_of_minute) - data.last["time"].to_time
       Rails.logger.warn "ib check time_diff: #{time_diff}"
       ot = case ENV['backtrader_version']
       when '1min'

@@ -98,7 +98,7 @@ class TradersJob < ApplicationJob
 
     elsif (current_time > "09:00" && current_time < "09:15") || (current_time > "15:50" && current_time < "16:30")
       position = TraderPosition.find_or_initialize_by(contract: contract).position
-      OrdersJob.perform_later("CLOSE", amount, "", 0)
+      OrdersJob.perform_later("CLOSE", position.abs, "", 0)
     else
       return
     end
