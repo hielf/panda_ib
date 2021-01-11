@@ -39,9 +39,9 @@ class TradersJob < ApplicationJob
         attempt += 1
         case ENV['backtrader_version']
         when '15sec'
-          market_data = true if (run_time - CSV.read(file).last[0].to_time < 30)
+          market_data = true if (run_time - File.mtime(file) < 30)
         else
-          market_data = true if (run_time - CSV.read(file).last[0].to_time < 60)
+          market_data = true if (run_time - File.mtime(file) < 60)
         end
         break if market_data
         Rails.logger.warn "await for 1 second.."

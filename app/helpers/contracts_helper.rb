@@ -215,7 +215,7 @@ module ContractsHelper
     skip_minute = Time.zone.now < (Time.parse "10:15 am") ? 75 : 0
     #回溯1小时，舍去9:15-9:44 & 15:45-16:29交易时间
     # begin_time = CSV.read(csv)[CSV.read(csv).count-skip_minute-90][0].to_time
-    end_time = (Time.zone.now + 1.minute).to_time
+    end_time = (Time.zone.now - 1.minute).beginning_of_minute.to_time
     begin_time = 10.days.before(end_time)
     system( "cd #{Rails.root.to_s + '/lib/python/ib'} && python3 v4_#{ENV["backtrader_version"]}.py '#{csv}' '#{json}' '#{begin_time}' '#{end_time}'" )
     data = JSON.parse(File.read(json))
