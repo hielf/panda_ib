@@ -21,12 +21,12 @@ module ContractsHelper
       market_data.to_csv(file, sep: ',', encoding: 'utf-8', index: false)
     else
       # contract = "hsi_5mins"
-      begin_time = EventLog.maximum(:created_at).nil? ? Time.zone.now - 1.day : EventLog.maximum(:created_at).beginning_of_day
-      end_time = Time.zone.now
-      # url = "http://#{ENV["market_db"]}:3000/#{contract}?and=(date.gte.#{begin_time.strftime('%Y-%m-%dT%H:%M:%S')},date.lte.#{end_time.strftime('%Y-%m-%dT%H:%M:%S')})"
-      url = "http://#{ENV["market_db"]}:3000/#{contract}_last_1200"
-      res = HTTParty.get url
-      json = JSON.parse res.body
+      # begin_time = EventLog.maximum(:created_at).nil? ? Time.zone.now - 1.day : EventLog.maximum(:created_at).beginning_of_day
+      # end_time = Time.zone.now
+      # # url = "http://#{ENV["market_db"]}:3000/#{contract}?and=(date.gte.#{begin_time.strftime('%Y-%m-%dT%H:%M:%S')},date.lte.#{end_time.strftime('%Y-%m-%dT%H:%M:%S')})"
+      # url = "http://#{ENV["market_db"]}:3000/#{contract}_last_1200"
+      # res = HTTParty.get url
+      # json = JSON.parse res.body
       begin
         csv = CSV.generate(headers: false) { |csv| json.map(&:to_a).each { |row| csv << row } }
         CSV.open( file, 'w' ) do |writer|
@@ -216,6 +216,7 @@ module ContractsHelper
     #回溯1小时，舍去9:15-9:44 & 15:45-16:29交易时间
     # begin_time = CSV.read(csv)[CSV.read(csv).count-skip_minute-90][0].to_time
     end_time = (Time.zone.now - 1.minute).beginning_of_minute.to_time
+    # end_time = ("2021-01-11 11:23:05".to_time - 1.minute).beginning_of_minute.to_time
     begin_time = 10.days.before(end_time)
     system( "cd #{Rails.root.to_s + '/lib/python/ib'} && python3 v4_#{ENV["backtrader_version"]}.py '#{csv}' '#{json}' '#{begin_time}' '#{end_time}'" )
     data = JSON.parse(File.read(json))
