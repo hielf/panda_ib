@@ -246,12 +246,30 @@ module ContractsHelper
         end
         if position && position < 0 && data.last["order"].upcase == "BUY"
           amount = position.abs
-          OrdersJob.perform_later("CLOSE", amount, "", 0)
+          begin
+            job = OrdersJob.perform_later("CLOSE", amount, "", 0)
+            100.times do
+              status = ActiveJob::Status.get(job)
+              break if status.completed?
+              sleep 0.2
+            end
+          rescue Exception => e
+            error_message = e.message
+          end
           order = data.last["order"].upcase
         end
         if position && position > 0 && data.last["order"].upcase == "SELL"
           amount = position.abs
-          OrdersJob.perform_later("CLOSE", amount, "", 0)
+          begin
+            job = OrdersJob.perform_later("CLOSE", amount, "", 0)
+            100.times do
+              status = ActiveJob::Status.get(job)
+              break if status.completed?
+              sleep 0.2
+            end
+          rescue Exception => e
+            error_message = e.message
+          end
           order = data.last["order"].upcase
         end
         if position && position > 0 && data.last["order"].upcase == "BUY"

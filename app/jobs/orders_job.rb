@@ -43,8 +43,26 @@ class OrdersJob < ApplicationJob
     EventLog.create(log_type: "ORDER", order_type: @order, content: "#{@order} #{@amount.to_s} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}") if @order != "" && @amount != 0
     EventLog.create(log_type: "MOVE", order_type: @move_order, content: "#{@move_order} #{@move_price.to_s} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}") if @move_order != "" && @move_price != 0
 
-    PositionsJob.set(wait: 6.seconds).perform_later(@contract)
-    TradesJob.set(wait: 15.seconds).perform_later(@contract)
+    begin
+      job = PositionsJob.set(wait: 6.seconds).perform_later(@contract)
+      100.times do
+        status = ActiveJob::Status.get(job)
+        break if status.completed?
+        sleep 0.2
+      end
+    rescue Exception => e
+      error_message = e.message
+    end
+    begin
+      job = TradesJob.set(wait: 15.seconds).perform_later(@contract)
+      100.times do
+        status = ActiveJob::Status.get(job)
+        break if status.completed?
+        sleep 0.2
+      end
+    rescue Exception => e
+      error_message = e.message
+    end
   end
 
 end

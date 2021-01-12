@@ -98,7 +98,16 @@ class TradersJob < ApplicationJob
 
     elsif (current_time > "09:00" && current_time < "09:15") || (current_time > "15:50" && current_time < "16:30")
       position = TraderPosition.find_or_initialize_by(contract: contract).position
-      OrdersJob.perform_later("CLOSE", position.abs, "", 0)
+      begin
+        job = OrdersJob.perform_later("CLOSE", position.abs, "", 0)
+        100.times do
+          status = ActiveJob::Status.get(job)
+          break if status.completed?
+          sleep 0.2
+        end
+      rescue Exception => e
+        error_message = e.message
+      end
     else
       return
     end
