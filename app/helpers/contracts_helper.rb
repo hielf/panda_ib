@@ -218,8 +218,14 @@ module ContractsHelper
     end_time = (Time.zone.now - 1.minute).beginning_of_minute.to_time
     # end_time = ("2021-01-11 11:23:05".to_time - 1.minute).beginning_of_minute.to_time
     begin_time = 10.days.before(end_time)
-    system( "cd #{Rails.root.to_s + '/lib/python/ib'} && python3 v4_#{ENV["backtrader_version"]}.py '#{csv}' '#{json}' '#{begin_time}' '#{end_time}'" )
-    data = JSON.parse(File.read(json))
+    data = Array.new()
+    3.times do
+      system( "cd #{Rails.root.to_s + '/lib/python/ib'} && python3 v4_#{ENV["backtrader_version"]}.py '#{csv}' '#{json}' '#{begin_time}' '#{end_time}'" )
+      data = JSON.parse(File.read(json))
+      break if !data.empty?
+      Rails.logger.warn "ib check no csv file"
+      sleep 2
+    end
     if data.last
       Rails.logger.warn("ib check last data: " + Rainbow("#{data.last}").blue)
       time_diff = 1.minute.ago(Time.zone.now.beginning_of_minute) - data.last["time"].to_time
