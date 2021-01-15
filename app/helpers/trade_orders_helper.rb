@@ -58,9 +58,17 @@ module TradeOrdersHelper
 
   def ib_main_contract(contract)
     main_contract = false
+    case contract.upcase
+    when "HSI"
+      exchange = 'HKFE'
+      currency = 'HKD'
+    when "SPX"
+      exchange = 'GLOBEX'
+      currency = 'USD'
+    end
     begin
-      PyCall.exec("hsi = Future('HSI')")
-      PyCall.exec("cds = ib.reqContractDetails(hsi)")
+      PyCall.exec("c = Future('#{contract.upcase}')")
+      PyCall.exec("cds = ib.reqContractDetails(c)")
       PyCall.exec("contracts = [cd.contract for cd in cds]")
 
       PyCall.exec("months = []")
@@ -77,8 +85,8 @@ module TradeOrdersHelper
       else
         PyCall.exec("month = months[0]")
       end
-      PyCall.exec("hsi = Future(symbol='HSI', lastTradeDateOrContractMonth=month, exchange='HKFE', currency='HKD')")
-      PyCall.exec("contract = ib.reqContractDetails(hsi)[0].contract")
+      PyCall.exec("fut = Future(symbol='#{contract.upcase}', lastTradeDateOrContractMonth=month, exchange='#{exchange}', currency='#{currency}')")
+      PyCall.exec("contract = ib.reqContractDetails(fut)[0].contract")
 
       main_contract = PyCall.eval("contract")
     rescue Exception => e

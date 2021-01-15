@@ -23,7 +23,16 @@ module Clockwork
       contract = 'hsi'
     end
     # puts "ib.trader started at #{Time.zone.now}"
-    TradersJob.perform_later contract if job == 'ib.trader'
+    begin
+      j = TradersJob.perform_later contract
+      100.times do
+        status = ActiveJob::Status.get(j)
+        break if status.completed?
+        sleep 0.2
+      end
+    rescue Exception => e
+      error_message = e.message
+    end if job == 'ib.trader'
   end
 
   # -----------------------------------temp -----------------------------------
