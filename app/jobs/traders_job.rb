@@ -74,28 +74,28 @@ class TradersJob < ApplicationJob
         return
       end
 
-      elr = EventLog.where("log_type = ? ", "RISK").last
-      if elr
-        ot = case ENV['backtrader_version']
-        when '1min'
-          60
-        when '5min'
-          60
-        when '4min'
-          480
-        when '3min'
-          360
-        when '15sec'
-          30
-        else
-          120
-        end
-        elo = EventLog.where("log_type = ? AND created_at > ?", "ORDER", ot.seconds.ago).last
-        if elo && elo.order_type == @order && elr.id > elo.id
-          Rails.logger.warn "ib return for last RISK CLOSE: #{@order}, #{Time.zone.now}"
-          return
-        end
-      end
+      # elr = EventLog.where("log_type = ? ", "RISK").last
+      # if elr
+      #   ot = case ENV['backtrader_version']
+      #   when '1min'
+      #     60
+      #   when '5min'
+      #     60
+      #   when '4min'
+      #     480
+      #   when '3min'
+      #     360
+      #   when '15sec'
+      #     30
+      #   else
+      #     120
+      #   end
+      #   elo = EventLog.where("log_type = ? AND created_at > ?", "ORDER", ot.seconds.ago).last
+      #   if elo && elo.order_type == @order && elr.id > elo.id
+      #     Rails.logger.warn "ib return for last RISK CLOSE: #{@order}, #{Time.zone.now}"
+      #     return
+      #   end
+      # end
 
       OrdersJob.perform_later(@order, @amount, @move_order, @move_price) if ((@order != "" && @amount != 0) || @move_order != "" && @move_price != 0)
 
