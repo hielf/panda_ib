@@ -28,6 +28,8 @@ class RisksJob < ApplicationJob
       end
 
       if last_trade && position != 0 && @market_data
+        return if @market_data.last["date"].to_time != Time.zone.now.beginning_of_minute
+
         @order = last_trade.action
         close = @market_data.last["close"].to_f
         unrealized_pnl = 0
