@@ -27,7 +27,7 @@ class RisksJob < ApplicationJob
         ProfitLoss.where(current: true).update_all(current: false)
       end
 
-      if last_trade && position != 0 && @market_data
+      if last_trade && last_trade.realized_pnl == 0 && position != 0 && @market_data
         return if @market_data.last["date"].to_time != Time.zone.now.beginning_of_minute
 
         @order = last_trade.action

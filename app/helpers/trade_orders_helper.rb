@@ -150,7 +150,7 @@ module TradeOrdersHelper
     # previous_position = tp.position if (tp && !tp.position.nil?)
     # tp.position = position + previous_position if price > 0
     tp.position = position["position"].nil? ? 0 : position["position"]
-    tp.save
+    tp.save!
 
     return tp.position
   end
