@@ -11,7 +11,7 @@ ib = IB()
 # ib.connect('129.226.51.237', 7497, clientId=101)
 ib.connect(host='124.156.100.215', port=7497, clientId=1, timeout=10, readonly=False)
 
-contracts = [Index(symbol = "SPX", exchange = "CBOE"), Forex('USDJPY'), Forex('EURUSD')]
+contracts = [Index(symbol = "HSI", exchange = "HKFE"), Index(symbol = "SPX", exchange = "CBOE"), Forex('USDJPY'), Forex('EURUSD'), Contract(exchange = "ECBOT", secType = "CONTFUT", symbol = "YM")]
 # contracts = [Contract(exchange = "ECBOT", secType = "CONTFUT", symbol = "YM")]
 # contracts = [Index(symbol = "HSI", exchange = "HKFE")]
 # bars = ib.reqHistoricalData(contract, endDateTime='', durationStr='1 D',
@@ -231,8 +231,19 @@ def get_index_5min(end_date):
 #         s.enter(60, 1, get_index_1min, (date_time,))
 
 if __name__ == '__main__':
-    d1 = datetime.datetime(2020,12,16,0,0)
-    d2 = datetime.datetime(2021,1,7,0,0,0)
+    now = datetime.datetime.now()
+    # d1 = datetime.datetime(2020,12,16,0,0)
+    conn = psycopg2.connect("host='rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com' dbname='panda_quant' user='chesp' password='Chesp92J5' port='3432'")
+    cur = conn.cursor()
+    sql = "select max(date) from hsi;"
+    cur.execute(sql)
+    result = cur.fetchone()
+    print (result)
+    conn.commit()
+    conn.close()
+
+    d1 = result[0]
+    d2 = now.replace(hour=23, minute=59, second=59, microsecond=000000)
     diff = d2 - d1
     for i in range(diff.days + 1):
         end_date = (d1 + datetime.timedelta(i))
@@ -241,7 +252,7 @@ if __name__ == '__main__':
         get_index_1min(end_date)
         get_index_5min(end_date)
         get_index_30sec(end_date)
-        # for j in range(6):
-        #     end_datetime = (end_date + datetime.timedelta(j/6))
-        #     print (end_datetime)
-        #     get_index_15sec(end_datetime)
+        for j in range(6):
+            end_datetime = (end_date + datetime.timedelta(j/6))
+            print (end_datetime)
+            get_index_15sec(end_datetime)

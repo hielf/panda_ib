@@ -35,9 +35,14 @@ module Clockwork
         sleep 4
       end
     end
+
+    if job == 'IB.history'
+      system( "cd #{Rails.root.to_s + '/lib/python/ib'} && python3 ibmarket_idx_his.py" ) if ENV['db_collect'] == "true"
+    end
   end
 
   every(3.minute, 'IB.market_data', :thread => true)
+  every(1.day, 'IB.history', :at => '20:00')
 
   # every(1.minute, 'timing', :skip_first_run => true, :thread => true)
   # every(1.hour, 'hourly.job')
