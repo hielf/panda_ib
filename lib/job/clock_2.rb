@@ -37,7 +37,7 @@ module Clockwork
     end
 
     if job == 'IB.history'
-      system( "cd #{Rails.root.to_s + '/lib/python/ib'} && python3 ibmarket_idx_his.py" ) if ENV['db_collect'] == "true"
+      system( "cd #{Rails.root.to_s + '/lib/python/ib'} && python3 ibmarket_idx_his.py" ) if ENV['his_collect'] == "true"
     end
   end
 
