@@ -42,7 +42,7 @@ module Clockwork
   end
 
   every(3.minute, 'IB.market_data', :thread => true)
-  every(1.day, 'IB.history', :at => '20:00')
+  every(1.day, 'IB.history', :at => '18:00', :thread => true)
 
   # every(1.minute, 'timing', :skip_first_run => true, :thread => true)
   # every(1.hour, 'hourly.job')
