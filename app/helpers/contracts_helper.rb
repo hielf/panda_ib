@@ -295,6 +295,12 @@ module ContractsHelper
       end
     end
 
+    # if last action is the same
+    last_action = Action.last
+    if last_action.order != "CLOSE" && last_action.order == order
+      order = ""
+    end
+
     begin
       moves = JSON.parse(File.read(json + ".move.json"))
     rescue Exception => e
