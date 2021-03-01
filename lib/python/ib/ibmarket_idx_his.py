@@ -4,12 +4,13 @@ import os, sys
 import psycopg2
 import sched, time
 import datetime
+import random
 # util.startLoop()  # uncomment this line when in a notebook
 
 ib = IB()
 # ib.connect('127.0.0.1', 7496, clientId=100)
 # ib.connect('129.226.51.237', 7497, clientId=101)
-ib.connect(host='124.156.100.215', port=7497, clientId=1, timeout=10, readonly=False)
+ib.connect(host='124.156.100.215', port=7497, clientId=random.randint(1,50), timeout=10, readonly=False)
 
 contracts = [Index(symbol = "HSI", exchange = "HKFE"), Index(symbol = "SPX", exchange = "CBOE"), Forex('USDJPY'), Forex('EURUSD'), Contract(exchange = "ECBOT", secType = "CONTFUT", symbol = "YM")]
 # contracts = [Contract(exchange = "ECBOT", secType = "CONTFUT", symbol = "YM")]

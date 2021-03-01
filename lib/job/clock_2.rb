@@ -37,7 +37,9 @@ module Clockwork
     end
 
     if job == 'IB.history'
+      Rails.logger.warn "IB.history started.."
       system( "cd #{Rails.root.to_s + '/lib/python/ib'} && python3 ibmarket_idx_his.py" ) if ENV['his_collect'] == "true"
+      Rails.logger.warn "IB.history ended.."
     end
   end
 
