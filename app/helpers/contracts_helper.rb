@@ -296,7 +296,7 @@ module ContractsHelper
     end
 
     # if last action is the same
-    last_action = Action.last
+    last_action = Action.today.last
     if last_action.order != "CLOSE" && last_action.order == order
       order = ""
     end
