@@ -384,7 +384,7 @@ if __name__ == '__main__':
 
     # Add the Data Feed to Cerebro
     cerebro.adddata(data)
-    cerebro.addwriter(bt.WriterFile, csv = True, out='results_%s.csv' % str(sys.argv[4]))
+    # cerebro.addwriter(bt.WriterFile, csv = True, out='results_%s.csv' % str(sys.argv[4]))
     # Set our desired cash start
     cerebro.broker.setcash(400000.0)
     # 设置每笔交易交易的股票数量
@@ -410,8 +410,6 @@ if __name__ == '__main__':
 
         results = cerebro.run()
 
-    results = cerebro.run()
-
     # endtime = time.time()
     print('='*5, 'program running time', '='*5)
     print('==== 2 bar ====')
@@ -429,4 +427,4 @@ if __name__ == '__main__':
     with open(json_path, 'w') as f:
         json.dump(trades, f)
 
-    cerebro.plot()
+    # cerebro.plot()

@@ -395,4 +395,4 @@ if __name__ == '__main__':
     print('AN:', strat.analyzers.myannual.get_analysis())
 
 
-    cerebro.plot()
+    # cerebro.plot()

@@ -360,4 +360,4 @@ if __name__ == '__main__':
     # print("总收益率:%.2f" % (results[0].analyzers.RE.get_analysis()["rtot"]))
     # results[0].analyzers.TA.print()
 
-    cerebro.plot()
+    # cerebro.plot()
