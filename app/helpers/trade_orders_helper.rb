@@ -81,9 +81,9 @@ module TradeOrdersHelper
       PyCall.exec("last_day = (datetime.datetime.strptime(months[0], '%Y%m%d').date() - datetime.timedelta(days=7)).strftime( '%Y%m%d' )")
 
       if PyCall.eval("today >= last_day")
-        PyCall.exec("month = months[1]")
+        PyCall.exec("month = months[#{ENV['contract_num'].to_i + 1}]")
       else
-        PyCall.exec("month = months[0]")
+        PyCall.exec("month = months[#{ENV['contract_num'].to_i}]")
       end
       PyCall.exec("fut = Future(symbol='#{contract.upcase}', lastTradeDateOrContractMonth=month, exchange='#{exchange}', currency='#{currency}')")
       PyCall.exec("contract = ib.reqContractDetails(fut)[0].contract")
