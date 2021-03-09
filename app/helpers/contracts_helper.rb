@@ -235,7 +235,7 @@ module ContractsHelper
       when '1min'
         60
       when '5min'
-        60
+        300
       when '4min'
         480
       when '3min'
