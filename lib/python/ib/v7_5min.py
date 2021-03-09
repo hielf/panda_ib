@@ -348,7 +348,7 @@ if __name__ == '__main__':
     cerebro.addstrategy(MyStrategy)
     # 本地数据，笔者用Wind获取的东风汽车数据以csv形式存储在本地。
     dataframe = pd.read_csv(csv_path, index_col=0, parse_dates=True, usecols=['date', 'open', 'high', 'low', 'close', 'volume'])
-    dataframe = format_data(dataframe, period='4T')
+    dataframe = format_data(dataframe, period='5T')
     print(dataframe.shape)
     data = PandasDataExtend(
             dataname=dataframe,
