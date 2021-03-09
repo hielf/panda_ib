@@ -145,7 +145,7 @@ module TradeOrdersHelper
     #   0
     # end
     position = ApplicationController.helpers.ib_positions
-    tp = TraderPosition.find_or_initialize_by(contract: contract)
+    tp = TraderPosition.init(contract)
     # previous_position = 0
     # previous_position = tp.position if (tp && !tp.position.nil?)
     # tp.position = position + previous_position if price > 0

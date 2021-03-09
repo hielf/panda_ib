@@ -207,7 +207,7 @@ module ContractsHelper
 
   def py_check_position(contract, amount = ENV["amount"])
     order = ""
-    position = TraderPosition.find_or_initialize_by(contract: contract).position
+    position = TraderPosition.init(contract).position
     csv = Rails.root.to_s + "/tmp/csv/#{contract}.csv"
     json = Rails.root.to_s + "/tmp/#{contract}_trades.json"
     # begin_date = Time.zone.now < (Time.parse "11:30 am") ? 1.business_day.ago.to_date : Date.today
@@ -407,7 +407,7 @@ module ContractsHelper
     end
     order = ""
     amount = 0
-    position = TraderPosition.find_or_initialize_by(contract: contract).position
+    position = TraderPosition.init(contract).position
 
     if position > 0 # buy
       order = "SELL"
