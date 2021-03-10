@@ -66,7 +66,7 @@ class TradersJob < ApplicationJob
       ApplicationController.helpers.document_files(contract, file) if file
       Rails.logger.warn "ib py_check_position: #{@order} #{@amount.to_s}, #{Time.zone.now}" if @order != ""
 
-      last_risk = EventLog.where(log_type: "RISK").last.created_at
+      last_risk = EventLog.where(log_type: "RISK").last.nil? ? Time.now-10.days : EventLog.where(log_type: "RISK").last.created_at
       risk_diff_time = (run_time.beginning_of_minute - last_risk.to_time).abs / 60
 
       if risk_diff_time <= 60

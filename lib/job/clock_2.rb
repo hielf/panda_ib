@@ -23,6 +23,18 @@ module Clockwork
       else
         contract = 'hsi'
       end
+      case ENV['backtrader_version']
+      when "1min"
+        await = 4
+      when "2min"
+        await = 8
+      when "3min"
+        await = 12
+      when "4min"
+        await = 16
+      when "5min"
+        await = 20
+      end
       stop_time = Time.zone.now + 3.minutes - 5.seconds
       60.times do
         if Time.zone.now > stop_time
@@ -32,7 +44,7 @@ module Clockwork
         @ib = ApplicationController.helpers.ib_connect if @ib.nil?
         @ib = ApplicationController.helpers.ib_connect if !@ib.nil? && !@ib.isConnected()
         MarketDataJob.perform_now @ib, contract if @ib
-        sleep 4
+        sleep await
       end
     end
 
