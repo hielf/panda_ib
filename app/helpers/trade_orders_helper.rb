@@ -226,6 +226,7 @@ module TradeOrdersHelper
 
   def ib_trades
     data = []
+    main_contract = ApplicationController.helpers.ib_main_contract(contract)
     begin
       # ib = ib_connect
       PyCall.exec("trades = ib.trades()")
@@ -237,11 +238,13 @@ module TradeOrdersHelper
 
       a.each do |d|
         d['fills'].each do |f|
-          data << {"perm_id": d['permId'], "action": d['action'], "symbol": d['symbol'],
-            "last_trade_date_or_contract_month": d['lastTradeDateOrContractMonth'],
-            "currency": d['currency'], "shares": f.execution.shares, "price": f.execution.price,
-            "time": f.execution.time.timestamp(), "commission": f.commissionReport.commission,
-            "realized_pnl": f.commissionReport.realizedPNL, "exec_id": f.commissionReport.execId}
+          if main_contract.lastTradeDateOrContractMonth == d['lastTradeDateOrContractMonth']
+            data << {"perm_id": d['permId'], "action": d['action'], "symbol": d['symbol'],
+              "last_trade_date_or_contract_month": d['lastTradeDateOrContractMonth'],
+              "currency": d['currency'], "shares": f.execution.shares, "price": f.execution.price,
+              "time": f.execution.time.timestamp(), "commission": f.commissionReport.commission,
+              "realized_pnl": f.commissionReport.realizedPNL, "exec_id": f.commissionReport.execId}
+          end
         end
       end
 
