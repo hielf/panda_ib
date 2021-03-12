@@ -7,7 +7,7 @@ class TradesJob < ApplicationJob
     contract = args[0]
     @ib = ApplicationController.helpers.ib_connect
     if @ib.isConnected()
-      data = ApplicationController.helpers.ib_trades
+      data = ApplicationController.helpers.ib_trades(contract)
       ApplicationController.helpers.trades_logger(data)
     end
   end

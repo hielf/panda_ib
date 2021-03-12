@@ -224,7 +224,7 @@ module TradeOrdersHelper
     return data
   end
 
-  def ib_trades
+  def ib_trades(contract)
     data = []
     main_contract = ApplicationController.helpers.ib_main_contract(contract)
     begin

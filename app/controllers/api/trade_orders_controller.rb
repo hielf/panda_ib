@@ -61,15 +61,15 @@ class Api::TradeOrdersController < Api::ApplicationController
   end
 
   def trades_data
+    contract = "hsi"
     if request.format.csv?
       duration = params[:duration]
-      contract = "hsi"
       trades_to_csv(contract, duration)
       file = Rails.root.to_s + "/tmp/csv/trades_#{contract}.csv"
       send_data(File.read(file), type: "application/csv", disposition:  "attachment", filename: "trades_#{contract}.csv")
     else
       result = [1, 'failed']
-      data = ib_trades
+      data = ib_trades(contract)
       if !data.empty?
         data.sort_by { |h| -h[:time] }.reverse.each do |d|
           trade = Trade.find_or_initialize_by(exec_id: d[:exec_id])
