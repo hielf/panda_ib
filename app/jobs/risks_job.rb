@@ -56,7 +56,7 @@ class RisksJob < ApplicationJob
             amount = position
             order = "CLOSE"
             begin
-              Action.create!(order: order, amount: amount, action_time: Time.zone.now) if order != ""
+              Action.act(order, amount, 0, Time.zone.now) if order != ""
             rescue Exception => e
               Rails.logger.warn "Action create error: #{e}"
             end

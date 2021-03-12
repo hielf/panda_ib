@@ -319,7 +319,7 @@ module ContractsHelper
         move_price = moves.last["price"]
         move_time = moves.last["time"].to_time
         begin
-          Action.create!(order: move_order, amount: amount, price: move_price, action_time: move_time) if Action.find_by(action_time: move_time).nil?
+          Action.act(move_order, amount, move_price, move_time) if Action.find_by(action_time: move_time).nil?
           Rails.logger.warn "ib move order: #{move_order} #{move_price} #{move_time}"
         rescue Exception => e
           Rails.logger.warn "Action create failed: #{e}"
@@ -329,7 +329,7 @@ module ContractsHelper
 
     Rails.logger.warn "ib order: #{order == "" ? "NO" : order} #{amount.to_s}"
     begin
-      Action.create!(order: order, amount: amount, action_time: data.last["time"].to_time) if order != ""
+      Action.act(order, amount, 0, data.last["time"].to_time) if order != ""
     rescue Exception => e
       Rails.logger.warn "Action create failed: #{e}"
     end
