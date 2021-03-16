@@ -3,10 +3,15 @@ dump_file = dir + "/" + "dump_sql.sql"
 
 postgres = PG.connect :host => 'rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com', :port => '3432', :dbname => 'panda_quant', :user => 'chesp', :password => 'Chesp92J5'
 
+sql = "select max(date) as date from hsi_fut;"
+res = postgres.exec(sql)
+begin_date = res.first["date"].to_date.strftime('%Y%m%d')
+
 Dir.entries(dir).sort.each do |d|
   next if d == '.' or d == '..'
   path = dir + d
   next if File.file?(path)
+  next if begin_date && d.to_i < begin_date.to_i
   csv_file = Dir.glob(File.join(path, '*.*')).max { |a,b| File.ctime(a) <=> File.ctime(b) }
   # Dir.entries(path).sort.each do |file|
   #   next if file == '.' or file == '..'
