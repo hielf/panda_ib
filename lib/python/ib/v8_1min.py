@@ -256,24 +256,24 @@ class MyStrategy(bt.Strategy):
 
 
         if not self.position:
-            if self.broker.getvalue() > 600000:
-                self.sizer.p.stake = 2
-            if self.broker.getvalue() > 700000:
-                self.sizer.p.stake = 3
-            if self.broker.getvalue() > 900000:
-                self.sizer.p.stake = 4
-            if self.broker.getvalue() > 1000000:
-                self.sizer.p.stake = 4
-            if self.broker.getvalue() > 1100000:
-                self.sizer.p.stake = 5
-            if self.broker.getvalue() > 1200000:
-                self.sizer.p.stake = 5
-            if self.broker.getvalue() > 1300000:
-                self.sizer.p.stake = 6
-            if self.broker.getvalue() < 500000:
-                self.sizer.p.stake = 2
-            if self.broker.getvalue() <= 400000:
-                self.sizer.p.stake = 1
+        #     if self.broker.getvalue() > 600000:
+        #         self.sizer.p.stake = 2
+        #     if self.broker.getvalue() > 700000:
+        #         self.sizer.p.stake = 3
+        #     if self.broker.getvalue() > 900000:
+        #         self.sizer.p.stake = 4
+        #     if self.broker.getvalue() > 1000000:
+        #         self.sizer.p.stake = 4
+        #     if self.broker.getvalue() > 1100000:
+        #         self.sizer.p.stake = 5
+        #     if self.broker.getvalue() > 1200000:
+        #         self.sizer.p.stake = 5
+        #     if self.broker.getvalue() > 1300000:
+        #         self.sizer.p.stake = 6
+        #     if self.broker.getvalue() < 500000:
+        #         self.sizer.p.stake = 2
+        #     if self.broker.getvalue() <= 400000:
+        #         self.sizer.p.stake = 1
 
 
             if  self.datas[0].up[0] < self.dataclose[0] and self.lines.atr[0] > self.lines.atr[-2] :
@@ -308,7 +308,7 @@ class MyStrategy(bt.Strategy):
                 #     self.log('BUY CLOSE B, %.4f' % self.dataclose[0])
                 #     close_sig = True
 
-                if self.datas[0].middle[0] - self.lines.atr[0] > self.dataclose[0] or self.dataclose[0] > self.sellprice + self.lines.atr[0]:
+                if self.datas[0].middle[0] - self.lines.atr[0] > self.dataclose[0] or self.dataclose[0] > self.sellprice + self.lines.atr[0]*2:
                     self.order = self.buy()
                     self.max_price = None
                     self.log('SELL Close, %.4f' % self.dataclose[0])
@@ -331,7 +331,7 @@ class MyStrategy(bt.Strategy):
             #         self.log('SELL CLOSE B, %.4f' % self.dataclose[0])
             #         close_sig = True
 
-                if self.datas[0].middle[0] + self.lines.atr[0]< self.dataclose[0] or self.dataclose[0] < self.buyprice - self.lines.atr[0]:
+                if self.datas[0].middle[0] + self.lines.atr[0] < self.dataclose[0] or self.dataclose[0] < self.buyprice - self.lines.atr[0]*2:
                     self.order = self.sell()
                     self.max_price = None
                     self.log('SELL Close, %.4f' % self.dataclose[0])
@@ -365,7 +365,7 @@ if __name__ == '__main__':
     cerebro.addstrategy(MyStrategy)
     # 本地数据，笔者用Wind获取的东风汽车数据以csv形式存储在本地。
     dataframe = pd.read_csv(csv_path, index_col=0, parse_dates=True, usecols=['date', 'open', 'high', 'low', 'close', 'volume'])
-    dataframe = format_data(dataframe, period='4T')
+    dataframe = format_data(dataframe, period='5T')
     print(dataframe.shape)
     data = PandasDataExtend(
             dataname=dataframe,

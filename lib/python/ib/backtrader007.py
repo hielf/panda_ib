@@ -59,17 +59,17 @@ def format_data(dataframe, period='1D', localize_zone='Asia/Shanghai', convert_z
 
     df3 = df2.dropna(axis=0) # 缺失值处理
 
-    df3['atr'] = ta.ATR(df3['high'] , df3['low'], df3['close'], timeperiod=30)
+    df3['atr'] = ta.ATR(df3['high'] , df3['low'], df3['close'], timeperiod=12)
 
     print(df3.atr.describe())
 
     df3['tr'] = df3['high'] - df3['low']
 
-    df3['hb'] = df3['high'] + df3['tr']/3
-    df3['hh'] = df3['hb'] + df3['tr']
+    df3['hb'] = df3['high'] + df3['tr']/4
+    df3['hh'] = df3['hb'] + df3['tr']/2
 
-    df3['lb'] =  df3['low'] - df3['tr']/3
-    df3['ll'] =  df3['lb'] - df3['tr']
+    df3['lb'] =  df3['low'] - df3['tr']/4
+    df3['ll'] =  df3['lb'] - df3['tr']/2
 
     print(df3['tr'].describe())
 
@@ -98,7 +98,7 @@ def format_data(dataframe, period='1D', localize_zone='Asia/Shanghai', convert_z
     df3.reset_index(inplace=True)
 
     df1.reset_index(inplace=True)
-    df1['ema'] = ta.MA(df1['close'], timeperiod = 12)
+    df1['ema'] = ta.MA(df1['close'], timeperiod = 120)
 
     df4 = pd.merge(df1, df3)
     print(df4.head())
@@ -162,6 +162,7 @@ class MyStrategy(bt.Strategy):
 
         self.overcross = False
         self.overcross_price = None
+        self.win_loss = 0
 
         # self.buy_sig = bt.indicators.CrossOver(self.datas[0].high_1, self.dataopen)
         # self.sell_sig = bt.indicators.CrossOver(self.datas[0].low_1, self.dataopen)
@@ -201,6 +202,7 @@ class MyStrategy(bt.Strategy):
 
             self.bar_executed = len(self)
 
+
         elif order.status in [order.Canceled, order.Margin, order.Rejected]:
             pass
             #self.log('Order Canceled/Margin/Rejected')
@@ -214,11 +216,14 @@ class MyStrategy(bt.Strategy):
         self.log('OPERATION PROFIT, COMM %.2f, GROSS %.2f, NET %.2f \n\n' %
                  (trade.commission, trade.pnl, trade.pnlcomm))
 
+        if trade.pnlcomm < 0:
+            self.win_loss += 1
+
     def next(self):
 
         # 9:45 - 15:45
         if self.data.datetime.time() > datetime.time(15, 55) or self.data.datetime.time() < datetime.time(9, 20) :
-
+            self.win_loss = 0
             if self. position.size > 0:
                 self.order = self.sell()
                 self.log('BUY Close by Day end, %.4f' % self.dataclose[0])
@@ -234,20 +239,20 @@ class MyStrategy(bt.Strategy):
 
         # Check if we are in the market
 
-        if not self.position:
+        if not self.position and self.win_loss < 3:
 
-            if  self.dataclose[0] > self.datas[0].hb[-1] :#and self.datas[0].atr_1[0] < self.datas[0].atr_1[-1]:
+            if  self.datahigh[0] > self.datas[0].hb[-1] and self.datas[0].atr_1[0] < self.datas[0].atr_1[-1]:
                  self.log('BUY CREATE, %.4f' % (self.dataclose[0]))
                  self.order = self.buy()
-                 self.max_price = self.dataclose[0]
+                 self.max_price = self.dataclose[0] - self.datas[0].atr_1[0]*2
                  self.overcross = False
                  self.overcross_price = None
 
 
-            elif self.dataclose[0] < self.datas[0].lb[-1] :#and self.datas[0].atr_1[0] < self.datas[0].atr_1[-1]:
+            elif self.datalow[0] < self.datas[0].lb[-1] and self.datas[0].atr_1[0] < self.datas[0].atr_1[-1]:
                  self.log('SELL CREATE, %.4f' % self.dataclose[0])
                  self.order = self.sell()
-                 self.min_price = self.dataclose[0]
+                 self.min_price = self.dataclose[0] + self.datas[0].atr_1[0]*2
                  self.overcross = False
                  self.overcross_price = None
 
@@ -255,16 +260,7 @@ class MyStrategy(bt.Strategy):
         else:
             if self. position.size > 0:
                 close_sig = False
-                self.max_price = max(self.max_price, self.datas[0].close[-1] - self.datas[0].atr_1[-1])
-
-                if self.overcross_price:
-                    if self.datas[0].hh[0] != self.datas[0].hh[-1]:
-                        self.overcross = False
-                        self.overcross_price = None
-
-                    if self.overcross and self.datalow[0] < self.overcross_price:
-                        self.log('BUY CLOSE A, %.4f' % self.datas[0].hh[0])
-                        close_sig = True
+                self.max_price = max(self.max_price, self.datas[0].close[-1] - self.datas[0].atr_1[0]*2)
 
 
                 if self.datahigh[0] > self.datas[0].hh[-1]:
@@ -273,6 +269,15 @@ class MyStrategy(bt.Strategy):
                     if not self.overcross_price:
                         self.overcross_price = self.datas[0].hh[-1]
 
+                if self.overcross_price:
+
+                    if self.overcross and self.datalow[0] < self.overcross_price:
+                        self.log('BUY CLOSE A, %.4f' % self.datas[0].hh[0])
+                        close_sig = True
+
+                    if self.datas[0].hh[0] != self.datas[0].hh[-1]:
+                        self.overcross = False
+                        self.overcross_price = None
 
                 if self.dataclose[0] < self.max_price:
                     self.log('BUY CLOSE B, %.4f' % self.dataclose[0])
@@ -286,17 +291,7 @@ class MyStrategy(bt.Strategy):
 
             if self. position.size < 0:
                 close_sig = False
-                self.min_price = min(self.min_price, self.datas[0].close[-1] + self.datas[0].atr_1[-1])
-
-                if self.overcross_price:
-                    if self.datas[0].ll[0] != self.datas[0].ll[-1]:
-                        self.overcross = False
-                        self.overcross_price = None
-
-                    if self.overcross and self.datahigh[0] > self.overcross_price:
-                        self.log('SELL CLOSE A, %.4f' % self.datas[0].ll[0])
-                        close_sig = True
-
+                self.min_price = min(self.min_price, self.datas[0].close[-1] + self.datas[0].atr_1[0]*2)
 
                 if self.datalow[0] < self.datas[0].ll[-1]:
                     self.overcross = True
@@ -304,6 +299,15 @@ class MyStrategy(bt.Strategy):
                     if not self.overcross_price:
                         self.overcross_price = self.datas[0].ll[-1]
 
+                if self.overcross_price:
+
+                    if self.overcross and self.datahigh[0] > self.overcross_price:
+                        self.log('SELL CLOSE A, %.4f' % self.datas[0].ll[0])
+                        close_sig = True
+
+                    if self.datas[0].ll[0] != self.datas[0].ll[-1]:
+                        self.overcross = False
+                        self.overcross_price = None
 
                 if self.dataclose[0] > self.min_price:
                     self.log('SELL CLOSE B, %.4f' % self.dataclose[0])
