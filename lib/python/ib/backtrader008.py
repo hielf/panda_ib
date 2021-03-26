@@ -59,57 +59,57 @@ def format_data(dataframe, period='1D', localize_zone='Asia/Shanghai', convert_z
 
     df3 = df2.dropna(axis=0) # 缺失值处理
 
-    df3['atr'] = ta.ATR(df3['high'] , df3['low'], df3['close'], timeperiod=15)
+    df3['atr'] = ta.ATR(df3['high'] , df3['low'], df3['close'], timeperiod=36)
 
     df3['tr'] = df3['high'] - df3['low']
 
-    df3['hb'] = df3['high'] + df3['tr']/3
+    df3['hb'] = df3['high'] + df3['tr']/4
     df3['hh'] = df3['hb'] + df3['atr']*1
 
-    df3['lb'] =  df3['low'] - df3['tr']/3
+    df3['lb'] =  df3['low'] - df3['tr']/4
     df3['ll'] =  df3['lb'] - df3['atr']*1
 
     for item in [ 'hb', 'hh', 'lb', 'll', 'high', 'low', 'atr', 'close']:
         df3[item+'_1'] = df3[item].shift(1)
 
-    up, middle, low=ta.BBANDS(df3['close'],matype=ta.MA_Type.T3, timeperiod=15, nbdevup=2, nbdevdn=2)
+    up, middle, low=ta.BBANDS(df3['close'],matype=ta.MA_Type.T3, timeperiod=48, nbdevup=2, nbdevdn=2)
 
     df3['up'] = up
     df3['middle'] = middle
     df3['low'] = low
-    # df3 = df3[['hb', 'hh', 'lb', 'll', 'hb_1', 'hh_1', 'lb_1', 'll_1', 'high_1', 'low_1', 'atr_1', 'close_1', 'up', 'middle', 'low']]
+    df3 = df3[['hb', 'hh', 'lb', 'll', 'hb_1', 'hh_1', 'lb_1', 'll_1', 'high_1', 'low_1', 'atr_1', 'close_1', 'up', 'middle', 'low']]
     print(df3.tail())
     df3.dropna(inplace=True)
 
     df3['openinterest'] = 0
 
-    # df3 = df3.resample('1T').agg({  'hb': 'last',
-    #                                 'hh': 'last',
-    #                                 'lb': 'last',
-    #                                 'll': 'last',
-    #                                 'hb_1': 'last',
-    #                                 'hh_1': 'last',
-    #                                 'lb_1': 'last',
-    #                                 'll_1': 'last',
-    #                                 'high_1': 'last',
-    #                                 'low_1': 'last',
-    #                                 'atr_1': 'last',
-    #                                 'close_1': 'last',
-    #                                 'up': 'last',
-    #                                 'middle': 'last',
-    #                                 'low': 'last',
-    #                                 })
+    df3 = df3.resample('1T').agg({  'hb': 'last',
+                                    'hh': 'last',
+                                    'lb': 'last',
+                                    'll': 'last',
+                                    'hb_1': 'last',
+                                    'hh_1': 'last',
+                                    'lb_1': 'last',
+                                    'll_1': 'last',
+                                    'high_1': 'last',
+                                    'low_1': 'last',
+                                    'atr_1': 'last',
+                                    'close_1': 'last',
+                                    'up': 'last',
+                                    'middle': 'last',
+                                    'low': 'last',
+                                    })
 
 
-    # df3.ffill(inplace=True)
+    df3.ffill(inplace=True)
     df3.reset_index(inplace=True)
 
-    # df1.reset_index(inplace=True)
+    df1.reset_index(inplace=True)
 
-    # df4 = pd.merge(df1, df3, on='datetime')
+    df4 = pd.merge(df1, df3, on='datetime')
     # print(df1.shape, df3.shape, df4.shape)
 
-    return df3
+    return df4
 
 class PandasDataExtend(PandasData):
     # 增加线
@@ -231,7 +231,7 @@ class MyStrategy(bt.Strategy):
     def next(self):
 
         # 9:45 - 15:45
-        if self.data.datetime.time() > datetime.time(15, 50) or self.data.datetime.time() < datetime.time(9, 20) :
+        if self.data.datetime.time() > datetime.time(15, 45) or self.data.datetime.time() < datetime.time(9, 20) :
 
             if self. position.size > 0:
                 self.order = self.sell()
@@ -273,14 +273,14 @@ class MyStrategy(bt.Strategy):
         #         self.sizer.p.stake = 1
 
 
-            if  self.datas[0].up[0] < self.dataclose[0] and self.lines.atr[0] > self.lines.atr[-2] :
+            if  self.datas[0].up[0] < self.dataclose[0]:# and self.datas[0].up[0] > self.datas[0].up[-2] and self.datas[0].up[-2] > self.datas[0].up[-5]:
                  self.log('BUY CREATE, %.4f' % (self.dataclose[0]))
                  self.order = self.sell()
                  self.max_price = self.dataclose[0]
                  self.overcross = False
 
 
-            elif (self.datas[0].low[0] > self.dataclose[0] and self.lines.atr[0] > self.lines.atr[-2]):
+            elif self.datas[0].low[0] > self.dataclose[0]:# and self.datas[0].low[0] < self.datas[0].low[-2] and self.datas[0].low[-2] < self.datas[0].low[-5]):
                  self.log('SELL CREATE, %.4f' % self.dataclose[0])
                  self.order = self.buy()
                  self.overcross = False
@@ -303,7 +303,7 @@ class MyStrategy(bt.Strategy):
                 #     self.log('BUY CLOSE B, %.4f' % self.dataclose[0])
                 #     close_sig = True
 
-                if self.datas[0].middle[0] - self.lines.atr[0] > self.dataclose[0] or self.dataclose[0] > self.sellprice + self.lines.atr[0]*2:
+                if self.sellprice + self.datas[0].atr_1[0]*2 < self.dataclose[0] or self.datas[0].low[0] - self.datas[0].atr_1[0]*3 > self.dataclose[0] :
                     self.order = self.buy()
                     self.max_price = None
 
@@ -324,7 +324,7 @@ class MyStrategy(bt.Strategy):
             #         self.log('SELL CLOSE B, %.4f' % self.dataclose[0])
             #         close_sig = True
 
-                if self.datas[0].middle[0] + self.lines.atr[0] < self.dataclose[0] or self.dataclose[0] < self.buyprice - self.lines.atr[0]*2:
+                 if self.buyprice - self.datas[0].atr_1[0]*2 > self.dataclose[0] or self.datas[0].up[0] + self.datas[0].atr_1[0]*3 < self.dataclose[0] :
                     self.order = self.sell()
                     self.max_price = None
 

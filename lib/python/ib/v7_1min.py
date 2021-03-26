@@ -314,7 +314,7 @@ class MyStrategy(bt.Strategy):
                     if self.datas[0].ll[0] != self.datas[0].ll[-1]:
                         self.overcross = False
                         self.overcross_price = None
-                        
+
                 if self.dataclose[0] > self.min_price:
                     self.log('SELL CLOSE B, %.4f' % self.dataclose[0])
                     close_sig = True
@@ -352,7 +352,7 @@ if __name__ == '__main__':
     cerebro.addstrategy(MyStrategy)
     # 本地数据，笔者用Wind获取的东风汽车数据以csv形式存储在本地。
     dataframe = pd.read_csv(csv_path, index_col=0, parse_dates=True, usecols=['date', 'open', 'high', 'low', 'close', 'volume'])
-    dataframe = format_data(dataframe, period='5T')
+    dataframe = format_data(dataframe, period='6T')
     print(dataframe.shape)
     data = PandasDataExtend(
             dataname=dataframe,
