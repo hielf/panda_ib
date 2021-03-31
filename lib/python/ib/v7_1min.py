@@ -60,29 +60,25 @@ def format_data(dataframe, period='1D', localize_zone='Asia/Shanghai', convert_z
 
     df3 = df2.dropna(axis=0) # 缺失值处理
 
-    df3['atr'] = ta.ATR(df3['high'] , df3['low'], df3['close'], timeperiod=36)
+    df3['atr'] = ta.ATR(df3['high'] , df3['low'], df3['close'], timeperiod=12)
+
+    print(df3.atr.describe())
 
     df3['tr'] = df3['high'] - df3['low']
 
     df3['hb'] = df3['high'] + df3['tr']/4
-    df3['hh'] = df3['hb'] + df3['atr']*1
+    df3['hh'] = df3['hb'] + df3['tr']/2
 
     df3['lb'] =  df3['low'] - df3['tr']/4
-    df3['ll'] =  df3['lb'] - df3['atr']*1
+    df3['ll'] =  df3['lb'] - df3['tr']/2
+
+    print(df3['tr'].describe())
 
     for item in [ 'hb', 'hh', 'lb', 'll', 'high', 'low', 'atr', 'close']:
         df3[item+'_1'] = df3[item].shift(1)
 
-    up, middle, low=ta.BBANDS(df3['close'],matype=ta.MA_Type.T3, timeperiod=48, nbdevup=2, nbdevdn=2)
-
-    df3['up'] = up
-    df3['middle'] = middle
-    df3['low'] = low
-    df3 = df3[['hb', 'hh', 'lb', 'll', 'hb_1', 'hh_1', 'lb_1', 'll_1', 'high_1', 'low_1', 'atr_1', 'close_1', 'up', 'middle', 'low']]
-    print(df3.tail())
+    df3 = df3[[ 'hb', 'hh', 'lb', 'll', 'hb_1', 'hh_1', 'lb_1', 'll_1', 'high_1', 'low_1', 'atr_1', 'close_1']]
     df3.dropna(inplace=True)
-
-    df3['openinterest'] = 0
 
     df3 = df3.resample('1T').agg({  'hb': 'last',
                                     'hh': 'last',
@@ -96,9 +92,6 @@ def format_data(dataframe, period='1D', localize_zone='Asia/Shanghai', convert_z
                                     'low_1': 'last',
                                     'atr_1': 'last',
                                     'close_1': 'last',
-                                    'up': 'last',
-                                    'middle': 'last',
-                                    'low': 'last',
                                     })
 
 
@@ -106,15 +99,16 @@ def format_data(dataframe, period='1D', localize_zone='Asia/Shanghai', convert_z
     df3.reset_index(inplace=True)
 
     df1.reset_index(inplace=True)
+    df1['ema'] = ta.MA(df1['close'], timeperiod = 120)
 
-    df4 = pd.merge(df1, df3, on='datetime')
-    # print(df1.shape, df3.shape, df4.shape)
+    df4 = pd.merge(df1, df3)
+    print(df4.head())
 
     return df4
 
 class PandasDataExtend(PandasData):
     # 增加线
-    lines = ('hb', 'hh', 'lb', 'll', 'hb_1', 'hh_1', 'lb_1', 'll_1','high_1', 'low_1', 'atr_1', 'close_1', 'up', 'middle', 'low')
+    lines = ('hb', 'hh', 'lb', 'll', 'hb_1', 'hh_1', 'lb_1', 'll_1','high_1', 'low_1', 'atr_1', 'close_1', 'ema',)
 
     # 第几列, 或者直接给列名
     params = (   ( 'hb', 'hb'),
@@ -129,10 +123,7 @@ class PandasDataExtend(PandasData):
                  ( 'low_1',  'low_1'),
                  ( 'atr_1',  'atr_1'),
                  ('close_1',  'close_1'),
-                 ('up',  'up'),
-                 ('middle',  'middle'),
-                 ('low',  'low'),
-
+                 ('ema',  'ema'),
                    )  # 上市天数
 
 # Create a Stratey
@@ -171,15 +162,11 @@ class MyStrategy(bt.Strategy):
         self.sellcomm = None
 
         self.overcross = False
+        self.overcross_price = None
+        self.win_loss = 0
 
-        self.lines.atr = bt.indicators.ATR(self.data, period=12)
-
-        self.lines.top=bt.indicators.BollingerBands(self.datas[0],period=120).top
-        self.lines.bot=bt.indicators.BollingerBands(self.datas[0],period=120).bot
-
-
-        self.buy_sig = bt.indicators.CrossOver(self.lines.top, self.dataopen)
-        self.sell_sig = bt.indicators.CrossOver(self.lines.bot, self.dataopen)
+        # self.buy_sig = bt.indicators.CrossOver(self.datas[0].high_1, self.dataopen)
+        # self.sell_sig = bt.indicators.CrossOver(self.datas[0].low_1, self.dataopen)
 
     def start(self):
         print("the world call me!")
@@ -229,11 +216,14 @@ class MyStrategy(bt.Strategy):
         self.log('OPERATION PROFIT, COMM %.2f, GROSS %.2f, NET %.2f \n\n' %
                  (trade.commission, trade.pnl, trade.pnlcomm))
 
+        if trade.pnlcomm < 0:
+            self.win_loss += 1
+
     def next(self):
 
         # 9:45 - 15:45
-        if self.data.datetime.time() > datetime.time(15, 45) or self.data.datetime.time() < datetime.time(9, 20) :
-
+        if self.data.datetime.time() > datetime.time(15, 55) or self.data.datetime.time() < datetime.time(9, 20) :
+            self.win_loss = 0
             if self. position.size > 0:
                 self.order = self.sell()
                 self.log('BUY Close by Day end, %.4f' % self.dataclose[0])
@@ -251,90 +241,87 @@ class MyStrategy(bt.Strategy):
 
         # Check if we are in the market
 
+        if not self.position and self.win_loss < 3:
 
-
-
-
-        if not self.position:
-        #     if self.broker.getvalue() > 600000:
-        #         self.sizer.p.stake = 2
-        #     if self.broker.getvalue() > 700000:
-        #         self.sizer.p.stake = 3
-        #     if self.broker.getvalue() > 900000:
-        #         self.sizer.p.stake = 4
-        #     if self.broker.getvalue() > 1000000:
-        #         self.sizer.p.stake = 4
-        #     if self.broker.getvalue() > 1100000:
-        #         self.sizer.p.stake = 5
-        #     if self.broker.getvalue() > 1200000:
-        #         self.sizer.p.stake = 5
-        #     if self.broker.getvalue() > 1300000:
-        #         self.sizer.p.stake = 6
-        #     if self.broker.getvalue() < 500000:
-        #         self.sizer.p.stake = 2
-        #     if self.broker.getvalue() <= 400000:
-        #         self.sizer.p.stake = 1
-
-
-            if  self.datas[0].up[0] < self.dataclose[0]:# and self.datas[0].up[0] > self.datas[0].up[-2] and self.datas[0].up[-2] > self.datas[0].up[-5]:
-                 self.log('SELL CREATE, %.4f' % (self.dataclose[0]))
-                 self.order = self.sell()
-                 self.max_price = self.dataclose[0]
-                 self.overcross = False
-                 trades.append({'order': 'sell', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
-
-
-            elif self.datas[0].low[0] > self.dataclose[0]:# and self.datas[0].low[0] < self.datas[0].low[-2] and self.datas[0].low[-2] < self.datas[0].low[-5]):
-                 self.log('BUY CREATE, %.4f' % self.dataclose[0])
+            if  self.datahigh[0] > self.datas[0].hb[-1] and self.datas[0].atr_1[0] < self.datas[0].atr_1[-1]:
+                 self.log('BUY CREATE, %.4f' % (self.dataclose[0]))
                  self.order = self.buy()
+                 self.max_price = self.dataclose[0] - self.datas[0].atr_1[0]*2
                  self.overcross = False
-                 self.min_price = self.dataclose[0]
+                 self.overcross_price = None
                  trades.append({'order': 'buy', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
 
+            elif self.datalow[0] < self.datas[0].lb[-1] and self.datas[0].atr_1[0] < self.datas[0].atr_1[-1]:
+                 self.log('SELL CREATE, %.4f' % self.dataclose[0])
+                 self.order = self.sell()
+                 self.min_price = self.dataclose[0] + self.datas[0].atr_1[0]*2
+                 self.overcross = False
+                 self.overcross_price = None
+                 trades.append({'order': 'sell', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
+
+
         else:
-            if self. position.size < 0:
-                # close_sig = False
-                # self.max_price = min(self.max_price, self.datas[0].lb_1[0])
+            if self. position.size > 0:
+                close_sig = False
+                self.max_price = max(self.max_price, self.datas[0].close[-1] - self.datas[0].atr_1[0]*2)
 
-                # if self.datalow[0] < self.datas[0].ll_1[0]:
-                #     self.overcross = True
 
-                # if self.overcross and self.datahigh[0] > self.datas[0].ll_1[0]:
-                #     self.log('BUY CLOSE A, %.4f' % self.datas[0].hh_1[0])
-                #     close_sig = True
+                if self.datahigh[0] > self.datas[0].hh[-1]:
+                    self.overcross = True
 
-                # if self.dataclose[0] > self.max_price:
-                #     self.log('BUY CLOSE B, %.4f' % self.dataclose[0])
-                #     close_sig = True
+                    if not self.overcross_price:
+                        self.overcross_price = self.datas[0].hh[-1]
 
-                if self.sellprice + self.datas[0].atr_1[0]*2 < self.dataclose[0] or self.datas[0].low[0] - self.datas[0].atr_1[0]*3 > self.dataclose[0] :
-                    self.order = self.buy()
+                if self.overcross_price:
+
+                    if self.overcross and self.datalow[0] < self.overcross_price:
+                        self.log('BUY CLOSE A, %.4f' % self.datas[0].hh[0])
+                        close_sig = True
+
+                    if self.datas[0].hh[0] != self.datas[0].hh[-1]:
+                        self.overcross = False
+                        self.overcross_price = None
+
+                if self.dataclose[0] < self.max_price:
+                    self.log('BUY CLOSE B, %.4f' % self.dataclose[0])
+                    close_sig = True
+
+                if close_sig:
+                    self.order = self.sell()
                     self.max_price = None
-                    self.log('SELL Close, %.4f' % self.dataclose[0])
                     trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
 
 
-            if self. position.size > 0:
-            #     close_sig = False
-            #     self.min_price = min(self.min_price, self.datas[0].lb_1[0])
+            if self. position.size < 0:
+                close_sig = False
+                self.min_price = min(self.min_price, self.datas[0].close[-1] + self.datas[0].atr_1[0]*2)
 
-            #     if self.datalow[0] < self.datas[0].ll_1[0]:
-            #         self.overcross = True
 
-            #     if self.overcross and self.datahigh[0] > self.datas[0].ll_1[0]:
-            #         self.log('SELL CLOSE A, %.4f' % self.datas[0].ll_1[0])
-            #         close_sig = True
+                if self.datalow[0] < self.datas[0].ll[-1]:
+                    self.overcross = True
 
-            #     if self.dataclose[0] > self.min_price:
-            #         self.log('SELL CLOSE B, %.4f' % self.dataclose[0])
-            #         close_sig = True
+                    if not self.overcross_price:
+                        self.overcross_price = self.datas[0].ll[-1]
 
-                if self.buyprice - self.datas[0].atr_1[0]*2 > self.dataclose[0] or self.datas[0].up[0] + self.datas[0].atr_1[0]*3 < self.dataclose[0] :
-                    self.order = self.sell()
-                    self.max_price = None
-                    self.log('SELL Close, %.4f' % self.dataclose[0])
+                if self.overcross_price:
+
+                    if self.overcross and self.datahigh[0] > self.overcross_price:
+                        self.log('SELL CLOSE A, %.4f' % self.datas[0].ll[0])
+                        close_sig = True
+
+                    if self.datas[0].ll[0] != self.datas[0].ll[-1]:
+                        self.overcross = False
+                        self.overcross_price = None
+
+                if self.dataclose[0] > self.min_price:
+                    self.log('SELL CLOSE B, %.4f' % self.dataclose[0])
+                    close_sig = True
+
+                if close_sig:
+                    self.order = self.buy()
+                    self.min_price = None
                     trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
 
@@ -386,9 +373,9 @@ if __name__ == '__main__':
     cerebro.adddata(data)
     # cerebro.addwriter(bt.WriterFile, csv = True, out='results_%s.csv' % str(sys.argv[4]))
     # Set our desired cash start
-    cerebro.broker.setcash(400000.0)
+    cerebro.broker.setcash(1000000.0)
     # 设置每笔交易交易的股票数量
-    cerebro.addsizer(bt.sizers.FixedSize, stake=1)
+    cerebro.addsizer(bt.sizers.FixedSize, stake=4)
     # Set the commission
     cerebro.broker.setcommission(
         commission=30,
