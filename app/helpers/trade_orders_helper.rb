@@ -156,12 +156,14 @@ module TradeOrdersHelper
   end
 
   def ib_positions
+    main_contract = ApplicationController.helpers.ib_main_contract(contract)
     begin
       # ib = ib_connect
+      PyCall.exec("lastTradeDateOrContractMonth = '#{main_contract.lastTradeDateOrContractMonth}'")
       PyCall.exec("pos = ib.positions()")
       PyCall.exec("list = {}")
       PyCall.exec("for po in pos:
-          if po.contract.symbol == 'HSI':
+          if po.contract.symbol == 'HSI' and po.contract.lastTradeDateOrContractMonth == lastTradeDateOrContractMonth:
             list.update({'position': po.position, 'currency': po.contract.currency, 'contract_date': po.contract.lastTradeDateOrContractMonth, 'symbol': po.contract.symbol})")
 
       data = PyCall.eval("list").to_h
