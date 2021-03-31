@@ -6,7 +6,7 @@ class PositionsJob < ApplicationJob
   def perform(*args)
     @contract = args[0]
 
-    @ib = ApplicationController.helpers.ib_connect if @ib.nil?
+    @ib = ApplicationController.helpers.ib_connect if @ib.nil? || !@ib.isConnected()
   end
 
   private
