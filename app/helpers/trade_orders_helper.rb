@@ -144,7 +144,7 @@ module TradeOrdersHelper
     # else
     #   0
     # end
-    position = ApplicationController.helpers.ib_positions
+    position = ApplicationController.helpers.ib_positions(contract)
     tp = TraderPosition.init(contract)
     # previous_position = 0
     # previous_position = tp.position if (tp && !tp.position.nil?)
@@ -155,7 +155,7 @@ module TradeOrdersHelper
     return tp.position
   end
 
-  def ib_positions
+  def ib_positions(contract)
     main_contract = ApplicationController.helpers.ib_main_contract(contract)
     begin
       # ib = ib_connect
