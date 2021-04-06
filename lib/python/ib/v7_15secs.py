@@ -16,6 +16,7 @@ import joblib
 import os
 import csv
 import yaml
+import json
 from tqdm import tqdm
 import sys
 import talib as ta
@@ -44,15 +45,9 @@ def get_yaml_data(yaml_file):
     print("类型：", type(data))
     return data
 
-configfile = sys.argv[1]
-current_path = os.path.abspath(".")
-yaml_path = os.path.join(current_path, configfile)
-config_params = get_yaml_data(yaml_path)
 
-starttime = time.time()
-
-from_date = datetime.datetime.strptime(config_params['from_date'],'%Y-%m-%d %H:%M:%S')
-to_date = datetime.datetime.strptime(config_params['end_date'],'%Y-%m-%d %H:%M:%S')
+# from_date = datetime.datetime.strptime(config_params['from_date'],'%Y-%m-%d %H:%M:%S')
+# to_date = datetime.datetime.strptime(config_params['end_date'],'%Y-%m-%d %H:%M:%S')
 
 
 def format_data(dataframe, period='1D', localize_zone='Asia/Shanghai', convert_zone= 'US/Eastern'):
@@ -228,7 +223,6 @@ class MyStrategy(bt.Strategy):
 
             self.bar_executed = len(self)
 
-
         elif order.status in [order.Canceled, order.Margin, order.Rejected]:
             pass
             #self.log('Order Canceled/Margin/Rejected')
@@ -253,10 +247,12 @@ class MyStrategy(bt.Strategy):
             if self. position.size > 0:
                 self.order = self.sell()
                 self.log('BUY Close by Day end, %.4f' % self.dataclose[0])
+                trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
             if self. position.size < 0:
                 self.order = self.buy()
                 self.log('Sale Close by Day end, %.4f' % self.dataclose[0])
+                trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
             return
 
@@ -276,6 +272,7 @@ class MyStrategy(bt.Strategy):
                  self.max_price = self.dataclose[0] - self.datas[0].atr_1[0]*2
                  self.overcross = False
                  self.overcross_price = None
+                 trades.append({'order': 'buy', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
 
             elif self.datalow[0] < self.datas[0].lb_1[-1] :#and self.datas[0].atr_1[0] < self.datas[0].atr_1[-1]:
@@ -284,6 +281,7 @@ class MyStrategy(bt.Strategy):
                  self.min_price = self.dataclose[0] + self.datas[0].atr_1[0]*2
                  self.overcross = False
                  self.overcross_price = None
+                 trades.append({'order': 'sell', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
 
         else:
@@ -315,12 +313,14 @@ class MyStrategy(bt.Strategy):
                 if close_sig:
                     self.order = self.sell()
                     self.max_price = None
+                    trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
 
 
             if self. position.size < 0:
                 close_sig = False
                 self.min_price = min(self.min_price, self.dataclose[0] + self.datas[0].atr_1[0]*2)
+
 
                 if self.datalow[0] < self.datas[0].ll_1[0]:
                     self.overcross = True
@@ -345,6 +345,7 @@ class MyStrategy(bt.Strategy):
                 if close_sig:
                     self.order = self.buy()
                     self.min_price = None
+                    trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
 
 
@@ -353,12 +354,32 @@ class MyStrategy(bt.Strategy):
         print("death")
 
 if __name__ == '__main__':
+    csv_path = sys.argv[1]
+    json_path = sys.argv[2]
+    begin_time = sys.argv[3]
+    end_time = sys.argv[4]
+    configfile = sys.argv[5]
+
+    current_path = os.path.abspath(".")
+    yaml_path = os.path.join(current_path, configfile)
+    config_params = get_yaml_data(yaml_path)
+
+    begin_time = datetime.datetime.strptime(begin_time, '%Y-%m-%d %H:%M:%S +0800')
+    end_time = datetime.datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S +0800')
+
+    date_handler = lambda obj: (
+        obj.isoformat()
+        if isinstance(obj, (datetime.datetime, datetime.date))
+        else None
+    )
+
+    trades = []
     # Create a cerebro entity
     cerebro = bt.Cerebro()
     # Add a strategy
     cerebro.addstrategy(MyStrategy)
     # 本地数据，笔者用Wind获取的东风汽车数据以csv形式存储在本地。
-    dataframe = pd.read_csv(config_params['data_source'], index_col=0, parse_dates=True, usecols=['date', 'open', 'high', 'low', 'close', 'volume'])
+    dataframe = pd.read_csv(csv_path, index_col=0, parse_dates=True, usecols=['date', 'open', 'high', 'low', 'close', 'volume'])
     dataframe = format_data(dataframe, period=config_params['period'])
     print(dataframe.shape)
     data = PandasDataExtend(
@@ -370,19 +391,15 @@ if __name__ == '__main__':
             close=4,  # 收盘价价所在列
             volume=5,  # 成交量所在列
             openinterest=6,
-            fromdate=from_date,  # 起始日2002, 4, 1
-            todate=to_date,  # 结束日 2015, 12, 31
+            fromdate=begin_time,  # 起始日2002, 4, 1
+            todate=end_time,  # 结束日 2015, 12, 31
             plot=False
         )
 
 
     # Add the Data Feed to Cerebro
     cerebro.adddata(data)
-
-
-    uuid_str = uuid.uuid4().hex
-
-    cerebro.addwriter(bt.WriterFile, csv = True, out="{}_{}_{}.csv".format(config_params['output_prefix'], config_params['period'], uuid_str))
+    # cerebro.addwriter(bt.WriterFile, csv = True, out='results_%s.csv' % str(sys.argv[4]))
     # Set our desired cash start
     cerebro.broker.setcash(1000000.0)
     # 设置每笔交易交易的股票数量
@@ -402,12 +419,17 @@ if __name__ == '__main__':
     cerebro.addanalyzer(bt.analyzers.AnnualReturn, _name='myannual')
     cerebro.addanalyzer(bt.analyzers.TimeReturn, _name = 'TR', timeframe=bt.TimeFrame.Months)
 
-    results = cerebro.run()
+    with open(csv_path + '.csv', 'w') as f:
+        headers=['TIME','action', 'price', 'comm', 'pnl']
+        writer = csv.writer(f)
+        writer.writerow(headers)
 
-    endtime = time.time()
+        results = cerebro.run()
+
+    # endtime = time.time()
     print('='*5, 'program running time', '='*5)
     print('==== 2 bar ====')
-    print ('time:', (endtime - starttime), 'seconds')
+    # print ('time:', (endtime - starttime), 'seconds')
     print('='*5, 'program running time', '='*5)
 
 
@@ -418,8 +440,10 @@ if __name__ == '__main__':
     print('AN:', strat.analyzers.myannual.get_analysis())
     print('TimeReturn')
     for date, value in  results[0].analyzers.TR.get_analysis().items():
-     print(date, value)
+        print(date, value)
 
+    print(trades)
+    with open(json_path, 'w') as f:
+        json.dump(trades, f)
 
-    figure = cerebro.plot()[0][0]
-    figure.savefig("{}_{}_{}.png".format(config_params['output_prefix'], config_params['period'], uuid_str))
+    # cerebro.plot()
