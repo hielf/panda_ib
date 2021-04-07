@@ -24,6 +24,8 @@ module Clockwork
         contract = 'hsi'
       end
       case ENV['backtrader_version']
+      when '15sec'
+        await = 4
       when "1min"
         await = 4
       when "2min"
