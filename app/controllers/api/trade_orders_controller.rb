@@ -61,7 +61,7 @@ class Api::TradeOrdersController < Api::ApplicationController
   end
 
   def trades_data
-    contract = "hsi"
+    contract = ENV['contract']
     if request.format.csv?
       duration = params[:duration]
       trades_to_csv(contract, duration)

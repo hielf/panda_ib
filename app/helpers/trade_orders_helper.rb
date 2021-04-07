@@ -293,24 +293,24 @@ module TradeOrdersHelper
     return data
   end
 
-  def market_data(contract, force_collect=false, db_collect=ENV['db_collect'])
+  def market_data(contract, version, force_collect=false, db_collect=ENV['db_collect'])
     # contract = "hsi_5mins"
-    bar_size = case contract
-    when "hsi"
+    bar_size = case version
+    when "1min"
       "1 min"
-    when "hsi_5mins"
+    when "5min"
       "5 mins"
-    when "hsi_30mins"
+    when "30min"
       "30 mins"
-    when "hsi_15secs"
+    when "15secs"
       "15 secs"
     end
     today_start = Time.zone.now.change({hour: 9, min: 15})
-    duration = case contract
-    when "hsi"
+    duration = case version
+    when "15secs"
+      (db_collect == "true" ? "14400" : 9000.to_s)
+    else
       (db_collect == "true" ? "72000" : (Time.zone.now - today_start + 86400).to_i.to_s)
-    when "hsi_15secs"
-      duration = (db_collect == "true" ? "14400" : 9000.to_s)
     end
     if duration.to_i > 86400
       duration = "86400"
@@ -366,7 +366,7 @@ module TradeOrdersHelper
       return list if db_collect == 'false'
 
       begin
-        tmp_table = contract + '_tmp'
+        tmp_table = contract + '_' + version + '_tmp'
         table = contract
         json = list.to_dict(orient='records')
         conn = PG.connect(host: ENV['quant_db_host'], dbname: ENV['quant_db_name'], user: ENV['quant_db_user'], password: ENV['quant_db_pwd'], port: ENV['quant_db_port'])

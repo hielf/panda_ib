@@ -5,22 +5,21 @@
 
 module ContractsHelper
 
-  def document_files(contract, file)
+  def document_files(contract, version, file)
     dir = Rails.root.to_s + "/tmp/csv/#{Time.zone.now.strftime("%Y%m%d")}"
     unless File.directory?(dir)
       FileUtils.mkdir_p(dir)
     end
-    dest = "#{dir}/#{contract}_#{Time.zone.now.strftime("%Y%m%d%H%M")}.csv"
+    dest = "#{dir}/#{contract}_#{version}_#{Time.zone.now.strftime("%Y%m%d%H%M")}.csv"
     File.open(dest, 'w') { |f| f.write(File.read(file)) }
   end
 
-  def index_to_csv(contract, market_data, with_index, db_collect=ENV['db_collect'])
+  def index_to_csv(contract, version, market_data, with_index, db_collect=ENV['db_collect'])
 
-    file = Rails.root.to_s + "/tmp/csv/#{contract}.csv"
+    file = Rails.root.to_s + "/tmp/csv/#{contract}_#{version}.csv"
     if db_collect == 'false' && market_data
       market_data.to_csv(file, sep: ',', encoding: 'utf-8', index: false)
     else
-      contract = "hsi_5mins"
       begin_time = EventLog.maximum(:created_at).nil? ? Time.zone.now - 1.day : EventLog.maximum(:created_at).beginning_of_day
       end_time = Time.zone.now
       # url = "http://#{ENV["market_db"]}:3000/#{contract}?and=(date.gte.#{begin_time.strftime('%Y-%m-%dT%H:%M:%S')},date.lte.#{end_time.strftime('%Y-%m-%dT%H:%M:%S')})"
@@ -205,11 +204,11 @@ module ContractsHelper
     return data
   end
 
-  def py_check_position(contract, amount = ENV["amount"])
+  def py_check_position(contract, version, amount = ENV["amount"])
     order = ""
-    position = TraderPosition.init(contract).position
-    csv = Rails.root.to_s + "/tmp/csv/#{contract}.csv"
-    json = Rails.root.to_s + "/tmp/#{contract}_trades.json"
+    position = TraderPosition.init("#{contract}").position
+    csv = Rails.root.to_s + "/tmp/csv/#{contract}_#{version}.csv"
+    json = Rails.root.to_s + "/tmp/#{contract}_#{version}_trades.json"
     # begin_date = Time.zone.now < (Time.parse "11:30 am") ? 1.business_day.ago.to_date : Date.today
     # end_date = 1.business_day.from_now.to_date
     skip_minute = Time.zone.now < (Time.parse "10:15 am") ? 75 : 0

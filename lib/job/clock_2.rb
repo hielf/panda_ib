@@ -16,15 +16,11 @@ module Clockwork
   # handler receives the time when job is prepared to run in the 2nd argument
   handler do |job, time|
     if job == 'IB.market_data'
-      contract = ''
-      case ENV['backtrader_version']
-      when '15sec'
-        contract = 'hsi_15secs'
-      else
-        contract = 'hsi'
-      end
-      case ENV['backtrader_version']
-      when '15sec'
+      contract = ENV['contract']
+      version = ENV['backtrader_version']
+
+      case version
+      when '15secs'
         await = 4
       when "1min"
         await = 4
@@ -45,7 +41,7 @@ module Clockwork
         end
         @ib = ApplicationController.helpers.ib_connect if @ib.nil?
         @ib = ApplicationController.helpers.ib_connect if !@ib.nil? && !@ib.isConnected()
-        MarketDataJob.perform_now @ib, contract if @ib
+        MarketDataJob.perform_now @ib, contract, version if @ib
         sleep await
       end
     end

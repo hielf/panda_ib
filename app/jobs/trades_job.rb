@@ -5,6 +5,8 @@ class TradesJob < ApplicationJob
 
   def perform(*args)
     contract = args[0]
+    version = args[1]
+
     @ib = ApplicationController.helpers.ib_connect
     if @ib.isConnected()
       data = ApplicationController.helpers.ib_trades(contract)

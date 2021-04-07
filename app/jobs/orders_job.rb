@@ -13,12 +13,8 @@ class OrdersJob < ApplicationJob
     @move_order = args[2]
     @move_price = args[3]
 
-    @contract = case ENV['backtrader_version']
-    when '15sec'
-      'hsi_15secs'
-    else
-      'hsi'
-    end
+    @contract = ENV['contract']
+    @version = ENV['backtrader_version']
     # @ib = args[2]
 
     # @ib = ApplicationController.helpers.ib_connect if @ib.nil?
@@ -43,8 +39,8 @@ class OrdersJob < ApplicationJob
     EventLog.create(log_type: "ORDER", order_type: @order, content: "#{@order} #{@amount.to_s} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}") if @order != "" && @amount != 0
     EventLog.create(log_type: "MOVE", order_type: @move_order, content: "#{@move_order} #{@move_price.to_s} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}") if @move_order != "" && @move_price != 0
 
-    job1 = PositionsJob.set(wait: 6.seconds).perform_later(@contract)
-    job2 = TradesJob.set(wait: 15.seconds).perform_later(@contract)
+    job1 = PositionsJob.set(wait: 6.seconds).perform_later(@contract, @version)
+    job2 = TradesJob.set(wait: 15.seconds).perform_later(@contract, @version)
 
     # begin
     #   job = PositionsJob.set(wait: 6.seconds).perform_later(@contract)

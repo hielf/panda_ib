@@ -9,17 +9,18 @@ class TradersJob < ApplicationJob
 
   def perform(*args)
     contract = args[0]
+    version = args[1]
     run_time = Time.zone.now
-    Rails.logger.warn "ib job start: #{contract}, #{Time.zone.now}"
+    Rails.logger.warn "ib job start: #{contract} #{version}, #{Time.zone.now}"
 
     attempt = 0
     market_data = nil
-    file = Rails.root.to_s + "/tmp/csv/#{contract}.csv"
+    file = Rails.root.to_s + "/tmp/csv/#{contract}_#{version}.csv"
 
     if ENV["remote_index"] == "true"
       10.times do
         attempt += 1
-        url = "http://#{ENV['remote_index_url']}/csv/#{contract}.csv"
+        url = "http://#{ENV['remote_index_url']}/csv/#{contract}_#{version}.csv"
         download = open(url)
         IO.copy_stream(download, file)
         if (run_time - CSV.read(file).last[0].to_time < 60)
@@ -32,9 +33,9 @@ class TradersJob < ApplicationJob
     else
       5.times do
         attempt += 1
-        case ENV['backtrader_version']
-        when '15sec'
-          market_data = true if (run_time - File.mtime(file) < 30)
+        case version
+        when '15secs'
+          market_data = true if (run_time - File.mtime(file) < 15)
         else
           market_data = true if (run_time - File.mtime(file) < 60)
         end
@@ -62,8 +63,8 @@ class TradersJob < ApplicationJob
 
     current_time = run_time.strftime('%H:%M')
     if (current_time >= "09:15" && current_time <= "15:50")
-      @order, @amount, @move_order, @move_price = ApplicationController.helpers.py_check_position(contract) if file
-      ApplicationController.helpers.document_files(contract, file) if file
+      @order, @amount, @move_order, @move_price = ApplicationController.helpers.py_check_position(contract, version) if file
+      ApplicationController.helpers.document_files(contract, version, file) if file
       Rails.logger.warn "ib py_check_position: #{@order} #{@amount.to_s}, #{Time.zone.now}" if @order != ""
 
       last_risk = EventLog.where(log_type: "RISK").last.nil? ? Time.now-10.days : EventLog.where(log_type: "RISK").last.created_at

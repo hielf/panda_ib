@@ -15,16 +15,11 @@ module Clockwork
 
   # handler receives the time when job is prepared to run in the 2nd argument
   handler do |job, time|
-    contract = ''
-    case ENV['backtrader_version']
-    when '15sec'
-      contract = 'hsi_15secs'
-    else
-      contract = 'hsi'
-    end
+    contract = ENV['contract']
+    version = ENV['backtrader_version']
     # puts "ib.trader started at #{Time.zone.now}"
     begin
-      j = TradersJob.perform_later contract
+      j = TradersJob.perform_later contract, version
       100.times do
         status = ActiveJob::Status.get(j)
         break if status.completed?
@@ -38,7 +33,7 @@ module Clockwork
   # -----------------------------------temp -----------------------------------
   # every(1.second, 'ib.trader', :if => lambda { |t| [11,26,41,56].include? t.sec }, :thread => true) if ENV["backtrader_version"] == "15sec"
   # every(1.second, 'ib.trader', :if => lambda { |t| (([6,11,16,21,26,31,36,41,46,51,56,1].include? t.min) && t.sec == 54) }, :thread => true) if ENV["backtrader_version"] == "15sec"
-  every(1.second, 'ib.trader', :if => lambda { |t| ([24,54].include? t.sec) }, :thread => true) if ENV["backtrader_version"] == "15sec"
+  every(1.second, 'ib.trader', :if => lambda { |t| ([24,54].include? t.sec) }, :thread => true) if ENV["backtrader_version"] == "15secs"
   # -----------------------------------temp -----------------------------------
   every(1.second, 'ib.trader', :if => lambda { |t| t.sec == 5 }, :thread => true) if ENV["backtrader_version"] == "1min"
   every(1.second, 'ib.trader', :if => lambda { |t| (([0,3,6,9,12,15,18,21,24,27,30,33,36,39,42,45,48,51,54,57].include? t.min) && t.sec == 56) }, :thread => true) if ENV["backtrader_version"] == "3min"

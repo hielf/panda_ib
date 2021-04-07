@@ -9,6 +9,7 @@ class RisksJob < ApplicationJob
 
   def perform(*args)
     @contract = args[0]
+    @version = args[1]
 
     current_time = Time.zone.now.strftime('%H:%M')
     @order = ""
@@ -16,12 +17,11 @@ class RisksJob < ApplicationJob
       loss_limit = ENV["total_asset"].to_f * 0.006 * -1
       last_trade = Trade.last
       position = TraderPosition.init(@contract).position
-      csv = Rails.root.to_s + "/tmp/csv/#{@contract}.csv"
+      csv = Rails.root.to_s + "/tmp/csv/#{@contract}_#{@version}.csv"
       @market_data = []
       CSV.foreach(csv, headers: true) do |row|
         @market_data << row.to_hash
       end
-
 
       if position == 0
         ProfitLoss.where(current: true).update_all(current: false)
