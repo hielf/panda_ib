@@ -80,17 +80,17 @@ def format_data(dataframe, period='1D', localize_zone='Asia/Shanghai', convert_z
 
     df3 = df2.dropna(axis=0) # 缺失值处理
 
-    df3['atr'] = ta.ATR(df3['high'] , df3['low'], df3['close'], timeperiod=12)
+    df3['atr'] = ta.ATR(df3['high'] , df3['low'], df3['close'], timeperiod=6)
 
     print(df3.atr.describe())
 
     df3['tr'] = df3['high'] - df3['low']
 
-    df3['hb'] = df3['high'] + df3['tr'] * config_params['base_line']
-    df3['hh'] = df3['hb'] + df3['tr'] * config_params['break_line']
+    df3['hb'] = df3['high'] + df3['atr'] * config_params['base_line']
+    df3['hh'] = df3['hb'] + df3['atr'] * config_params['break_line']
 
-    df3['lb'] =  df3['low'] - df3['tr'] * config_params['base_line']
-    df3['ll'] =  df3['lb'] - df3['tr'] * config_params['break_line']
+    df3['lb'] =  df3['low'] - df3['atr'] * config_params['base_line']
+    df3['ll'] =  df3['lb'] - df3['atr'] * config_params['break_line']
 
     print(df3['tr'].describe())
 
@@ -185,6 +185,8 @@ class MyStrategy(bt.Strategy):
         self.overcross_price = None
         self.win_loss = 0
 
+        self.lines.atr2 = bt.indicators.ATR(self.data, period=12)
+
         # self.buy_sig = bt.indicators.CrossOver(self.datas[0].high_1, self.dataopen)
         # self.sell_sig = bt.indicators.CrossOver(self.datas[0].low_1, self.dataopen)
 
@@ -266,19 +268,19 @@ class MyStrategy(bt.Strategy):
 
         if not self.position :#and self.win_loss < 3:
 
-            if  self.datahigh[0] > self.datas[0].hb_1[-1] :#and self.datas[0].atr_1[0] < self.datas[0].atr_1[-1]:
+            if  self.datahigh[0] > self.datas[0].hb_1[-1] :#and self.lines.atr2[0] < self.lines.atr2[-2]:
                  self.log('BUY CREATE, %.4f' % (self.dataclose[0]))
                  self.order = self.buy()
-                 self.max_price = self.dataclose[0] - self.datas[0].atr_1[0]*2
+                 self.max_price = self.dataclose[0] - self.datas[0].atr_1[-1]*1
                  self.overcross = False
                  self.overcross_price = None
                  trades.append({'order': 'buy', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
 
-            elif self.datalow[0] < self.datas[0].lb_1[-1] :#and self.datas[0].atr_1[0] < self.datas[0].atr_1[-1]:
+            elif self.datalow[0] < self.datas[0].lb_1[-1] :#and self.lines.atr2[0] < self.lines.atr2[-2]:
                  self.log('SELL CREATE, %.4f' % self.dataclose[0])
                  self.order = self.sell()
-                 self.min_price = self.dataclose[0] + self.datas[0].atr_1[0]*2
+                 self.min_price = self.dataclose[0] + self.datas[0].atr_1[-1]*1
                  self.overcross = False
                  self.overcross_price = None
                  trades.append({'order': 'sell', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
@@ -287,7 +289,7 @@ class MyStrategy(bt.Strategy):
         else:
             if self. position.size > 0:
                 close_sig = False
-                self.max_price = max(self.max_price, self.dataclose[0] - self.datas[0].atr_1[0]*2)
+                self.max_price = max(self.max_price, self.dataclose[0] - self.datas[0].atr_1[-1]*3)
 
 
                 if self.datahigh[0] > self.datas[0].hh_1[0]:
@@ -319,7 +321,7 @@ class MyStrategy(bt.Strategy):
 
             if self. position.size < 0:
                 close_sig = False
-                self.min_price = min(self.min_price, self.dataclose[0] + self.datas[0].atr_1[0]*2)
+                self.min_price = min(self.min_price, self.dataclose[0] + self.datas[0].atr_1[-1]*3)
 
 
                 if self.datalow[0] < self.datas[0].ll_1[0]:
@@ -414,7 +416,7 @@ if __name__ == '__main__':
     # Print out the starting conditions
     print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
 
-    cerebro.addanalyzer(bt.analyzers.SharpeRatio, _name = 'SharpeRatio')
+    cerebro.addanalyzer(bt.analyzers.SharpeRatio, _name = 'SharpeRatio', timeframe=bt.TimeFrame.Months)
     cerebro.addanalyzer(bt.analyzers.DrawDown, _name='DW')
     cerebro.addanalyzer(bt.analyzers.AnnualReturn, _name='myannual')
     cerebro.addanalyzer(bt.analyzers.TimeReturn, _name = 'TR', timeframe=bt.TimeFrame.Months)
