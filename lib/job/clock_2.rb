@@ -33,7 +33,7 @@ module Clockwork
       when "5min"
         await = 20
       end
-      stop_time = Time.zone.now + 3.minutes - 5.seconds
+      stop_time = Time.zone.now + 2.minutes - 5.seconds
       60.times do
         if Time.zone.now > stop_time
           ApplicationController.helpers.ib_disconnect(@ib) if @ib.isConnected()
