@@ -21,7 +21,7 @@ module Clockwork
 
       case version
       when '15secs'
-        await = 4
+        await = 8
       when "1min"
         await = 4
       when "2min"
@@ -33,7 +33,7 @@ module Clockwork
       when "5min"
         await = 20
       end
-      stop_time = Time.zone.now + 2.minutes - 5.seconds
+      stop_time = Time.zone.now + 3.minutes - 5.seconds
       60.times do
         if Time.zone.now > stop_time
           ApplicationController.helpers.ib_disconnect(@ib) if @ib.isConnected()
@@ -58,7 +58,7 @@ module Clockwork
     end
   end
 
-  every(2.minute, 'IB.market_data', :thread => true)
+  every(3.minute, 'IB.market_data', :thread => true)
   every(1.day, 'IB.history', :at => '18:00', :thread => true)
 
   # every(1.minute, 'timing', :skip_first_run => true, :thread => true)

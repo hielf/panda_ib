@@ -265,6 +265,7 @@ class MyStrategy(bt.Strategy):
             return
 
         # Check if we are in the market
+        margin_grid = 180000
 
         if not self.position :#and self.win_loss < 3:
 
@@ -405,7 +406,7 @@ if __name__ == '__main__':
     # Set our desired cash start
     cerebro.broker.setcash(1000000.0)
     # 设置每笔交易交易的股票数量
-    cerebro.addsizer(bt.sizers.FixedSize, stake=4)
+    cerebro.addsizer(bt.sizers.FixedSize, stake=1)
     # Set the commission
     cerebro.broker.setcommission(
         commission=30,

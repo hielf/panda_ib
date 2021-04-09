@@ -270,7 +270,26 @@ class MyStrategy(bt.Strategy):
 
         # Check if we are in the market
 
+        margin_grid = 180000
         if not self.position :#and self.win_loss < 3:
+            # if self.broker.getvalue() < margin_grid * 2:
+            #     self.sizer.p.stake = 1
+
+            # if self.broker.getvalue() > margin_grid*2:
+            #     self.sizer.p.stake = 2
+            # if self.broker.getvalue() > margin_grid*3:
+            #     self.sizer.p.stake = 3
+            # if self.broker.getvalue() > margin_grid*4:
+            #     self.sizer.p.stake = 4
+            # if self.broker.getvalue() > margin_grid*5:
+            #     self.sizer.p.stake = 5
+            # if self.broker.getvalue() > margin_grid*6:
+            #     self.sizer.p.stake = 6
+            # if self.broker.getvalue() > margin_grid*7:
+            #     self.sizer.p.stake = 7
+            # if self.broker.getvalue() > margin_grid*8:
+            #     self.sizer.p.stake = 8
+
 
             if  self.datahigh[0] > self.datas[0].hb_1[-1] :#and self.lines.atr2[0] < self.lines.atr2[-2]:
                  self.log('BUY CREATE, %.4f' % (self.dataclose[0]))
@@ -386,9 +405,9 @@ if __name__ == '__main__':
 
     cerebro.addwriter(bt.WriterFile, csv = True, out="{}_{}_{}.csv".format(config_params['output_prefix'], config_params['period'], uuid_str))
     # Set our desired cash start
-    cerebro.broker.setcash(1000000.0)
+    cerebro.broker.setcash(250000.0)
     # 设置每笔交易交易的股票数量
-    cerebro.addsizer(bt.sizers.FixedSize, stake=4)
+    cerebro.addsizer(bt.sizers.FixedSize, stake=1)
     # Set the commission
     cerebro.broker.setcommission(
         commission=30,
