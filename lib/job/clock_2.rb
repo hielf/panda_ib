@@ -21,7 +21,7 @@ module Clockwork
 
       case version
       when '15secs'
-        await = 8
+        await = 11
       when "1min"
         await = 4
       when "2min"
