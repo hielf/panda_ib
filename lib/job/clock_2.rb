@@ -21,7 +21,7 @@ module Clockwork
 
       case version
       when '15secs'
-        await = 4
+        await = 7
       when "1min"
         await = 4
       when "2min"
@@ -44,7 +44,7 @@ module Clockwork
         MarketDataJob.perform_now @ib, contract, version if @ib
         sleep await
       end
-      ApplicationController.helpers.ib_disconnect(@ib) if @ib.isConnected()
+      ApplicationController.helpers.ib_disconnect(@ib)
     end
 
     if job == 'IB.history'
