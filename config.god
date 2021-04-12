@@ -109,7 +109,7 @@ end
 
     w.behavior(:clean_pid_file)
 
-    generic_monitoring(w, :cpu_limit => 80.percent, :memory_limit => 500.megabytes)
+    generic_monitoring(w, :cpu_limit => 100.percent, :memory_limit => 1500.megabytes)
   end
 
   env_3 = "clock_3"

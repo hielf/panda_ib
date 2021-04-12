@@ -23,7 +23,7 @@ module Clockwork
       when '15secs'
         await = 11
       when "1min"
-        await = 4
+        await = 13
       when "2min"
         await = 8
       when "3min"
