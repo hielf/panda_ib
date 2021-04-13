@@ -33,8 +33,9 @@ module Clockwork
       when "5min"
         await = 20
       end
-      stop_time = Time.zone.now + 1.minutes - await.seconds
-      15.times do
+      stop_time = Time.zone.now + 2.minutes - await.seconds
+      req_times = 0
+      loop do
         if Time.zone.now > stop_time
           ApplicationController.helpers.ib_disconnect(@ib) if @ib.isConnected()
           break
@@ -42,9 +43,14 @@ module Clockwork
         @ib = ApplicationController.helpers.ib_connect if @ib.nil?
         @ib = ApplicationController.helpers.ib_connect if !@ib.nil? && !@ib.isConnected()
         MarketDataJob.perform_now @ib, contract, version if @ib
+        req_times = req_times + 1
+        if req_times >= 20
+          ApplicationController.helpers.ib_disconnect(@ib) if @ib.isConnected()
+          system( "god restart panda_ib-clock_2" )
+          break
+        end
         sleep await
       end
-      ApplicationController.helpers.ib_disconnect(@ib)
     end
 
     if job == 'IB.history'
@@ -59,7 +65,7 @@ module Clockwork
     end
   end
 
-  every(1.minute, 'IB.market_data', :thread => true)
+  every(2.minute, 'IB.market_data', :thread => true)
   every(1.day, 'IB.history', :at => '18:00', :thread => true)
 
   # every(1.minute, 'timing', :skip_first_run => true, :thread => true)
