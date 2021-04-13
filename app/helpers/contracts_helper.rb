@@ -221,7 +221,12 @@ module ContractsHelper
     data = Array.new()
     3.times do
       system( "cd #{Rails.root.to_s + '/lib/python/ib'} && python3 #{ENV["ib_version"]}_#{ENV["backtrader_version"]}.py '#{csv}' '#{json}' '#{begin_time}' '#{end_time}' '#{ENV["ib_version"]}_#{ENV["backtrader_version"]}.yml'" )
-      data = JSON.parse(File.read(json))
+      begin
+        data = JSON.parse(File.read(json))
+      rescue Exception => e
+        error_message = e.message
+        break
+      end
       break if !data.empty?
       Rails.logger.warn "ib check no csv file"
       sleep 2
