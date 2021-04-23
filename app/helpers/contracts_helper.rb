@@ -41,6 +41,23 @@ module ContractsHelper
     return file
   end
 
+  def join_realtime_csv(file, bars)
+    csv = CSV.parse(File.read(file), headers: true)
+    last_time = csv[-1]["date"].to_time
+    new_bars = []
+    bars.each_with_index do |bar, index|
+      if last_time < bar[:date].to_time
+        new_bars << bar
+      end
+    end
+
+    CSV.open(file, "a+") do |writer|
+      new_bars.each do |bar|
+        writer << [bar[:date], bar[:open], bar[:high], bar[:low], bar[:close], bar[:volume], bar[:average], bar[:barCount]]
+      end
+    end
+    return file
+  end
 
   def online_data(file)
     Rails.logger.warn "online_data start: #{Time.zone.now}"

@@ -293,6 +293,113 @@ module TradeOrdersHelper
     return data
   end
 
+  def bar_second_covert(second)
+    version = ENV['backtrader_version']
+    end_second = false
+    case version
+    when "15secs"
+      if second.to_i >= 0 && second.to_i < 15
+        end_second = 15
+      elsif second.to_i >= 15 && second.to_i < 30
+        end_second = 30
+      elsif second.to_i >= 30 && second.to_i < 45
+        end_second = 45
+      elsif second.to_i >= 45
+        end_second = 0
+      end
+    when "1min"
+      end_second = 0
+    when "5mins"
+      end_second = 0
+    end
+    return end_second
+  end
+
+  def realtime_market_data(contract, version, force_collect=false, db_collect=ENV['db_collect'])
+    # contract = ENV['contract']
+    # version = ENV['backtrader_version']
+    result = true
+    list = nil
+    # file = Rails.root.to_s + "/tmp/#{contract}_#{version}_bars.json"
+    file = Rails.root.to_s + "/tmp/#{contract}_#{version}_bars.csv"
+    begin
+      main_contract = ApplicationController.helpers.ib_main_contract(contract)
+      # PyCall.exec("import json")
+      PyCall.exec("def onBarUpdate(bars, hasNewBar):
+          df = util.df(bars[-100:])
+          df.to_csv('#{file}', sep=',', encoding='utf-8', index=False)")
+          # with open('#{file}', 'w') as f:
+          #     json.dump(df.to_json(orient='records', lines=True), f)")
+      PyCall.exec("contract = #{main_contract}")
+      PyCall.exec("bars = ib.reqRealTimeBars(contract, 5, 'TRADES', False)")
+      PyCall.exec("bars.updateEvent += onBarUpdate")
+      PyCall.exec("ib.sleep(10800)")
+      PyCall.exec("ib.cancelRealTimeBars(bars)")
+      # Rails.logger.warn "market_data_latest: #{PyCall.eval("bars[-1].date").to_s} force_collect: #{force_collect.to_s}"
+    rescue Exception => e
+      error_message = e
+      result = false
+      Rails.logger.warn "market_data error: #{error_message}, #{Time.zone.now}"
+    end
+    return result
+  end
+
+  def realtime_bar_resample(contract, version)
+    # contract = ENV['contract']
+    # version = ENV['backtrader_version']
+    result = true
+    file = Rails.root.to_s + "/tmp/#{contract}_#{version}_bars.csv"
+
+    table = nil
+    3.times do
+      table = CSV.parse(File.read(file), headers: true)
+      break if table && table.count > 0
+      sleep 0.3
+    end
+
+    if table && table.count > 0
+      array = []
+      table.each do |row|
+        time = row["time"].in_time_zone
+        open = row["open_"]
+        high = row["high"]
+        low = row["low"]
+        close = row["close"]
+        volume = row["volume"].to_i.to_s
+        average = ((high.to_f + low.to_f) / 2).to_s
+        count  = row["count"].to_i.to_s
+
+        if ["00", "15", "30", "45"].include? time.strftime('%S')
+          # time = time.change({sec: bar_second_covert(time.strftime('%S'))})
+          time = time.strftime('%Y-%m-%d %H:%M:%S')
+          bar = {"date": time, "open": open, "high": high, "low": low, "close": close, "volume": volume, "average": average, "barCount": count}
+          array << bar
+        else
+          # time = time.change({sec: bar_second_covert(time.strftime('%S'))})
+          last_bar = array[-1]
+          if last_bar
+            open = last_bar[:open]
+            high = (last_bar[:high].to_f > high.to_f ? last_bar[:high].to_f : high).to_s
+            low = (last_bar[:low].to_f < low.to_f ? last_bar[:low].to_f : low).to_s
+            volume = (last_bar[:volume].to_f + volume.to_f).to_i.to_s
+            average = ((high.to_f + low.to_f) / 2).to_s
+            count  = (last_bar[:barCount].to_f + count.to_f).to_i.to_s
+
+            # bar = {"time": time, "open": open, "high": high, "low": low, "close": close, "volume": volume, "average": average, "count": count}
+            last_bar[:open] = open
+            last_bar[:high] = high
+            last_bar[:low] = low
+            last_bar[:close] = close
+            last_bar[:volume] = volume
+            last_bar[:average] = average
+            last_bar[:barCount] = count
+          end
+        end
+      end
+    end
+
+  end
+
   def market_data(contract, version, force_collect=false, db_collect=ENV['db_collect'])
     # contract = "hsi_5mins"
     bar_size = case version
@@ -355,7 +462,7 @@ module TradeOrdersHelper
       error_message = e
       result = false
       Rails.logger.warn "market_data error: #{error_message}, #{Time.zone.now}"
-      ApplicationController.helpers.ib_connect #test
+      # ApplicationController.helpers.ib_connect #test
     # ensure
       # ib_disconnect(ib)
     end

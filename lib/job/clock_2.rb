@@ -15,6 +15,32 @@ module Clockwork
 
   # handler receives the time when job is prepared to run in the 2nd argument
   handler do |job, time|
+    if job == 'IB.realtime_bar_get'
+      contract = ENV['contract']
+      version = ENV['backtrader_version']
+
+      file = Rails.root.to_s + "/tmp/#{contract}_#{version}_bars.csv"
+
+      3.times do
+        table = CSV.parse(File.read(file), headers: true)
+        if table && table.count > 0
+          current_time = Time.zone.now
+          if current_time - table[-1]["time"].in_time_zone > 15
+            @ib = ApplicationController.helpers.ib_connect
+            ApplicationController.helpers.realtime_market_data(contract, version) if @ib
+          else
+            break
+          end
+        end
+      end
+    end
+
+    if job == 'IB.realtime_bar_csv'
+      contract = ENV['contract']
+      version = ENV['backtrader_version']
+      RealtimeBarJob.perform_later(contract, version)
+    end
+
     if job == 'IB.market_data'
       contract = ENV['contract']
       version = ENV['backtrader_version']
@@ -65,6 +91,8 @@ module Clockwork
     end
   end
 
+  every(1.minute, 'IB.realtime_bar_get', :thread => true)
+  every(2.second, 'IB.realtime_bar_csv', :thread => true)
   every(2.minute, 'IB.market_data', :thread => true)
   every(1.day, 'IB.history', :at => '18:00', :thread => true)
 
