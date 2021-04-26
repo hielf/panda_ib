@@ -64,7 +64,7 @@ module Clockwork
         # end
         @ib = ApplicationController.helpers.ib_connect if @ib.nil?
         @ib = ApplicationController.helpers.ib_connect if !@ib.nil? && !@ib.isConnected()
-        MarketDataJob.perform_later @ib, contract, version if @ib
+        MarketDataJob.perform_later(@ib, contract, version) if @ib
         req_times = req_times + 1
         if req_times >= 200
           ApplicationController.helpers.ib_disconnect(@ib) if @ib.isConnected()
