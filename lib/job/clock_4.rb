@@ -15,6 +15,12 @@ module Clockwork
 
   # handler receives the time when job is prepared to run in the 2nd argument
   handler do |job, time|
+    if job == 'IB.realtime_bar_csv' && ENV['backtrader_version'] == "15secs"
+      contract = ENV['contract']
+      version = ENV['backtrader_version']
+      RealtimeBarJob.perform_later(contract, version)
+    end
+
     if job == 'IB.realtime_bar_get' && ENV['backtrader_version'] == "15secs"
       contract = ENV['contract']
       version = ENV['backtrader_version']
@@ -53,6 +59,7 @@ module Clockwork
     end
   end
 
+  every(2.second, 'IB.realtime_bar_csv', :thread => true)
   every(1.minute, 'IB.realtime_bar_get', :thread => true)
   every(1.day, 'IB.history', :at => '18:00', :thread => true)
 

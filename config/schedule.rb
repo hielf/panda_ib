@@ -50,11 +50,13 @@ every 1.day, at: '20:00' do
   command "god stop panda_ib-clock_1"
   command "god stop panda_ib-clock_2"
   command "god stop panda_ib-clock_3"
+  command "god stop panda_ib-clock_4"
 end
 
 every 1.day, at: '9:00' do
   command "god start panda_ib-clock_1"
   command "god start panda_ib-clock_2"
   command "god start panda_ib-clock_3"
+  command "god start panda_ib-clock_4"
 end
 #
