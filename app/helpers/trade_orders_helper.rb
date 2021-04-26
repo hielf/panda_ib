@@ -352,7 +352,13 @@ module TradeOrdersHelper
 
     table = nil
     3.times do
-      table = CSV.parse(File.read(file), headers: true)
+      begin
+        table = CSV.parse(File.read(file), headers: true)
+      rescue Exception => e
+        error_message = e
+        result = false
+        Rails.logger.warn "realtime_bar_resample error: #{error_message}, #{Time.zone.now}"
+      end
       break if table && table.count > 0
       sleep 0.3
     end
@@ -398,7 +404,7 @@ module TradeOrdersHelper
       end
       result = array
     end
-    return array
+    return result
   end
 
   def market_data(contract, version, force_collect=false, db_collect=ENV['db_collect'])
