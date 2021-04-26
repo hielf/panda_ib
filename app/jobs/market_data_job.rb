@@ -14,9 +14,9 @@ class MarketDataJob < ApplicationJob
 
     current_time = Time.zone.now.strftime('%H:%M')
     if (current_time >= "09:15" && current_time <= "12:00") || (current_time >= "13:00" && current_time <= "16:30")
-      if @ib.isConnected()
+      # if @ib.isConnected()
         @market_data = ApplicationController.helpers.market_data(@contract, @version, true) unless ENV["remote_index"] == "true"
-      end
+      # end
     end
   end
 
