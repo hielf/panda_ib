@@ -12,8 +12,10 @@ class RealtimeBarJob < ApplicationJob
     @version = args[1]
 
     current_time = Time.zone.now.strftime('%H:%M')
+    file = Rails.root.to_s + "/tmp/csv/#{contract}_#{version}.csv"
     if (current_time >= "09:15" && current_time <= "12:00") || (current_time >= "13:00" && current_time <= "16:30")
-      ApplicationController.helpers.realtime_bar_resample(@contract, @version) #unless ENV["remote_index"] == "true"
+      @bars = ApplicationController.helpers.realtime_bar_resample(@contract, @version) #unless ENV["remote_index"] == "true"
+      ApplicationController.helpers.join_realtime_csv(file, @bars) if @bars
     end
   end
 

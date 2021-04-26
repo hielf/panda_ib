@@ -347,7 +347,7 @@ module TradeOrdersHelper
   def realtime_bar_resample(contract, version)
     # contract = ENV['contract']
     # version = ENV['backtrader_version']
-    result = true
+    result = false
     file = Rails.root.to_s + "/tmp/#{contract}_#{version}_bars.csv"
 
     table = nil
@@ -396,8 +396,9 @@ module TradeOrdersHelper
           end
         end
       end
+      result = array
     end
-
+    return array
   end
 
   def market_data(contract, version, force_collect=false, db_collect=ENV['db_collect'])

@@ -19,13 +19,18 @@ module Clockwork
       contract = ENV['contract']
       version = ENV['backtrader_version']
 
-      file = Rails.root.to_s + "/tmp/#{contract}_#{version}_bars.csv"
+      file = Rails.root.to_s + "/tmp/csv/#{contract}_#{version}.csv"
 
       3.times do
-        table = CSV.parse(File.read(file), headers: true)
+        begin
+          table = CSV.parse(File.read(file), headers: true)
+        rescue Exception => e
+          Rails.logger.warn "IB.realtime_bar_get failed: #{e}"
+        end
+
         if table && table.count > 0
           current_time = Time.zone.now
-          if current_time - table[-1]["time"].in_time_zone > 15
+          if current_time - table[-1]["date"].in_time_zone > 15
             Rails.logger.warn "IB.realtime_bar_get start"
             @ib = ApplicationController.helpers.ib_connect
             ApplicationController.helpers.realtime_market_data(contract, version) if @ib
