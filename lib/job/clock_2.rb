@@ -20,7 +20,7 @@ module Clockwork
       version = ENV['backtrader_version']
       RealtimeBarJob.perform_later(contract, version)
     end
-    
+
     if job == 'IB.market_data'
       contract = ENV['contract']
       version = ENV['backtrader_version']
@@ -41,6 +41,27 @@ module Clockwork
       end
       stop_time = Time.zone.now + 2.minutes - await.seconds
       req_times = 0
+
+      file = Rails.root.to_s + "/tmp/csv/#{contract}_#{version}.csv"
+
+      3.times do
+        begin
+          table = CSV.parse(File.read(file), headers: true)
+        rescue Exception => e
+          Rails.logger.warn "IB.realtime_bar_get failed: #{e}"
+        end
+
+        if table && table.count > 0
+          current_time = Time.zone.now
+          if current_time - table[-1]["date"].in_time_zone > 60
+            if (current_time >= "09:15" && current_time <= "12:00") || (current_time >= "13:00" && current_time <= "16:30")
+              system( "god restart panda_ib-clock_2" )
+              break
+            end
+          end
+        end
+      end
+
       loop do
         if Time.zone.now > stop_time
           ApplicationController.helpers.ib_disconnect(@ib) if @ib.isConnected()
