@@ -49,6 +49,8 @@ module Clockwork
           table = CSV.parse(File.read(file), headers: true)
         rescue Exception => e
           Rails.logger.warn "IB.realtime_bar_get failed: #{e}"
+          sleep 0.3
+          next
         end
 
         if table && table.count > 0
