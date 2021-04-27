@@ -33,7 +33,7 @@ module Clockwork
       when "5min"
         await = 20
       end
-      stop_time = Time.zone.now + 2.minutes - await.seconds
+      stop_time = Time.zone.now + 60.minutes - await.seconds
       req_times = 0
 
       # file = Rails.root.to_s + "/tmp/csv/#{contract}_#{version}.csv"
@@ -58,15 +58,15 @@ module Clockwork
       # end
 
       loop do
-        # if Time.zone.now > stop_time
-        #   ApplicationController.helpers.ib_disconnect(@ib) if @ib.isConnected()
-        #   break
-        # end
+        if Time.zone.now > stop_time
+          ApplicationController.helpers.ib_disconnect(@ib) if @ib.isConnected()
+          break
+        end
         @ib = ApplicationController.helpers.ib_connect if @ib.nil?
         @ib = ApplicationController.helpers.ib_connect if !@ib.nil? && !@ib.isConnected()
         MarketDataJob.perform_later('@ib', contract, version) if @ib
         req_times = req_times + 1
-        if req_times >= 200
+        if req_times >= 20
           ApplicationController.helpers.ib_disconnect(@ib) if @ib.isConnected()
           system( "god restart panda_ib-clock_2" )
           break
