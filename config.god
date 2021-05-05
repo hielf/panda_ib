@@ -77,7 +77,7 @@ end
 
     w.behavior(:clean_pid_file)
 
-    generic_monitoring(w, :cpu_limit => 80.percent, :memory_limit => 500.megabytes)
+    generic_monitoring(w, :cpu_limit => 80.percent, :memory_limit => 1000.megabytes)
   end
 
   env_2 = "clock_1"
@@ -93,7 +93,7 @@ end
 
     w.behavior(:clean_pid_file)
 
-    generic_monitoring(w, :cpu_limit => 80.percent, :memory_limit => 500.megabytes)
+    generic_monitoring(w, :cpu_limit => 80.percent, :memory_limit => 1000.megabytes)
   end
 
   env_3 = "clock_2"
@@ -125,7 +125,7 @@ end
 
     w.behavior(:clean_pid_file)
 
-    generic_monitoring(w, :cpu_limit => 80.percent, :memory_limit => 500.megabytes)
+    generic_monitoring(w, :cpu_limit => 80.percent, :memory_limit => 1000.megabytes)
   end
 
   env_5 = "clock_4"
@@ -141,7 +141,7 @@ end
 
     w.behavior(:clean_pid_file)
 
-    generic_monitoring(w, :cpu_limit => 80.percent, :memory_limit => 500.megabytes)
+    generic_monitoring(w, :cpu_limit => 80.percent, :memory_limit => 1000.megabytes)
   end
 
 end
