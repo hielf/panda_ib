@@ -90,12 +90,13 @@ def format_data(dataframe, period='1D', localize_zone='Asia/Shanghai', convert_z
     print(df3.atr.describe())
 
     df3['tr'] = df3['high'] - df3['low']
+    df3['tr_1'] = df3['tr'].shift(1)
+    df3['tr_1'].fillna(0, inplace=True)
+    df3['hb'] = df3['high'] + df3['tr_1'] * config_params['base_line']
+    df3['hh'] = df3['hb'] + df3['tr_1'] * config_params['break_line']
 
-    df3['hb'] = df3['high'] + df3['atr'] * config_params['base_line']
-    df3['hh'] = df3['hb'] + df3['atr'] * config_params['break_line']
-
-    df3['lb'] =  df3['low'] - df3['atr'] * config_params['base_line']
-    df3['ll'] =  df3['lb'] - df3['atr'] * config_params['break_line']
+    df3['lb'] =  df3['low'] - df3['tr_1'] * config_params['base_line']
+    df3['ll'] =  df3['lb'] - df3['tr_1'] * config_params['break_line']
 
     print(df3['tr'].describe())
 
@@ -262,15 +263,12 @@ class MyStrategy(bt.Strategy):
 
             return
 
-        # if self.data.datetime.time() > datetime.time(11, 55) and  self.data.datetime.time() < datetime.time(13, 30):
-        #     self.win_loss = 0
 
         if self.order:
             return
 
         # Check if we are in the market
 
-        margin_grid = 180000
         if not self.position :#and self.win_loss < 3:
             # if self.broker.getvalue() < margin_grid * 2:
             #     self.sizer.p.stake = 1
@@ -294,7 +292,7 @@ class MyStrategy(bt.Strategy):
             if  self.datahigh[0] > self.datas[0].hb_1[-1] :#and self.lines.atr2[0] < self.lines.atr2[-2]:
                  self.log('BUY CREATE, %.4f' % (self.dataclose[0]))
                  self.order = self.buy()
-                 self.max_price = self.dataclose[0] - self.datas[0].atr_1[-1]*1
+                 self.max_price = self.dataclose[0] - self.datas[0].atr_1[-2]*1
                  self.overcross = False
                  self.overcross_price = None
 
@@ -302,7 +300,7 @@ class MyStrategy(bt.Strategy):
             elif self.datalow[0] < self.datas[0].lb_1[-1] :#and self.lines.atr2[0] < self.lines.atr2[-2]:
                  self.log('SELL CREATE, %.4f' % self.dataclose[0])
                  self.order = self.sell()
-                 self.min_price = self.dataclose[0] + self.datas[0].atr_1[-1]*1
+                 self.min_price = self.dataclose[0] + self.datas[0].atr_1[-2]*1
                  self.overcross = False
                  self.overcross_price = None
 
@@ -310,8 +308,7 @@ class MyStrategy(bt.Strategy):
         else:
             if self. position.size > 0:
                 close_sig = False
-                self.max_price = max(self.max_price, self.dataclose[0] - self.datas[0].atr_1[-1]*3)
-
+                self.max_price = max(self.max_price, self.dataclose[0] - self.datas[0].atr_1[-2]*3)
 
                 if self.datahigh[0] > self.datas[0].hh_1[0]:
                     self.overcross = True
@@ -325,9 +322,10 @@ class MyStrategy(bt.Strategy):
                         self.log('BUY CLOSE A, %.4f, %4f' % (self.overcross_price, self.dataclose[0]))
                         close_sig = True
 
-                    if self.datas[0].hh_1[0] != self.datas[0].hh_1[-1]:
+                    if self.datas[0].hh_1[-1] != self.datas[0].hh_1[-2]:
                         self.overcross = False
                         self.overcross_price = None
+
 
                 if self.dataclose[0] < self.max_price:
                     self.log('BUY CLOSE B, %.4f' % self.dataclose[0])
@@ -341,7 +339,7 @@ class MyStrategy(bt.Strategy):
 
             if self. position.size < 0:
                 close_sig = False
-                self.min_price = min(self.min_price, self.dataclose[0] + self.datas[0].atr_1[-1]*3)
+                self.min_price = min(self.min_price, self.dataclose[0] + self.datas[0].atr_1[-2]*3)
 
                 if self.datalow[0] < self.datas[0].ll_1[0]:
                     self.overcross = True
@@ -355,9 +353,10 @@ class MyStrategy(bt.Strategy):
                         self.log('SELL CLOSE A, %.4f, %4f' % (self.overcross_price, self.dataclose[0]))
                         close_sig = True
 
-                    if self.datas[0].ll_1[0] != self.datas[0].ll_1[-1]:
+                    if self.datas[0].ll_1[-1] != self.datas[0].ll_1[-2]:
                         self.overcross = False
                         self.overcross_price = None
+
 
                 if self.dataclose[0] > self.min_price:
                     self.log('SELL CLOSE B, %.4f' % self.dataclose[0])
@@ -405,9 +404,9 @@ if __name__ == '__main__':
 
     cerebro.addwriter(bt.WriterFile, csv = True, out="{}_{}_{}.csv".format(config_params['output_prefix'], config_params['period'], uuid_str))
     # Set our desired cash start
-    cerebro.broker.setcash(250000.0)
+    cerebro.broker.setcash(1000000.0)
     # 设置每笔交易交易的股票数量
-    cerebro.addsizer(bt.sizers.FixedSize, stake=1)
+    cerebro.addsizer(bt.sizers.FixedSize, stake=4)
     # Set the commission
     cerebro.broker.setcommission(
         commission=30,
