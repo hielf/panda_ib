@@ -66,21 +66,21 @@ def format_data(dataframe, period='1D', localize_zone='Asia/Shanghai', convert_z
     df1 = dataframe
     df1.sort_index(inplace=True)
 
-    df1= df1.resample('1T').agg({'open': 'first',
+    df1= df1.resample('15S').agg({'open': 'first',
                                 'high': 'max',
                                 'low': 'min',
                                 'close': 'last', 'volume': 'sum'})
     df1 = df1.dropna(axis=0)
     df1['openinterest'] = 0
 
-    df2= df1.resample(period).agg({'open': 'first',
+    df2= df1.resample(period, closed='right',label='right').agg({'open': 'first',
                                 'high': 'max',
                                 'low': 'min',
                                 'close': 'last', 'volume': 'sum'})
 
     df3 = df2.dropna(axis=0) # 缺失值处理
 
-    df3['atr'] = ta.ATR(df3['high'] , df3['low'], df3['close'], timeperiod=6)
+    df3['atr'] = ta.ATR(df3['high'] , df3['low'], df3['close'], timeperiod=7)
 
     print(df3.atr.describe())
 
@@ -98,7 +98,6 @@ def format_data(dataframe, period='1D', localize_zone='Asia/Shanghai', convert_z
     df3['lb'] =  df3['low'] - df3['tr_1'] * config_params['base_line']
     df3['ll'] =  df3['lb'] - df3['tr_1'] * config_params['break_line']
 
-    print(df3['tr'].describe())
 
     for item in [ 'hb', 'hh', 'lb', 'll', 'high', 'low', 'atr', 'close']:
         df3[item+'_1'] = df3[item].shift(1)
@@ -106,22 +105,8 @@ def format_data(dataframe, period='1D', localize_zone='Asia/Shanghai', convert_z
     df3 = df3[[ 'hb', 'hh', 'lb', 'll', 'hb_1', 'hh_1', 'lb_1', 'll_1', 'high_1', 'low_1', 'atr_1', 'close_1']]
     df3.dropna(inplace=True)
 
-    df3 = df3.resample('1T').agg({  'hb': 'last',
-                                    'hh': 'last',
-                                    'lb': 'last',
-                                    'll': 'last',
-                                    'hb_1': 'last',
-                                    'hh_1': 'last',
-                                    'lb_1': 'last',
-                                    'll_1': 'last',
-                                    'high_1': 'last',
-                                    'low_1': 'last',
-                                    'atr_1': 'last',
-                                    'close_1': 'last',
-                                    })
+    df3 = df3.asfreq(freq='15S').ffill()
 
-
-    df3.ffill(inplace=True)
     df3.reset_index(inplace=True)
 
     df1.reset_index(inplace=True)
@@ -272,19 +257,19 @@ class MyStrategy(bt.Strategy):
 
         if not self.position :#and self.win_loss < 3:
 
-            if  self.datahigh[0] > self.datas[0].hb_1[-1] :#and self.lines.atr2[0] < self.lines.atr2[-2]:
+            if  self.datahigh[0] > self.datas[0].hb_1[0] :#and self.lines.atr2[0] < self.lines.atr2[-2]:
                  self.log('BUY CREATE, %.4f' % (self.dataclose[0]))
                  self.order = self.buy()
-                 self.max_price = self.dataclose[0] - self.datas[0].atr_1[-2]*1
+                 self.max_price = self.dataclose[0] - self.datas[0].atr_1[-2]*3
                  self.overcross = False
                  self.overcross_price = None
                  trades.append({'order': 'buy', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
 
-            elif self.datalow[0] < self.datas[0].lb_1[-1] :#and self.lines.atr2[0] < self.lines.atr2[-2]:
+            elif self.datalow[0] < self.datas[0].lb_1[0] :#and self.lines.atr2[0] < self.lines.atr2[-2]:
                  self.log('SELL CREATE, %.4f' % self.dataclose[0])
                  self.order = self.sell()
-                 self.min_price = self.dataclose[0] + self.datas[0].atr_1[-2]*1
+                 self.min_price = self.dataclose[0] + self.datas[0].atr_1[-2]*3
                  self.overcross = False
                  self.overcross_price = None
                  trades.append({'order': 'sell', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
@@ -293,7 +278,7 @@ class MyStrategy(bt.Strategy):
         else:
             if self. position.size > 0:
                 close_sig = False
-                self.max_price = max(self.max_price, self.dataclose[0] - self.datas[0].atr_1[-2]*3)
+                self.max_price = max(self.max_price, self.dataclose[0] - self.datas[0].atr_1[-2]*2)
 
 
                 if self.datahigh[0] > self.datas[0].hh_1[0]:
@@ -325,7 +310,7 @@ class MyStrategy(bt.Strategy):
 
             if self. position.size < 0:
                 close_sig = False
-                self.min_price = min(self.min_price, self.dataclose[0] + self.datas[0].atr_1[-2]*3)
+                self.min_price = min(self.min_price, self.dataclose[0] + self.datas[0].atr_1[-2]*2)
 
 
                 if self.datalow[0] < self.datas[0].ll_1[0]:

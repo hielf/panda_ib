@@ -2,7 +2,7 @@ data_source: ./data/hsi_fut.csv
 from_date: '2019-01-01 09:30:00'
 end_date: '2021-04-01 09:30:00'
 output_prefix: './output/hsifut_25p'
-period: 6T
-base_line: 0.25
+period: 5T
+base_line: 0.5
 break_line: 0.5
 memo: 6分钟周期 0.5 0.5
