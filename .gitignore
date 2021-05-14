@@ -39,3 +39,4 @@ config/wechat_menu.yml
 lib/python/easytrader/*.json
 lib/python/.proc
 lib/job/tmp/clockworkd.clock.output
+*.csv
