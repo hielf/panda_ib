@@ -1,8 +1,8 @@
-data_source: ./data/hsi_fut.csv
-from_date: '2019-01-01 09:30:00'
-end_date: '2021-04-01 09:30:00'
-output_prefix: './output/hsifut_25p'
+data_source: /Users/hielf/Downloads/20210513/hsi_15secs_202105130954.csv
+from_date: '2021-01-01 09:30:00'
+end_date: '2021-05-19 09:31:00'
+output_prefix: '/Users/hielf/workspace/projects/panda_ib/tmp'
 period: 5T
 base_line: 0.5
 break_line: 0.5
-memo: 6分钟周期 0.5 0.5
+memo: 5分钟周期 0.5 0.5

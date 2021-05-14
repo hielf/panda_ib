@@ -90,11 +90,6 @@ def format_data(dataframe, period='1D', localize_zone='Asia/Shanghai', convert_z
     df3['hb'] = df3['high'] + df3['tr_1'] * config_params['base_line']
     df3['hh'] = df3['hb'] + df3['tr_1'] * config_params['break_line']
 
-    df3['hb'] = df3['high'] + df3['atr'] * config_params['base_line']
-    df3['hh'] = df3['hb'] + df3['atr'] * config_params['break_line']
-
-    df3['lb'] =  df3['low'] - df3['atr'] * config_params['base_line']
-    df3['ll'] =  df3['lb'] - df3['atr'] * config_params['break_line']
     df3['lb'] =  df3['low'] - df3['tr_1'] * config_params['base_line']
     df3['ll'] =  df3['lb'] - df3['tr_1'] * config_params['break_line']
 
