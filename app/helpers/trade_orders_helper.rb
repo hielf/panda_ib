@@ -22,11 +22,13 @@ module TradeOrdersHelper
     clientId = rand(11..19999)
 
     begin
-      PyCall.exec("import sys
-modulename = 'ib_insync'
-if modulename not in sys.modules:
-    from ib_insync import *")
-      # PyCall.exec("from ib_insync import *")
+      PyCall.exec("import sys")
+      PyCall.exec("modulename = 'ib_insync'")
+      check = PyCall.eval("modulename not in sys.modules")
+      if check
+        sleep rand(0.1..0.7)
+        PyCall.exec("from ib_insync import *")
+      end
       PyCall.exec("ib_status = ''")
       PyCall.exec("ib = IB()")
       # PyCall.exec("ib.connect('#{ip}', #{port}, clientId=#{clientId}), 5")
