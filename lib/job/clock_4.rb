@@ -37,7 +37,7 @@ module Clockwork
         if table && table.count > 0
           current_time = Time.zone.now
           if current_time - table[-1]["date"].in_time_zone > 15
-            Rails.logger.warn "IB.realtime_bar_get start"
+            # Rails.logger.warn "IB.realtime_bar_get start"
             @ib = ApplicationController.helpers.ib_connect
             ApplicationController.helpers.realtime_market_data(contract, version) if @ib
           else
