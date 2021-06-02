@@ -47,65 +47,10 @@ class TradersJob < ApplicationJob
         Rails.logger.warn "ib job return: no market_data, #{Time.zone.now}"
         return
       end
-      # 5.times do
-      #   attempt += 1
-      #   market_data = ApplicationController.helpers.market_data(contract)
-      #   if market_data
-      #     break
-      #   else
-      #     Rails.logger.warn "await for 3 seconds.."
-      #     sleep 3
-      #     market_data = ApplicationController.helpers.market_data(contract, true) if attempt == 5
-      #   end
-      # end
-      # file = ApplicationController.helpers.index_to_csv(contract, market_data, true)
     end
 
-    last_risk = EventLog.where(log_type: "RISK").last.nil? ? Time.now-10.days : EventLog.where(log_type: "RISK").last.created_at
-    risk_diff_time = (run_time.beginning_of_minute - last_risk.to_time).abs / 60
-
-    if risk_diff_time <= 60
-      Rails.logger.warn "ib returned for last RISK at: #{last_risk.to_time.to_s}, #{Time.zone.now}"
-      return
-    end
-
-    current_time = run_time.strftime('%H:%M')
-    if (current_time >= "09:15" && current_time <= "15:50")
-      begin
-        @order, @amount, @move_order, @move_price = ApplicationController.helpers.py_check_position(contract, version) if file
-      rescue Exception => e
-        error_message = e.message
-      ensure
-        ApplicationController.helpers.document_files(contract, version, file) if file
-      end
-      Rails.logger.warn "ib py_check_position: #{@order} #{@amount.to_s}, #{Time.zone.now}" if @order != ""
-
-      # elr = EventLog.where("log_type = ? ", "RISK").last
-      # if elr
-      #   ot = case ENV['backtrader_version']
-      #   when '1min'
-      #     60
-      #   when '5min'
-      #     60
-      #   when '4min'
-      #     480
-      #   when '3min'
-      #     360
-      #   when '15sec'
-      #     30
-      #   else
-      #     120
-      #   end
-      #   elo = EventLog.where("log_type = ? AND created_at > ?", "ORDER", ot.seconds.ago).last
-      #   if elo && elo.order_type == @order && elr.id > elo.id
-      #     Rails.logger.warn "ib return for last RISK CLOSE: #{@order}, #{Time.zone.now}"
-      #     return
-      #   end
-      # end
-
-      OrdersJob.perform_later(@order, @amount, @move_order, @move_price) if ((@order != "" && @amount != 0) || @move_order != "" && @move_price != 0)
-
-    elsif (current_time > "09:00" && current_time < "09:15") || (current_time > "15:50" && current_time < "16:30")
+    # close
+    if (current_time > "09:00" && current_time < "09:15") || (current_time > "15:50" && current_time < "16:30")
       position = TraderPosition.init(contract).position
       begin
         job = OrdersJob.perform_later("CLOSE", position.abs, "", 0)
@@ -116,16 +61,34 @@ class TradersJob < ApplicationJob
         end
       rescue Exception => e
         error_message = e.message
+      ensure
+        return
       end
-    else
+    end
+
+    # risk
+    last_risk = EventLog.where(log_type: "RISK").last.nil? ? Time.now-10.days : EventLog.where(log_type: "RISK").last.created_at
+    risk_diff_time = (run_time.beginning_of_minute - last_risk.to_time).abs / 60
+
+    if risk_diff_time <= 60
+      Rails.logger.warn "ib returned for last RISK at: #{last_risk.to_time.to_s}, #{Time.zone.now}"
       return
     end
 
-    # if @order != "" && @amount != 0
-    #   ApplicationController.helpers.ib_order(@order, @amount, 0)
-    #   ApplicationController.helpers.close_position if @order == "CLOSE"
-    #   EventLog.create(content: "#{@order} #{@amount.to_s} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}")
-    # end
+    # trade
+    current_time = run_time.strftime('%H:%M')
+    if (current_time >= "09:15" && current_time <= "15:50")
+      begin
+        @order, @amount, @move_order, @move_price = ApplicationController.helpers.py_check_position(contract, version) if file
+      rescue Exception => e
+        error_message = e.message
+      ensure
+        ApplicationController.helpers.document_files(contract, version, file) if file
+      end
+      Rails.logger.warn "ib py_check_position: #{@order} #{@amount.to_s}, #{Time.zone.now}" if @order != ""
+      OrdersJob.perform_later(@order, @amount, @move_order, @move_price) if ((@order != "" && @amount != 0) || @move_order != "" && @move_price != 0)
+    end
+
   end
 
   private
