@@ -48,48 +48,24 @@ class RisksJob < ApplicationJob
 
         # Rails.logger.warn "ib risk loss_limit: #{loss_limit}, position: #{last_trade.action}, open: #{last_trade.price}, close: #{close}, unrealized_pnl: #{unrealized_pnl}, #{Time.zone.now}" if unrealized_pnl != 0
 
-        if ENV['backtrader_version'] != "15sec"
-          @profit_losses = ProfitLoss.latest(4)
-          pnls = @profit_losses.to_a.map{|pr| pr.unrealized_pnl}
-          # realized_pnl = Trade.where("time >= ? AND perm_id = ?", Date.today, last_trade.perm_id).sum(:realized_pnl)
-          if unrealized_pnl < loss_limit
-            amount = position
-            order = "CLOSE"
-            begin
-              Action.act(order, amount, 0, Time.zone.now) if order != ""
-            rescue Exception => e
-              Rails.logger.warn "Action create error: #{e}"
-            end
-
-            OrdersJob.set(wait: 2.seconds).perform_later("CLOSE", amount, "", 0)
-            begin
-              EventLog.create(log_type: "RISK", order_type: @order, content: "RISK unrealized_pnl: #{unrealized_pnl} CLOSE #{@order} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}") if order != "" && amount != 0
-            rescue Exception => e
-              Rails.logger.warn "EventLog create error: #{e}"
-            end
+        @profit_losses = ProfitLoss.latest(4)
+        pnls = @profit_losses.to_a.map{|pr| pr.unrealized_pnl}
+        # realized_pnl = Trade.where("time >= ? AND perm_id = ?", Date.today, last_trade.perm_id).sum(:realized_pnl)
+        if unrealized_pnl < loss_limit
+          amount = position
+          order = "CLOSE"
+          begin
+            Action.act(order, amount, 0, Time.zone.now) if order != ""
+          rescue Exception => e
+            Rails.logger.warn "Action create error: #{e}"
           end
 
-          # if unrealized_pnl.to_f < loss_limit.to_f
-          #   amount = position
-          #   order = "CLOSE"
-          #   OrdersJob.perform_later("CLOSE", amount, "", 0)
-          #   begin
-          #     EventLog.create(log_type: "RISK", order_type: @order, content: "RISK unrealized_pnl: #{unrealized_pnl} CLOSE #{@order} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}") if order != "" && amount != 0
-          #   rescue Exception => e
-          #     Rails.logger.warn "EventLog create error: #{e}"
-          #   end
-          # end
-
-          # if pnls && pnls.length >= 3 && ENV["backtrader_version"] != "5min"
-          #   if pnls[0] > 0 && pnls[0] < pnls[1] && pnls[1] < pnls[2]
-          #     order, amount = ApplicationController.helpers.close_position
-          #     begin
-          #       EventLog.create(log_type: "RISK", order_type: @order, content: "RISK profit: #{pnls[0]} CLOSE #{@order} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}") if order != "" && amount != 0
-          #     rescue Exception => e
-          #       Rails.logger.warn "EventLog create error: #{e}"
-          #     end
-          #   end
-          # end
+          OrdersJob.set(wait: 2.seconds).perform_later("CLOSE", amount, "", 0)
+          begin
+            EventLog.create(log_type: "RISK", order_type: @order, content: "RISK unrealized_pnl: #{unrealized_pnl} CLOSE #{@order} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}") if order != "" && amount != 0
+          rescue Exception => e
+            Rails.logger.warn "EventLog create error: #{e}"
+          end
         end
       end
     end
