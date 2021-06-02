@@ -61,6 +61,14 @@ class TradersJob < ApplicationJob
       # file = ApplicationController.helpers.index_to_csv(contract, market_data, true)
     end
 
+    last_risk = EventLog.where(log_type: "RISK").last.nil? ? Time.now-10.days : EventLog.where(log_type: "RISK").last.created_at
+    risk_diff_time = (run_time.beginning_of_minute - last_risk.to_time).abs / 60
+
+    if risk_diff_time <= 60
+      Rails.logger.warn "ib returned for last RISK at: #{last_risk.to_time.to_s}, #{Time.zone.now}"
+      return
+    end
+
     current_time = run_time.strftime('%H:%M')
     if (current_time >= "09:15" && current_time <= "15:50")
       begin
@@ -71,14 +79,6 @@ class TradersJob < ApplicationJob
         ApplicationController.helpers.document_files(contract, version, file) if file
       end
       Rails.logger.warn "ib py_check_position: #{@order} #{@amount.to_s}, #{Time.zone.now}" if @order != ""
-
-      last_risk = EventLog.where(log_type: "RISK").last.nil? ? Time.now-10.days : EventLog.where(log_type: "RISK").last.created_at
-      risk_diff_time = (run_time.beginning_of_minute - last_risk.to_time).abs / 60
-
-      if risk_diff_time <= 60
-        Rails.logger.warn "ib returned for last RISK at: #{last_risk.to_time.to_s}, #{Time.zone.now}"
-        return
-      end
 
       # elr = EventLog.where("log_type = ? ", "RISK").last
       # if elr
