@@ -49,6 +49,7 @@ class TradersJob < ApplicationJob
       end
     end
 
+    current_time = run_time.strftime('%H:%M')
     # close
     if (current_time > "09:00" && current_time < "09:15") || (current_time > "15:50" && current_time < "16:30")
       position = TraderPosition.init(contract).position
@@ -76,7 +77,6 @@ class TradersJob < ApplicationJob
     end
 
     # trade
-    current_time = run_time.strftime('%H:%M')
     if (current_time >= "09:15" && current_time <= "15:50")
       begin
         @order, @amount, @move_order, @move_price = ApplicationController.helpers.py_check_position(contract, version) if file
