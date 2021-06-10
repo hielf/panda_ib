@@ -15,6 +15,7 @@ class RisksJob < ApplicationJob
     @order = ""
     if (current_time >= "09:15" && current_time <= "12:00") || (current_time >= "13:00" && current_time <= "16:30")
       loss_limit = ENV["total_asset"].to_f * 0.006 * -1
+      loss_limit_total = ENV["total_asset"].to_f * 0.01 * -1
       last_trade = Trade.last
       position = TraderPosition.init(@contract).position
       csv = Rails.root.to_s + "/tmp/csv/#{@contract}_#{@version}.csv"
@@ -63,6 +64,24 @@ class RisksJob < ApplicationJob
           OrdersJob.set(wait: 2.seconds).perform_later("CLOSE", amount, "", 0)
           begin
             EventLog.create(log_type: "RISK", order_type: @order, content: "RISK unrealized_pnl: #{unrealized_pnl} CLOSE #{@order} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}") if order != "" && amount != 0
+          rescue Exception => e
+            Rails.logger.warn "EventLog create error: #{e}"
+          end
+        end
+
+        today_pnl = Trade.today_pnl
+        if today_pnl < loss_limit_total
+          amount = position
+          order = "CLOSE"
+          begin
+            Action.act(order, amount, 0, Time.zone.now) if order != ""
+          rescue Exception => e
+            Rails.logger.warn "Action create error: #{e}"
+          end
+
+          OrdersJob.set(wait: 2.seconds).perform_later("CLOSE", amount, "", 0)
+          begin
+            EventLog.create(log_type: "STOP", order_type: @order, content: "RISK unrealized_pnl: #{unrealized_pnl} CLOSE #{@order} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}") if order != "" && amount != 0
           rescue Exception => e
             Rails.logger.warn "EventLog create error: #{e}"
           end

@@ -76,6 +76,14 @@ class TradersJob < ApplicationJob
       return
     end
 
+    # stop
+    last_stop = EventLog.where(log_type: "STOP").last.nil? ? Time.now-10.days : EventLog.where(log_type: "STOP").last.created_at
+    if last_stop.to_date == Date.today
+      Rails.logger.warn "ib returned for last STOP at: #{last_stop.to_time.to_s}, #{Time.zone.now}"
+      return
+    end
+
+
     # trade
     if (current_time >= "09:15" && current_time <= "15:50")
       begin
