@@ -14,8 +14,8 @@ class RisksJob < ApplicationJob
     current_time = Time.zone.now.strftime('%H:%M')
     @order = ""
     if (current_time >= "09:15" && current_time <= "12:00") || (current_time >= "13:00" && current_time <= "16:30")
-      loss_limit = ENV["total_asset"].to_f * 0.006 * -1
-      loss_limit_total = ENV["total_asset"].to_f * 0.01 * -1
+      loss_limit = ENV["total_asset"].to_f * 0.0025 * -1
+      loss_limit_total = ENV["total_asset"].to_f * 0.005 * -1
       last_trade = Trade.last
       position = TraderPosition.init(@contract).position
       csv = Rails.root.to_s + "/tmp/csv/#{@contract}_#{@version}.csv"
