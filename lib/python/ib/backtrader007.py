@@ -89,6 +89,13 @@ def format_data(dataframe, period='1D', localize_zone='Asia/Shanghai', convert_z
 
     print(df3.atr.describe())
 
+    df3['slowk'], df3['slowd'] = ta.STOCH(
+			            df3['high'] , df3['low'], df3['close'],
+                        fastk_period=9,
+                        slowk_period=3,
+                        slowk_matype=0,
+                        slowd_period=3,slowd_matype=0)
+
     df3['tr'] = df3['high'] - df3['low']
     df3['tr_1'] = df3['tr'].shift(1)
     df3['tr_1'].fillna(0, inplace=True)
@@ -98,10 +105,13 @@ def format_data(dataframe, period='1D', localize_zone='Asia/Shanghai', convert_z
     df3['lb'] =  df3['low'] - df3['tr_1'] * config_params['base_line']
     df3['ll'] =  df3['lb'] - df3['tr_1'] * config_params['break_line']
 
-    for item in [ 'hb', 'hh', 'lb', 'll', 'high', 'low', 'atr', 'close']:
+
+
+
+    for item in [ 'hb', 'hh', 'lb', 'll', 'high', 'low', 'atr', 'close', 'slowk', 'slowd']:
         df3[item+'_1'] = df3[item].shift(1)
 
-    df3 = df3[[ 'hb', 'hh', 'lb', 'll', 'hb_1', 'hh_1', 'lb_1', 'll_1', 'high_1', 'low_1', 'atr_1', 'close_1']]
+    df3 = df3[[ 'hb', 'hh', 'lb', 'll', 'hb_1', 'hh_1', 'lb_1', 'll_1', 'high_1', 'low_1', 'atr_1', 'close_1', 'slowk', 'slowd']]
     df3.dropna(inplace=True)
 
     df3 = df3.asfreq(freq='15S').ffill()
@@ -118,7 +128,7 @@ def format_data(dataframe, period='1D', localize_zone='Asia/Shanghai', convert_z
 
 class PandasDataExtend(PandasData):
     # 增加线
-    lines = ('hb', 'hh', 'lb', 'll', 'hb_1', 'hh_1', 'lb_1', 'll_1','high_1', 'low_1', 'atr_1', 'close_1', 'ema',)
+    lines = ('hb', 'hh', 'lb', 'll', 'hb_1', 'hh_1', 'lb_1', 'll_1','high_1', 'low_1', 'atr_1', 'close_1', 'ema','slowk', 'slowd',)
 
     # 第几列, 或者直接给列名
     params = (   ( 'hb', 'hb'),
@@ -134,6 +144,8 @@ class PandasDataExtend(PandasData):
                  ( 'atr_1',  'atr_1'),
                  ('close_1',  'close_1'),
                  ('ema',  'ema'),
+                 ('slowk',  'slowk'),
+                 ('slowd',  'slowd'),
                    )  # 上市天数
 
 # Create a Stratey
@@ -254,6 +266,7 @@ class MyStrategy(bt.Strategy):
         # Check if we are in the market
 
         if not self.position :#and self.win_loss < 3:
+            # margin_grid =30000
             # if self.broker.getvalue() < margin_grid * 2:
             #     self.sizer.p.stake = 1
 
@@ -273,7 +286,7 @@ class MyStrategy(bt.Strategy):
             #     self.sizer.p.stake = 8
 
 
-            if  self.datahigh[0] > self.datas[0].hb_1[0] :#and self.lines.atr2[0] < self.lines.atr2[-2]:
+            if  self.datahigh[0] > self.datas[0].hb_1[0] :
                  self.log('BUY CREATE, %.4f' % (self.dataclose[0]))
                  self.order = self.buy()
                  self.max_price = self.dataclose[0] - self.datas[0].atr_1[-2]*3
@@ -281,7 +294,7 @@ class MyStrategy(bt.Strategy):
                  self.overcross_price = None
 
 
-            elif self.datalow[0] < self.datas[0].lb_1[0] :#and self.lines.atr2[0] < self.lines.atr2[-2]:
+            elif self.datalow[0] < self.datas[0].lb_1[0] :
                  self.log('SELL CREATE, %.4f' % self.dataclose[0])
                  self.order = self.sell()
                  self.min_price = self.dataclose[0] + self.datas[0].atr_1[-2]*3
@@ -292,13 +305,21 @@ class MyStrategy(bt.Strategy):
         else:
             if self. position.size > 0:
                 close_sig = False
+
+                if self.datas[0].slowd[-1] > 50 and self.datas[0].slowk[-1] > self.datas[0].slowd[-1]:
+                    brate = 1.0002
+                else:
+                    brate = 1
+
+                if self.datas[0].slowd[-1] > 80:
+                    brate = 1.0003
                 self.max_price = max(self.max_price, self.dataclose[0] - self.datas[0].atr_1[-2]*2)
 
-                if self.datahigh[0] > self.datas[0].hh_1[0]:
+                if self.datahigh[0] > self.datas[0].hh_1[0] * brate:
                     self.overcross = True
 
                     if not self.overcross_price:
-                        self.overcross_price = self.datas[0].hh_1[0]
+                        self.overcross_price = self.datas[0].hh_1[0] * brate
 
                 if self.overcross_price:
 
@@ -311,7 +332,7 @@ class MyStrategy(bt.Strategy):
                         self.overcross_price = None
 
 
-                if self.dataclose[0] < self.max_price:
+                if self.dataopen[0] < self.max_price:
                     self.log('BUY CLOSE B, %.4f' % self.dataclose[0])
                     close_sig = True
 
@@ -323,13 +344,22 @@ class MyStrategy(bt.Strategy):
 
             if self. position.size < 0:
                 close_sig = False
+
+                if self.datas[0].slowd[-1] < 50 and self.datas[0].slowk[-1] < self.datas[0].slowd[-1]:
+                    brate = 1
+                else:
+                    brate = (1 - 0.0001)
+
+                if self.datas[0].slowd[-1] < 20:
+                    brate = 1.0001
+
                 self.min_price = min(self.min_price, self.dataclose[0] + self.datas[0].atr_1[-2]*2)
 
-                if self.datalow[0] < self.datas[0].ll_1[0]:
+                if self.datalow[0] < self.datas[0].ll_1[0] * brate:
                     self.overcross = True
 
                     if not self.overcross_price:
-                        self.overcross_price = self.datas[0].ll_1[0]
+                        self.overcross_price = self.datas[0].ll_1[0] * brate
 
                 if self.overcross_price:
 
@@ -342,7 +372,7 @@ class MyStrategy(bt.Strategy):
                         self.overcross_price = None
 
 
-                if self.dataclose[0] > self.min_price:
+                if self.dataopen[0] > self.min_price:
                     self.log('SELL CLOSE B, %.4f' % self.dataclose[0])
                     close_sig = True
 
