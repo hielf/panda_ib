@@ -435,12 +435,6 @@ if __name__ == '__main__':
 
     # Add the Data Feed to Cerebro
     cerebro.adddata(data)
-
-
-    uuid_str = uuid.uuid4().hex
-
-    cerebro.addwriter(bt.WriterFile, csv = True, out="{}_{}_{}.csv".format(config_params['output_prefix'],
-    ['period'], uuid_str))
     # Set our desired cash start
     cerebro.broker.setcash(1000000.0)
     # 设置每笔交易交易的股票数量
