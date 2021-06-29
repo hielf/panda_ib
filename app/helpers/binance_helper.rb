@@ -1,6 +1,5 @@
 module BinanceHelper
 
-  # ["ETH", "BTC", "LTC", "EOS", "XMR", "DODO", "ONT", "VET", "AAVE", "SUSHI", "YFI", "FTM", "CRV"]
   # <base_url>/data/spot/monthly/klines/<symbol_in_uppercase>/<interval>/<symbol_in_uppercase>-<interval>-<year>-<month>.zip
   # https://data.binance.vision/data/futures/um/daily/trades/BTCBUSD/BTCBUSD-trades-2021-06-27.zip
 
@@ -41,6 +40,7 @@ module BinanceHelper
 
           table_name = binance_table(symbol_in_uppercase, interval)
           count = binance_data_insert(zip_file, table_name)
+          Rails.logger.warn "Binance get_data #{symbol_in_uppercase} #{count} rows"
         rescue Exception => e
           Rails.logger.warn "Binance get_data failed: #{e}"
         end
@@ -73,7 +73,7 @@ module BinanceHelper
 
   def binance_data_insert(file, table_name)
     # file = "/Users/hielf/workspace/projects/panda_ib/tmp/csv/binance/20210629/ETHBTC-1m-2021-06-27.zip"
-    # require 'zip'
+    require 'zip'
     fpath = ""
     begin
       Zip::File.open(file, create: true) do |zip_file|
