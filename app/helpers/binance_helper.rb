@@ -6,7 +6,7 @@ module BinanceHelper
 
   # ApplicationController.helpers.binance_data
   def binance_data
-    (1.year.ago.to_date..Date.today).each do |dt|
+    (4.months.ago.to_date..Date.today).each do |dt|
       p [dt.strftime("%Y"), dt.strftime("%m"), dt.strftime("%d"), "1m"]
       get_data(dt.strftime("%Y"), dt.strftime("%m"), dt.strftime("%d"), "1m")
     end
