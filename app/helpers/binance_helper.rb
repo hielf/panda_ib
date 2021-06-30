@@ -19,7 +19,8 @@ module BinanceHelper
     res = HTTParty.get('https://api.binance.com/api/v1/exchangeInfo')
     json = JSON.parse res.body
     key_symbols = ["ETH", "BTCUSD", "BTCBUSD", "LTC", "EOS", "XMR", "DODO", "ONT", "VET", "AAVE", "SUSHI", "YFI", "FTM", "CRV"]
-    json["symbols"].each do |sym|
+    # json["symbols"].each do |sym|
+    Parallel.each(json["symbols"], in_processes: 4) do |sym|
       symbol_in_uppercase = sym["symbol"]
       # p symbol_in_uppercase
       # p key_symbols.any? { |word| symbol_in_uppercase.include?(word) }
@@ -96,7 +97,7 @@ module BinanceHelper
         sql = "insert into #{table_name} select '#{Time.at row[0].to_i / 1000}', #{row[1]}, #{row[2]}, #{row[3]}, #{row[4]}, #{row[5]}, '#{Time.at row[6].to_i / 1000}', #{row[7]}, #{row[8]}, #{row[9]}, #{row[10]}, #{row[11]} WHERE NOT EXISTS (select '#{Time.at row[0].to_i / 1000}' from #{table_name} where open_time = '#{Time.at row[0].to_i / 1000}');"
         postgres.exec(sql)
         count = count + 1
-        p count
+        # p count
       end
     rescue PG::Error => e
       Rails.logger.warn e.message
