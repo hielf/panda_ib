@@ -18,7 +18,7 @@ module BinanceHelper
     # day = "27"
     res = HTTParty.get('https://api.binance.com/api/v1/exchangeInfo')
     json = JSON.parse res.body
-    key_symbols = ["ETH", "BTC", "LTC", "EOS", "XMR", "DODO", "ONT", "VET", "AAVE", "SUSHI", "YFI", "FTM", "CRV"]
+    key_symbols = ["ETH", "BTCUSD", "BTCBUSD", "LTC", "EOS", "XMR", "DODO", "ONT", "VET", "AAVE", "SUSHI", "YFI", "FTM", "CRV"]
     json["symbols"].each do |sym|
       symbol_in_uppercase = sym["symbol"]
       # p symbol_in_uppercase
@@ -30,7 +30,7 @@ module BinanceHelper
         kilnes_url = "#{base_url}/data/spot/daily/klines/#{symbol_in_uppercase}/#{interval}/#{symbol_in_uppercase}-#{interval}-#{year}-#{month}-#{day}.zip"
         begin
           download = open(kilnes_url)
-          dir = "#{Rails.root.to_s}/tmp/csv/binance/#{Time.zone.now.strftime("%Y%m%d")}"
+          dir = "#{Rails.root.to_s}/tmp/csv/binance/#{year+month+day}"
           file_name = "#{symbol_in_uppercase}-#{interval}-#{year}-#{month}-#{day}.zip"
           unless File.directory?(dir)
             FileUtils.mkdir_p(dir)
