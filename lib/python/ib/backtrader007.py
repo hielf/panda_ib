@@ -455,5 +455,5 @@ if __name__ == '__main__':
      print(date, value)
 
 
-    figure = cerebro.plot()[0][0]
-    figure.savefig("{}_{}_{}.png".format(config_params['output_prefix'], config_params['period'], uuid_str))
+    # figure = cerebro.plot()[0][0]
+    # figure.savefig("{}_{}_{}.png".format(config_params['output_prefix'], config_params['period'], uuid_str))

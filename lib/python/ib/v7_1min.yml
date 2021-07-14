@@ -1,7 +1,7 @@
-data_source: ./data/hsi_fut.csv
-from_date: '2021-01-01 09:30:00'
-end_date: '2021-05-19 09:31:00'
-output_prefix: './output/hsifut'
+data_source: /Users/hielf/Downloads/20210702/hsi_1min_202107021545.csv
+from_date: '2021-06-29 09:30:00'
+end_date: '2021-07-02 15:31:00'
+output_prefix: '/Users/hielf/workspace/projects/panda_ib/tmp'
 period: 5T
 base_line: 0.5
 break_line: 0.5

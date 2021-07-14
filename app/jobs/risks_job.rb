@@ -29,7 +29,7 @@ class RisksJob < ApplicationJob
       end
 
       if last_trade && last_trade.realized_pnl == 0 && position != 0 && !@market_data.empty?
-        return if @market_data.last["date"].to_time != Time.zone.now.beginning_of_minute
+        return if @market_data.last["date"].to_time.beginning_of_minute != Time.zone.now.beginning_of_minute
 
         @order = last_trade.action
         close = @market_data.last["close"].to_f
@@ -68,23 +68,23 @@ class RisksJob < ApplicationJob
             Rails.logger.warn "EventLog create error: #{e}"
           end
         end
+      end
 
-        today_pnl = Trade.today_pnl
-        if today_pnl < loss_limit_total
-          amount = position
-          order = "CLOSE"
-          begin
-            Action.act(order, amount, 0, Time.zone.now) if order != ""
-          rescue Exception => e
-            Rails.logger.warn "Action create error: #{e}"
-          end
+      today_pnl = Trade.today_pnl
+      if today_pnl < loss_limit_total
+        amount = position
+        order = "CLOSE"
+        begin
+          Action.act(order, amount, 0, Time.zone.now) if order != ""
+        rescue Exception => e
+          Rails.logger.warn "Action create error: #{e}"
+        end
 
-          OrdersJob.set(wait: 2.seconds).perform_later("CLOSE", amount, "", 0)
-          begin
-            EventLog.create(log_type: "STOP", order_type: @order, content: "STOP today_pnl: #{today_pnl} CLOSE at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}")
-          rescue Exception => e
-            Rails.logger.warn "EventLog create error: #{e}"
-          end
+        OrdersJob.set(wait: 2.seconds).perform_later("CLOSE", amount, "", 0)
+        begin
+          EventLog.create(log_type: "STOP", order_type: @order, content: "STOP today_pnl: #{today_pnl} CLOSE at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}")
+        rescue Exception => e
+          Rails.logger.warn "EventLog create error: #{e}"
         end
       end
     end
