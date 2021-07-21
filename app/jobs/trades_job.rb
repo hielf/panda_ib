@@ -11,6 +11,8 @@ class TradesJob < ApplicationJob
     if @ib.isConnected()
       data = ApplicationController.helpers.ib_trades(contract)
       ApplicationController.helpers.trades_logger(data)
+    else
+      SmsJob.perform_later ENV["admin_phone"], ENV["superme_user"] + " " + ENV["backtrader_version"], "无法连接"
     end
   end
 

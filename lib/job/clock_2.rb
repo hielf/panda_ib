@@ -75,9 +75,19 @@ module Clockwork
       end
     end
 
+    if job == 'IB.trades_data'
+      @contract = ENV['contract']
+      @version = ENV['backtrader_version']
+      run_time = Time.zone.now
+      current_time = run_time.strftime('%H:%M')
+      if ((current_time >= "09:15" && current_time <= "12:00") || (current_time >= "13:00" && current_time <= "15:55"))
+        job = PositionsJob.set(wait: 2.seconds).perform_later(@contract, @version)
+      end
+    end
   end
 
   every(60.minute, 'IB.market_data', :thread => true)
+  every(5.minute, 'IB.trades_data', :thread => true)
 
   # every(1.minute, 'timing', :skip_first_run => true, :thread => true)
   # every(1.hour, 'hourly.job')

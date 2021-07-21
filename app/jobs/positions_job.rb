@@ -8,6 +8,10 @@ class PositionsJob < ApplicationJob
     @version = args[1]
 
     @ib = ApplicationController.helpers.ib_connect if @ib.nil? || !@ib.isConnected()
+
+    if @ib.nil? || !@ib.isConnected()
+      SmsJob.perform_later ENV["admin_phone"], ENV["superme_user"] + " " + ENV["backtrader_version"], "无法连接"
+    end
   end
 
   private
