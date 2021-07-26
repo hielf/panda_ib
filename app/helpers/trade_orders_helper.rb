@@ -460,7 +460,7 @@ module TradeOrdersHelper
       list = PyCall.eval("df")
 
       #
-      # PyCall.exec("engine = create_engine('postgresql+psycopg2://chesp:Chesp92J5@rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com:3432/panda_quant',echo=True,client_encoding='utf8')")
+      # PyCall.exec("engine = create_engine('postgresql+psycopg2://chesp:Chesp2021@postgres.ripple-tech.com:5432/panda_quant',echo=True,client_encoding='utf8')")
       # PyCall.exec("df.tail(2000).to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');")
       # PyCall.exec("conn = psycopg2.connect(host='#{ENV['quant_db_host']}', dbname='#{ENV['quant_db_name']}', user='#{ENV['quant_db_user']}', password='#{ENV['quant_db_pwd']}', port='#{ENV['quant_db_port']}')")
       # PyCall.exec("cur = conn.cursor()")

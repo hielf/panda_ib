@@ -42,7 +42,7 @@ def get_index_1min(date_time):
         print("got contract %s" % str(contract))
         # print(df[['date', 'open', 'high', 'low', 'close']])
 
-        engine = create_engine('postgresql+psycopg2://chesp:Chesp92J5@rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com:3432/panda_quant',echo=True,client_encoding='utf8')
+        engine = create_engine('postgresql+psycopg2://chesp:Chesp2021@postgres.ripple-tech.com:5432/panda_quant',echo=True,client_encoding='utf8')
 
 
         print("waiting for collect %s" % table)
@@ -52,7 +52,7 @@ def get_index_1min(date_time):
         #不再清空表
         # sql = "delete from %s;" % table
 
-        conn = psycopg2.connect("host='rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com' dbname='panda_quant' user='chesp' password='Chesp92J5' port='3432'")
+        conn = psycopg2.connect("host='postgres.ripple-tech.com' dbname='panda_quant' user='chesp' password='Chesp2021' port='5432'")
         cur = conn.cursor()
         # cur.execute(sql, (10, 1000000, False, False))
         # conn.commit()

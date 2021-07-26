@@ -1,7 +1,7 @@
 dir = Rails.root.to_s + "/tmp/csv/"
 dump_file = dir + "/" + "dump_sql.sql"
 
-postgres = PG.connect :host => 'rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com', :port => '3432', :dbname => 'panda_quant', :user => 'chesp', :password => ''
+postgres = PG.connect :host => 'postgres.ripple-tech.com', :port => '5432', :dbname => 'panda_quant', :user => 'chesp', :password => ''
 
 sql = "select max(date) as date from hsi_fut;"
 res = postgres.exec(sql)

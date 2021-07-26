@@ -22,7 +22,7 @@ def get_index_15sec(end_datetime):
     print("start 15sec collect %s" % str(end_datetime))
     for contract in contracts:
         print(str(contract))
-        conn = psycopg2.connect("host='rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com' dbname='panda_quant' user='chesp' password='Chesp92J5' port='3432'")
+        conn = psycopg2.connect("host='postgres.ripple-tech.com' dbname='panda_quant' user='chesp' password='Chesp2021' port='5432'")
         cur = conn.cursor()
         if contract.secType == 'CASH':
             if contract.symbol == 'USD' and contract.currency == 'JPY':
@@ -48,7 +48,7 @@ def get_index_15sec(end_datetime):
         df = util.df(bars)
         print("got bars %s" % str(bars))
         print("got contract %s" % str(contract))
-        engine = create_engine('postgresql+psycopg2://chesp:Chesp92J5@rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com:3432/panda_quant',echo=True,client_encoding='utf8')
+        engine = create_engine('postgresql+psycopg2://chesp:Chesp2021@postgres.ripple-tech.com:5432/panda_quant',echo=True,client_encoding='utf8')
         print("waiting for collect %s" % table)
         try:
             df.to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');
@@ -64,7 +64,7 @@ def get_index_30sec(end_date):
     print("start 30sec collect %s" % str(end_date))
     for contract in contracts:
         print(str(contract))
-        conn = psycopg2.connect("host='rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com' dbname='panda_quant' user='chesp' password='Chesp92J5' port='3432'")
+        conn = psycopg2.connect("host='postgres.ripple-tech.com' dbname='panda_quant' user='chesp' password='Chesp2021' port='5432'")
         cur = conn.cursor()
         if contract.secType == 'CASH':
             if contract.symbol == 'USD' and contract.currency == 'JPY':
@@ -90,7 +90,7 @@ def get_index_30sec(end_date):
         df = util.df(bars)
         print("got bars %s" % str(bars))
         print("got contract %s" % str(contract))
-        engine = create_engine('postgresql+psycopg2://chesp:Chesp92J5@rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com:3432/panda_quant',echo=True,client_encoding='utf8')
+        engine = create_engine('postgresql+psycopg2://chesp:Chesp2021@postgres.ripple-tech.com:5432/panda_quant',echo=True,client_encoding='utf8')
         print("waiting for collect %s" % table)
         try:
             df.to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');
@@ -106,7 +106,7 @@ def get_index_1min(end_date):
     print("start 1min collect %s" % str(end_date))
     for contract in contracts:
         print(str(contract))
-        conn = psycopg2.connect("host='rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com' dbname='panda_quant' user='chesp' password='Chesp92J5' port='3432'")
+        conn = psycopg2.connect("host='postgres.ripple-tech.com' dbname='panda_quant' user='chesp' password='Chesp2021' port='5432'")
         cur = conn.cursor()
         if contract.secType == 'CASH':
             if contract.symbol == 'USD' and contract.currency == 'JPY':
@@ -132,7 +132,7 @@ def get_index_1min(end_date):
         df = util.df(bars)
         print("got bars %s" % str(bars))
         print("got contract %s" % str(contract))
-        engine = create_engine('postgresql+psycopg2://chesp:Chesp92J5@rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com:3432/panda_quant',echo=True,client_encoding='utf8')
+        engine = create_engine('postgresql+psycopg2://chesp:Chesp2021@postgres.ripple-tech.com:5432/panda_quant',echo=True,client_encoding='utf8')
         print("waiting for collect %s" % table)
         try:
             df.to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');
@@ -149,7 +149,7 @@ def get_index_5min(end_date):
     print("start 5min collect %s" % str(end_date))
     for contract in contracts:
         print(str(contract))
-        conn = psycopg2.connect("host='rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com' dbname='panda_quant' user='chesp' password='Chesp92J5' port='3432'")
+        conn = psycopg2.connect("host='postgres.ripple-tech.com' dbname='panda_quant' user='chesp' password='Chesp2021' port='5432'")
         cur = conn.cursor()
         if contract.secType == 'CASH':
             if contract.symbol == 'USD' and contract.currency == 'JPY':
@@ -175,7 +175,7 @@ def get_index_5min(end_date):
         df = util.df(bars)
         print("got bars %s" % str(bars))
         print("got contract %s" % str(contract))
-        engine = create_engine('postgresql+psycopg2://chesp:Chesp92J5@rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com:3432/panda_quant',echo=True,client_encoding='utf8')
+        engine = create_engine('postgresql+psycopg2://chesp:Chesp2021@postgres.ripple-tech.com:5432/panda_quant',echo=True,client_encoding='utf8')
         print("waiting for collect %s" % table)
         try:
             df.to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');
@@ -190,7 +190,7 @@ def get_index_5min(end_date):
 
 # def get_index_30min(date_time):
 #     for contract in contracts:
-#         conn = psycopg2.connect("host='rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com' dbname='panda_quant' user='chesp' password='Chesp92J5' port='3432'")
+#         conn = psycopg2.connect("host='postgres.ripple-tech.com' dbname='panda_quant' user='chesp' password='Chesp2021' port='5432'")
 #         cur = conn.cursor()
 #         if contract.secType == 'CASH':
 #             bars = ib.reqHistoricalData(contract, endDateTime='', durationStr='45 D', barSizeSetting='30 mins', whatToShow='MIDPOINT', useRTH=True)
@@ -214,7 +214,7 @@ def get_index_5min(end_date):
 #         df = util.df(bars)
 #         # print(df[['date', 'open', 'high', 'low', 'close']])
 #
-#         engine = create_engine('postgresql+psycopg2://chesp:Chesp92J5@rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com:3432/panda_quant',echo=True,client_encoding='utf8')
+#         engine = create_engine('postgresql+psycopg2://chesp:Chesp2021@postgres.ripple-tech.com:5432/panda_quant',echo=True,client_encoding='utf8')
 #
 #         print("collecting %s" % table)
 #         # get last 2000 bars
@@ -234,7 +234,7 @@ def get_index_5min(end_date):
 if __name__ == '__main__':
     now = datetime.datetime.now()
     # d1 = datetime.datetime(2020,12,16,0,0)
-    conn = psycopg2.connect("host='rm-2zelv192ymyi9680vo.pg.rds.aliyuncs.com' dbname='panda_quant' user='chesp' password='Chesp92J5' port='3432'")
+    conn = psycopg2.connect("host='postgres.ripple-tech.com' dbname='panda_quant' user='chesp' password='Chesp2021' port='5432'")
     cur = conn.cursor()
     sql = "select max(date) from hsi;"
     cur.execute(sql)
