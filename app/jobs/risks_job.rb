@@ -63,7 +63,7 @@ class RisksJob < ApplicationJob
 
           OrdersJob.set(wait: 2.seconds).perform_later("CLOSE", amount, "", 0)
           begin
-            EventLog.create(log_type: "RISK", order_type: @order, content: "RISK unrealized_pnl: #{unrealized_pnl} CLOSE #{@order} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}") if order != "" && amount != 0
+            EventLog.find_or_create_by(log_type: "RISK", order_type: @order, content: "RISK unrealized_pnl: #{unrealized_pnl} CLOSE #{@order} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}") if order != "" && amount != 0
           rescue Exception => e
             Rails.logger.warn "EventLog create error: #{e}"
           end
@@ -82,7 +82,7 @@ class RisksJob < ApplicationJob
 
         OrdersJob.set(wait: 2.seconds).perform_later("CLOSE", amount, "", 0)
         begin
-          EventLog.create(log_type: "STOP", order_type: @order, content: "STOP today_pnl: #{today_pnl} CLOSE at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}")
+          EventLog.find_or_create_by(log_type: "STOP", order_type: @order, content: "STOP today_pnl: #{today_pnl} CLOSE at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}")
         rescue Exception => e
           Rails.logger.warn "EventLog create error: #{e}"
         end

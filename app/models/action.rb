@@ -5,6 +5,6 @@ class Action < ApplicationRecord
   end
 
   def self.act(order, amount, price, time)
-    create(order: order, amount: amount, price: price, action_time: time)
+    create(order: order, amount: amount, price: price, action_time: time) if amount != 0
   end
 end
