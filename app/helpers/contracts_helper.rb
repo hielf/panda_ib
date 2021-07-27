@@ -236,6 +236,7 @@ module ContractsHelper
     # end_time = ("2021-01-11 11:23:05".to_time - 1.minute).beginning_of_minute.to_time
     begin_time = 10.days.before(end_time)
     data = Array.new()
+    action = Action.today.last
     3.times do
       system( "cd #{Rails.root.to_s + '/lib/python/ib'} && python3 #{ENV["ib_version"]}_#{ENV["backtrader_version"]}.py '#{csv}' '#{json}' '#{begin_time}' '#{end_time}' '#{ENV["ib_version"]}_#{ENV["backtrader_version"]}.yml'" )
       begin
@@ -267,8 +268,7 @@ module ContractsHelper
         120
       end
       if time_diff.abs <= ot || data.last["order"].upcase == "CLOSE"
-        action = Action.today.last
-        Rails.logger.warn "ib position: #{position} last_order: #{data.last["order"].upcase} last_action: #{action ? action.order : ""}@#{action ? action.action_time : ""}"
+        Rails.logger.warn "ib position: #{position} last_order: #{data.last["order"].upcase} prev_action: #{action ? action.order : ""}@#{action ? action.action_time : ""}"
         if position && position != 0 && data.last["order"].upcase == "CLOSE"
           amount = position.abs
           order = "CLOSE"
