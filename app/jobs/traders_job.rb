@@ -51,7 +51,7 @@ class TradersJob < ApplicationJob
 
     current_time = run_time.strftime('%H:%M')
     # close
-    if (current_time > "09:00" && current_time < "09:15") || (current_time > "15:50" && current_time < "16:30")
+    if (current_time > "09:00" && current_time < "09:50") || (current_time > "15:50" && current_time < "16:30")
       position = TraderPosition.init(contract).position
       begin
         job = OrdersJob.perform_later("CLOSE", position.abs, "", 0)
