@@ -10,6 +10,7 @@ class RisksJob < ApplicationJob
   def perform(*args)
     @contract = args[0]
     @version = args[1]
+    @close_flag = false
 
     current_time = Time.zone.now.strftime('%H:%M')
     @order = ""
@@ -49,9 +50,56 @@ class RisksJob < ApplicationJob
 
         # Rails.logger.warn "ib risk loss_limit: #{loss_limit}, position: #{last_trade.action}, open: #{last_trade.price}, close: #{close}, unrealized_pnl: #{unrealized_pnl}, #{Time.zone.now}" if unrealized_pnl != 0
 
-        @profit_losses = ProfitLoss.latest(4)
+        @profit_losses = ProfitLoss.latest(1000)
         pnls = @profit_losses.to_a.map{|pr| pr.unrealized_pnl}
+        # pnls_detail = @profit_losses.to_a.map.with_index(1) {|pr,index| [pr.unrealized_pnl, index]}
         # realized_pnl = Trade.where("time >= ? AND perm_id = ?", Date.today, last_trade.perm_id).sum(:realized_pnl)
+
+        # profit getting back
+        if !pnls.empty? && pnls.max > 0 && (pnls.first < pnls.max && pnls.first >= pnls.max * 0.8)
+          if pnls.find_index(pnls.max) >= 3
+            amount = position
+            order = "CLOSE"
+            begin
+              Action.act(order, amount, 0, Time.zone.now) if order != ""
+            rescue Exception => e
+              Rails.logger.warn "Action create error: #{e}"
+            ensure
+              OrdersJob.set(wait: 2.seconds).perform_later("CLOSE", amount, "", 0)
+              @close_flag = ture
+            end
+          end
+        end
+
+        # profit limit
+        if !pnls.empty? && pnls.max >= ENV["total_asset"].to_f * 0.05
+          amount = position
+          order = "CLOSE"
+          begin
+            Action.act(order, amount, 0, Time.zone.now) if order != ""
+          rescue Exception => e
+            Rails.logger.warn "Action create error: #{e}"
+          ensure
+            OrdersJob.set(wait: 2.seconds).perform_later("CLOSE", amount, "", 0)
+            @close_flag = ture
+          end
+        end
+
+        # start with under 0
+        if !pnls.empty? && pnls.last < 0
+          amount = position
+          order = "CLOSE"
+          begin
+            Action.act(order, amount, 0, Time.zone.now) if order != ""
+          rescue Exception => e
+            Rails.logger.warn "Action create error: #{e}"
+          ensure
+            OrdersJob.set(wait: 2.seconds).perform_later("CLOSE", amount, "", 0)
+            @close_flag = ture
+          end
+        end
+
+        # achieve loss limit
         if unrealized_pnl < loss_limit
           amount = position
           order = "CLOSE"
@@ -59,9 +107,11 @@ class RisksJob < ApplicationJob
             Action.act(order, amount, 0, Time.zone.now) if order != ""
           rescue Exception => e
             Rails.logger.warn "Action create error: #{e}"
+          ensure
+            OrdersJob.set(wait: 2.seconds).perform_later("CLOSE", amount, "", 0)
+            @close_flag = ture
           end
 
-          OrdersJob.set(wait: 2.seconds).perform_later("CLOSE", amount, "", 0)
           begin
             EventLog.find_or_create_by(log_type: "RISK", order_type: @order, content: "RISK unrealized_pnl: #{unrealized_pnl} CLOSE #{@order} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}") if order != "" && amount != 0
           rescue Exception => e
@@ -78,9 +128,11 @@ class RisksJob < ApplicationJob
           Action.act(order, amount, 0, Time.zone.now) if order != ""
         rescue Exception => e
           Rails.logger.warn "Action create error: #{e}"
+        ensure
+          OrdersJob.set(wait: 2.seconds).perform_later("CLOSE", amount, "", 0)
+          @close_flag = True
         end
 
-        OrdersJob.set(wait: 2.seconds).perform_later("CLOSE", amount, "", 0)
         begin
           EventLog.find_or_create_by(log_type: "STOP", order_type: @order, content: "STOP today_pnl: #{today_pnl} CLOSE at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}")
         rescue Exception => e
@@ -93,8 +145,11 @@ class RisksJob < ApplicationJob
   private
   def around_check
     begin
-      if @profit_losses && @profit_losses.count == 4
-        @profit_losses.last.update(current: false)
+      # if @profit_losses && @profit_losses.count == 4
+      #   @profit_losses.last.update(current: false)
+      # end
+      if @close_flag
+        @profit_losses.update(current: false)
       end
     rescue Exception => e
       Rails.logger.warn "profit_losses error: #{e}"
