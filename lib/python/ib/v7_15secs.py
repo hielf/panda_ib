@@ -223,6 +223,7 @@ class MyStrategy(bt.Strategy):
 
         self.log('OPERATION PROFIT, COMM %.2f, GROSS %.2f, NET %.2f \n\n' %
                  (trade.commission, trade.pnl, trade.pnlcomm))
+        profits.append({'comm': trade.commission, 'pnl': trade.pnl, 'pnlcomm': trade.pnlcomm})
 
         if trade.pnlcomm < 0:
             self.win_loss += 1
@@ -360,6 +361,7 @@ if __name__ == '__main__':
     )
 
     trades = []
+    profits = []
     # Create a cerebro entity
     cerebro = bt.Cerebro()
     # Add a strategy
