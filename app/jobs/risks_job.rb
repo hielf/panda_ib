@@ -10,7 +10,6 @@ class RisksJob < ApplicationJob
   def perform(*args)
     @contract = args[0]
     @version = args[1]
-    @close_flag = false
 
     current_time = Time.zone.now.strftime('%H:%M')
     @order = ""
@@ -24,6 +23,7 @@ class RisksJob < ApplicationJob
       CSV.foreach(csv, headers: true) do |row|
         @market_data << row.to_hash
       end
+      @close_flag = false
 
       if position == 0
         ProfitLoss.where(current: true).update_all(current: false)
@@ -66,7 +66,7 @@ class RisksJob < ApplicationJob
               Rails.logger.warn "Action create error: #{e}"
             ensure
               OrdersJob.set(wait: 2.seconds).perform_later("CLOSE", amount, "", 0)
-              @close_flag = ture
+              @close_flag = true
             end
           end
         end
@@ -81,7 +81,7 @@ class RisksJob < ApplicationJob
             Rails.logger.warn "Action create error: #{e}"
           ensure
             OrdersJob.set(wait: 2.seconds).perform_later("CLOSE", amount, "", 0)
-            @close_flag = ture
+            @close_flag = true
           end
         end
 
@@ -95,7 +95,7 @@ class RisksJob < ApplicationJob
             Rails.logger.warn "Action create error: #{e}"
           ensure
             OrdersJob.set(wait: 2.seconds).perform_later("CLOSE", amount, "", 0)
-            @close_flag = ture
+            @close_flag = true
           end
         end
 
@@ -109,7 +109,7 @@ class RisksJob < ApplicationJob
             Rails.logger.warn "Action create error: #{e}"
           ensure
             OrdersJob.set(wait: 2.seconds).perform_later("CLOSE", amount, "", 0)
-            @close_flag = ture
+            @close_flag = true
           end
 
           begin
