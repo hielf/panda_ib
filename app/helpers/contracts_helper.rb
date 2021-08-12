@@ -483,6 +483,35 @@ module ContractsHelper
     end
   end
 
+  def merge_csv(stock_code, duration)
+    file = Rails.root.to_s + "/tmp/data/#{stock_code}_#{duration}.csv"
+    tmp_file = Rails.root.to_s + "/tmp/data/tmp/#{stock_code}_#{duration}_tmp.csv"
+    table = CSV.parse(File.read(file), headers: true)
+    tmp_table = CSV.parse(File.read(tmp_file), headers: true)
+    last_date = table[-1]["date"]
+    table.delete_if do |row|
+      row["date"].to_time == last_date.to_time
+    end
+    tmp_table.each do |row|
+      table.push(row)
+    end
+    File.open(file, 'w') do |f|
+      f.write(table.to_csv)
+    end
+    return file
+  end
+
+  def merge(*csvs)
+    headers = csvs.map {|csv| csv.headers }.flatten.compact.uniq.sort
+    csvs.flat_map(&method(:csv_to_hash_array))
+  end
+
+  def csv_to_hash_array(csv)
+    csv.to_a[1..-1].map do |row|
+      Hash[csv.headers.zip(row)]
+    end
+  end
+
   def csv_to_db
     dir = Rails.root.to_s + "/tmp/csv/"
     dump_file = dir + "/" + "dump_sql.sql"
@@ -498,18 +527,34 @@ module ContractsHelper
       path = dir + d
       next if File.file?(path)
       next if begin_date && d.to_i < begin_date.to_i
-      csv_file = Dir.glob(File.join(path, '*.*')).max { |a,b| File.ctime(a) <=> File.ctime(b) }
-      # Dir.entries(path).sort.each do |file|
-      #   next if file == '.' or file == '..'
-      #   file_path = path + "/" + file
-      #   File.file?(file_path)
-      #   p file_path
-      # end
-      p csv_file
-      csv_text = File.read(csv_file)
-      csv = CSV.parse(csv_text, :headers => true)
+      # csv_file = Dir.glob(File.join(path, '*.*')).max { |a,b| File.ctime(a) <=> File.ctime(b) }
+      csv_file = Dir.glob(File.join(path, '*.*')).min { |a,b| File.ctime(a) <=> File.ctime(b) }
+      table = CSV.parse(File.read(csv_file), headers: true)
+      total_count = (("12:00".to_time - "09:15".to_time) / 60 * 4) + (("15:51".to_time - "13:00".to_time) / 60 * 4)
+      Dir.entries(path).sort.each do |tmp_file|
+        next if tmp_file == '.' or tmp_file == '..'
+        p "before table has: #{table.count}"
+        file_path = path + "/" + tmp_file
+        File.file?(file_path)
+        p file_path
+        tmp_table = CSV.parse(File.read(file_path), headers: true)
+        table.each do |tr|
+          tmp_table.delete_if do |row|
+            row["date"].to_time == tr["date"].to_time
+          end
+        end
+        p "add tmp_table has: #{tmp_table.count}"
+        # next if tmp_table.count == 0
+        tmp_table.each do |row|
+          table.push(row)
+        end
+        p "now table has: #{table.count}"
+      end
+      # p csv_file
+      # csv_text = File.read(csv_file)
+      # csv = CSV.parse(csv_text, :headers => true)
       count = 0
-      csv.each do |row|
+      table.each do |row|
         # Moulding.create!(row.to_hash)
         h = row.to_hash
         sql = "insert into hsi_fut_tmp (select 0 as index, '#{h["date"]}' as date, #{h["open"]} as open,#{h["high"]} as high,#{h["low"]} as low,#{h["close"]} as close,#{h["volume"]} as volume,#{h["barCount"]} as barCount,#{h["average"]} as average);"
@@ -521,7 +566,7 @@ module ContractsHelper
       postgres.exec(sql)
       sql = "truncate table hsi_fut_tmp;"
       postgres.exec(sql)
-      sleep 0.2
+      # sleep 0.2
     end
   end
 end

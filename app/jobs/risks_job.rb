@@ -130,7 +130,7 @@ class RisksJob < ApplicationJob
           Rails.logger.warn "Action create error: #{e}"
         ensure
           OrdersJob.set(wait: 2.seconds).perform_later("CLOSE", amount, "", 0)
-          @close_flag = True
+          @close_flag = true
         end
 
         begin
