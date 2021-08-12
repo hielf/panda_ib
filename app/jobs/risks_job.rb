@@ -148,7 +148,7 @@ class RisksJob < ApplicationJob
       # if @profit_losses && @profit_losses.count == 4
       #   @profit_losses.last.update(current: false)
       # end
-      if @close_flag
+      if @close_flag && !@profit_losses.empty?
         @profit_losses.update(current: false)
       end
     rescue Exception => e
