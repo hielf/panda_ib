@@ -501,16 +501,16 @@ module ContractsHelper
     return file
   end
 
-  def merge(*csvs)
-    headers = csvs.map {|csv| csv.headers }.flatten.compact.uniq.sort
-    csvs.flat_map(&method(:csv_to_hash_array))
-  end
-
-  def csv_to_hash_array(csv)
-    csv.to_a[1..-1].map do |row|
-      Hash[csv.headers.zip(row)]
-    end
-  end
+  # def merge(*csvs)
+  #   headers = csvs.map {|csv| csv.headers }.flatten.compact.uniq.sort
+  #   csvs.flat_map(&method(:csv_to_hash_array))
+  # end
+  #
+  # def csv_to_hash_array(csv)
+  #   csv.to_a[1..-1].map do |row|
+  #     Hash[csv.headers.zip(row)]
+  #   end
+  # end
 
   def csv_to_db
     dir = Rails.root.to_s + "/tmp/csv/"
@@ -529,7 +529,8 @@ module ContractsHelper
       next if begin_date && d.to_i < begin_date.to_i
       # csv_file = Dir.glob(File.join(path, '*.*')).max { |a,b| File.ctime(a) <=> File.ctime(b) }
       csv_file = Dir.glob(File.join(path, '*.*')).min { |a,b| File.ctime(a) <=> File.ctime(b) }
-      table = CSV.parse(File.read(csv_file), headers: true)
+      # table = CSV.parse(File.read(csv_file), headers: true)
+      table = []
       total_count = (("12:00".to_time - "09:15".to_time) / 60 * 4) + (("15:51".to_time - "13:00".to_time) / 60 * 4)
       Dir.entries(path).sort.each do |tmp_file|
         next if tmp_file == '.' or tmp_file == '..'
@@ -537,31 +538,59 @@ module ContractsHelper
         file_path = path + "/" + tmp_file
         File.file?(file_path)
         p file_path
-        tmp_table = CSV.parse(File.read(file_path), headers: true)
-        table.each do |tr|
-          tmp_table.delete_if do |row|
-            row["date"].to_time == tr["date"].to_time
-          end
+        # tmp_table = CSV.parse(File.read(file_path), headers: true)
+        # table.each do |tr|
+        #   tmp_table.delete_if do |row|
+        #     row["date"].to_time == tr["date"].to_time
+        #   end
+        # end
+        # p "add tmp_table has: #{tmp_table.count}"
+        # # next if tmp_table.count == 0
+        # tmp_table.each do |row|
+        #   table.push(row)
+        # end
+        # p "now table has: #{table.count}"
+        tmp_table = CSV.open(file_path, headers: :first_row).map(&:to_h)
+        tmp_table.each do |r|
+          table << r
         end
-        p "add tmp_table has: #{tmp_table.count}"
-        # next if tmp_table.count == 0
-        tmp_table.each do |row|
-          table.push(row)
-        end
-        p "now table has: #{table.count}"
       end
       # p csv_file
       # csv_text = File.read(csv_file)
       # csv = CSV.parse(csv_text, :headers => true)
       count = 0
-      table.each do |row|
-        # Moulding.create!(row.to_hash)
-        h = row.to_hash
+      table = table.uniq
+
+      final = []
+      table.each do |r|
+        n = table.select {|e| e["date"] == r["date"]}
+        if n.count == 1
+          final << r
+        elsif n.count > 1
+          n2 = final.select {|e| e["date"] == r["date"]}
+          if n2.empty? || n2[0]["volume"] < r["volume"]
+            final.delete_if {|a| a["date"] == r["date"]}
+            final << r
+          end
+        end
+      end
+
+      p "now table has: #{final.count}"
+      final.each do |row|
+        h = row
         sql = "insert into hsi_fut_tmp (select 0 as index, '#{h["date"]}' as date, #{h["open"]} as open,#{h["high"]} as high,#{h["low"]} as low,#{h["close"]} as close,#{h["volume"]} as volume,#{h["barCount"]} as barCount,#{h["average"]} as average);"
         postgres.exec(sql)
         count = count + 1
         p count
       end
+      # table.each do |row|
+      #   # Moulding.create!(row.to_hash)
+      #   h = row.to_hash
+      #   sql = "insert into hsi_fut_tmp (select 0 as index, '#{h["date"]}' as date, #{h["open"]} as open,#{h["high"]} as high,#{h["low"]} as low,#{h["close"]} as close,#{h["volume"]} as volume,#{h["barCount"]} as barCount,#{h["average"]} as average);"
+      #   postgres.exec(sql)
+      #   count = count + 1
+      #   p count
+      # end
       sql = "insert into hsi_fut select * from hsi_fut_tmp b where not exists (select 1 from hsi_fut a where a.date = b.date);"
       postgres.exec(sql)
       sql = "truncate table hsi_fut_tmp;"
