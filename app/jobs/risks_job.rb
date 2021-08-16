@@ -37,9 +37,9 @@ class RisksJob < ApplicationJob
         unrealized_pnl = 0
         case last_trade.action
         when "BUY"
-          unrealized_pnl = (close - last_trade.price) * ENV['amount'].to_i * 50
+          unrealized_pnl = (close - last_trade.price) * ENV['@amount'].to_i * 50
         when "SELL"
-          unrealized_pnl = -1 * (close - last_trade.price) * ENV['amount'].to_i * 50
+          unrealized_pnl = -1 * (close - last_trade.price) * ENV['@amount'].to_i * 50
         end
 
         begin
@@ -58,62 +58,80 @@ class RisksJob < ApplicationJob
         # profit getting back
         if !pnls.empty? && pnls.max > 0 && (pnls.first < pnls.max && pnls.first >= pnls.max * 0.8)
           if pnls.find_index(pnls.max) >= 3
-            amount = position
-            order = "CLOSE"
+            @amount = position
+            @order = "CLOSE"
             begin
-              Action.act(order, amount, 0, Time.zone.now) if order != ""
+              Action.act(@order, @amount, 0, Time.zone.now) if @order != ""
             rescue Exception => e
               Rails.logger.warn "Action create error: #{e}"
             ensure
-              OrdersJob.set(wait: 2.seconds).perform_later("CLOSE", amount, "", 0)
+              OrdersJob.set(wait: 2.seconds).perform_later("CLOSE", @amount, "", 0)
               @close_flag = true
+            end
+
+            begin
+              EventLog.find_or_create_by(log_type: "BENEFIT", order_type: @order, content: "BENEFIT unrealized_pnl: #{unrealized_pnl} CLOSE #{@order} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}") if @order != "" && @amount != 0
+            rescue Exception => e
+              Rails.logger.warn "EventLog create error: #{e}"
             end
           end
         end
 
         # profit limit
         if !pnls.empty? && pnls.max >= ENV["total_asset"].to_f * 0.05
-          amount = position
-          order = "CLOSE"
+          @amount = position
+          @order = "CLOSE"
           begin
-            Action.act(order, amount, 0, Time.zone.now) if order != ""
+            Action.act(@order, @amount, 0, Time.zone.now) if @order != ""
           rescue Exception => e
             Rails.logger.warn "Action create error: #{e}"
           ensure
-            OrdersJob.set(wait: 2.seconds).perform_later("CLOSE", amount, "", 0)
+            OrdersJob.set(wait: 2.seconds).perform_later("CLOSE", @amount, "", 0)
             @close_flag = true
+          end
+
+          begin
+            EventLog.find_or_create_by(log_type: "BENEFIT", order_type: @order, content: "BENEFIT unrealized_pnl: #{unrealized_pnl} CLOSE #{@order} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}") if @order != "" && @amount != 0
+          rescue Exception => e
+            Rails.logger.warn "EventLog create error: #{e}"
           end
         end
 
         # start with under 0
         if !pnls.empty? && pnls.last < 0
-          amount = position
-          order = "CLOSE"
+          @amount = position
+          @order = "CLOSE"
           begin
-            Action.act(order, amount, 0, Time.zone.now) if order != ""
+            Action.act(@order, @amount, 0, Time.zone.now) if @order != ""
           rescue Exception => e
             Rails.logger.warn "Action create error: #{e}"
           ensure
-            OrdersJob.set(wait: 2.seconds).perform_later("CLOSE", amount, "", 0)
+            OrdersJob.set(wait: 2.seconds).perform_later("CLOSE", @amount, "", 0)
             @close_flag = true
+          end
+
+          begin
+            EventLog.find_or_create_by(log_type: "BENEFIT", order_type: @order, content: "BENEFIT unrealized_pnl: #{unrealized_pnl} CLOSE #{@order} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}") if @order != "" && @amount != 0
+          rescue Exception => e
+            Rails.logger.warn "EventLog create error: #{e}"
           end
         end
 
         # achieve loss limit
         if unrealized_pnl < loss_limit
-          amount = position
-          order = "CLOSE"
+          @amount = position
+          @order = "CLOSE"
           begin
-            Action.act(order, amount, 0, Time.zone.now) if order != ""
+            Action.act(@order, @amount, 0, Time.zone.now) if @order != ""
           rescue Exception => e
             Rails.logger.warn "Action create error: #{e}"
           ensure
-            OrdersJob.set(wait: 2.seconds).perform_later("CLOSE", amount, "", 0)
+            OrdersJob.set(wait: 2.seconds).perform_later("CLOSE", @amount, "", 0)
             @close_flag = true
           end
 
           begin
-            EventLog.find_or_create_by(log_type: "RISK", order_type: @order, content: "RISK unrealized_pnl: #{unrealized_pnl} CLOSE #{@order} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}") if order != "" && amount != 0
+            EventLog.find_or_create_by(log_type: "RISK", order_type: @order, content: "RISK unrealized_pnl: #{unrealized_pnl} CLOSE #{@order} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}") if @order != "" && @amount != 0
           rescue Exception => e
             Rails.logger.warn "EventLog create error: #{e}"
           end
@@ -122,19 +140,22 @@ class RisksJob < ApplicationJob
 
       today_pnl = Trade.today_pnl
       if today_pnl < loss_limit_total
-        amount = position
-        order = "CLOSE"
+        @amount = position
+        @order = "CLOSE"
         begin
-          Action.act(order, amount, 0, Time.zone.now) if order != ""
+          Action.act(@order, @amount, 0, Time.zone.now) if @order != ""
         rescue Exception => e
           Rails.logger.warn "Action create error: #{e}"
         ensure
-          OrdersJob.set(wait: 2.seconds).perform_later("CLOSE", amount, "", 0)
+          OrdersJob.set(wait: 2.seconds).perform_later("CLOSE", @amount, "", 0)
           @close_flag = true
         end
 
         begin
-          EventLog.find_or_create_by(log_type: "STOP", order_type: @order, content: "STOP today_pnl: #{today_pnl} CLOSE at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}")
+          last_stop = EventLog.where(log_type: "STOP").last
+          if last_stop && last_stop.created_at.to_date != Date.today
+            EventLog.find_or_create_by(log_type: "STOP", order_type: @order, content: "STOP today_pnl: #{today_pnl} CLOSE at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}")
+          end
         rescue Exception => e
           Rails.logger.warn "EventLog create error: #{e}"
         end
