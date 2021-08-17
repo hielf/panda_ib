@@ -11,13 +11,23 @@ class RisksJob < ApplicationJob
     @contract = args[0]
     @version = args[1]
 
+    loss_limit = ENV["total_asset"].to_f * 0.0025 * -1
+    loss_limit_total = ENV["total_asset"].to_f * 0.005 * -1
+    last_trade = Trade.last
+    position = TraderPosition.init(@contract).position
+    last_action = Action.last
+    if (last_action.order == "CLOSE" && position != 0) || (last_action.order != "CLOSE" && last_trade.action != last_action.order)
+      Rails.logger.warn "find: last_action #{last_action.order}, position #{position}, last_trade #{last_trade}"
+      job1 = PositionsJob.perform_now(@contract, @version)
+      job2 = TradesJob.perform_now(@contract, @version)
+
+      last_trade = Trade.last
+      position = TraderPosition.init(@contract).position
+    end
+
     current_time = Time.zone.now.strftime('%H:%M')
     @order = ""
     if (current_time >= "09:15" && current_time <= "12:00") || (current_time >= "13:00" && current_time <= "16:30")
-      loss_limit = ENV["total_asset"].to_f * 0.0025 * -1
-      loss_limit_total = ENV["total_asset"].to_f * 0.005 * -1
-      last_trade = Trade.last
-      position = TraderPosition.init(@contract).position
       csv = Rails.root.to_s + "/tmp/csv/#{@contract}_#{@version}.csv"
       @market_data = []
       CSV.foreach(csv, headers: true) do |row|
@@ -169,7 +179,7 @@ class RisksJob < ApplicationJob
       # if @profit_losses && @profit_losses.count == 4
       #   @profit_losses.last.update(current: false)
       # end
-      if @close_flag && !@profit_losses.empty?
+      if @close_flag && @profit_losses && !@profit_losses.empty?
         @profit_losses.update(current: false)
       end
     rescue Exception => e
