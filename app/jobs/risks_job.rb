@@ -47,13 +47,13 @@ class RisksJob < ApplicationJob
         unrealized_pnl = 0
         case last_trade.action
         when "BUY"
-          unrealized_pnl = (close - last_trade.price) * ENV['@amount'].to_i * 50
+          unrealized_pnl = (close - last_trade.price) * ENV['amount'].to_i * 50
         when "SELL"
-          unrealized_pnl = -1 * (close - last_trade.price) * ENV['@amount'].to_i * 50
+          unrealized_pnl = -1 * (close - last_trade.price) * ENV['amount'].to_i * 50
         end
 
         begin
-          ProfitLoss.create(open: last_trade.price, close: close, unrealized_pnl: unrealized_pnl) if unrealized_pnl != 0
+          ProfitLoss.create(open: last_trade.price, close: close, unrealized_pnl: unrealized_pnl) if unrealized_pnl
         rescue Exception => e
           Rails.logger.warn "profit_losses create error: #{e}"
         end

@@ -4,7 +4,7 @@
 # include PyCall::Import
 # require 'faye/websocket'
 # require 'eventmachine'
-
+# ApplicationController.helpers.huobi_data_insert
 module HuobisHelper
 
   def currencys_list
@@ -60,10 +60,9 @@ module HuobisHelper
           postgres = PG.connect :host => ENV['quant_db_host'], :port => ENV['quant_db_port'], :dbname => ENV['quant_db_name'], :user => ENV['quant_db_user'], :password => ENV['quant_db_pwd']
           csv.each do |row|
             sql = "insert into #{table_name} select '#{currency}', '#{row[0]}', #{row[1]}, #{row[2]}, #{row[3]}, #{row[4]}, #{row[5]}, #{row[6]} WHERE NOT EXISTS (select '#{currency}', '#{row[0]}' from #{table_name} where contract = '#{currency}' and date = '#{row[0]}');"
-            # postgres.exec(sql)
+            postgres.exec(sql)
             p sql
             count = count + 1
-            # p count
           end
         rescue PG::Error => e
           Rails.logger.warn e.message
