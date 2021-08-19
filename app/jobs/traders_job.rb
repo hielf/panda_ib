@@ -80,7 +80,7 @@ class TradersJob < ApplicationJob
     last_benefit = EventLog.where(log_type: "BENEFIT").last.nil? ? Time.now-10.days : EventLog.where(log_type: "BENEFIT").last.created_at
     benefit_diff_time = (run_time.beginning_of_minute - last_benefit.to_time).abs / 60
     if benefit_diff_time <= 1
-      Rails.logger.warn "ib returned for last BENEFIT at: #{last_stop.to_time.to_s}, #{Time.zone.now}"
+      Rails.logger.warn "ib returned for last BENEFIT at: #{last_benefit.to_time.to_s}, #{Time.zone.now}"
       return
     end
 
