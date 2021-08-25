@@ -6,6 +6,7 @@
 # require 'eventmachine'
 # ApplicationController.helpers.huobi_data_insert
 module HuobisHelper
+# ["ethusdt", "btcusdt", "dogeusdt", "xrpusdt", "lunausdt", "adausdt", "bttusdt", "nftusdt", "dotusdt", "trxusdt", "icpusdt", "abtusdt", "skmusdt", "bhdusdt", "aacusdt", "canusdt", "fisusdt", "nhbtcusdt", "letusdt", "massusdt", "achusdt", "ringusdt", "stnusdt", "mtausdt", "itcusdt", "atpusdt", "gofusdt", "pvtusdt", "auctionus", "ocnusdt"]
 
   def currencys_list
     url = "https://api.huobi.pro"
@@ -78,6 +79,68 @@ module HuobisHelper
 
     return total
   end
+
+  def huobi_tickers
+    contracts = []
+    filepath = Rails.root.to_s + "/tmp/contracts.json"
+    url = "https://api.huobi.pro/market/tickers"
+
+    loop do
+      current_time = Time.zone.now.strftime('%H:%M')
+      p current_time
+      if (current_time >= "00:00" && current_time < "00:01")
+        res = HTTParty.get url
+        json = JSON.parse res.body
+        ticker_time = Time.at(json["ts"]/1000)
+        if !contracts.any?{|d| d["time"] == ticker_time}
+          hash = {}
+          data = []
+          json["data"].each do |d|
+            if d["symbol"].end_with?("usdt")
+              data << d
+            end
+          end
+          hash["time"] = ticker_time
+          hash["data"] = data
+          contracts << hash
+        end
+      elsif current_time == "00:01"
+        p "end"
+        break
+      end
+      sleep 0.1
+    end
+
+    File.write(filepath, JSON.dump(contracts))
+
+    return filepath
+  end
+
+  def huobi_ticker_insert(filepath)
+    f = File.open filepath
+    json_data = JSON.load f
+    table_name = "huobi_tickers"
+
+    begin
+      postgres = PG.connect :host => ENV['quant_db_host'], :port => ENV['quant_db_port'], :dbname => ENV['quant_db_name'], :user => ENV['quant_db_user'], :password => ENV['quant_db_pwd']
+      json_data.each do |time|
+        time["data"].each do |d|
+          sql = "insert into #{table_name} select '#{d["symbol"]}', '#{time["time"]}', '#{d["open"]}', #{d["high"]}, #{d["low"]}, #{d["close"]}, #{d["vol"]}, #{d["amount"]}, #{d["count"]}, #{d["bid"]}, #{d["bidSize"]}, #{d["ask"]}, #{d["askSize"]} WHERE NOT EXISTS (select '#{d["symbol"]}', '#{time["time"]}' from #{table_name} where symbol = '#{d["symbol"]}' and time = '#{time["time"]}');"
+          postgres.exec(sql)
+          p sql
+        end
+      end
+    rescue PG::Error => e
+      Rails.logger.warn e.message
+    ensure
+      postgres.close if postgres
+    end
+  end
+
+  # sql = "CREATE TABLE public.#{table_name} (symbol varchar, time timestamp, open float8, high float8, low float8, close float8, vol float8, amount float8, count int8, bid float8, bidSize float8, ask float8, askSize float8);"
+  # res = postgres.exec(sql)
+  # sql = "CREATE UNIQUE INDEX #{table_name}_idx ON public.#{table_name} (symbol, time);"
+  # res = postgres.exec(sql)
 
   # def ws_client
   #   WebSocket::Client::Simple.connect 'wss://api.huobi.pro/ws' do |ws|
