@@ -27,6 +27,7 @@ class MarketDataJob < ApplicationJob
       if table && table.count > 0
         current_time = Time.zone.now
         if current_time - table[-1]["date"].in_time_zone > 120
+          current_time = current_time.strftime('%H:%M')
           if (current_time >= "09:18" && current_time <= "12:00") || (current_time >= "13:03" && current_time <= "16:30")
             SmsJob.perform_later ENV["admin_phone"], ENV["superme_user"] + " " + ENV["backtrader_version"], "行情数据中断"
           end
