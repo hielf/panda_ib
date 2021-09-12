@@ -64,7 +64,17 @@ module Clockwork
         end
         @ib = ApplicationController.helpers.ib_connect if @ib.nil?
         @ib = ApplicationController.helpers.ib_connect if !@ib.nil? && !@ib.isConnected()
-        MarketDataJob.perform_later('@ib', contract, version)
+
+        begin
+          job = MarketDataJob.perform_later('@ib', contract, version)
+          100.times do
+            status = ActiveJob::Status.get(job)
+            break if status.completed?
+            sleep 0.2
+          end
+        rescue Exception => e
+          error_message = e.message
+        end
         req_times = req_times + 1
         if req_times >= 20
           ApplicationController.helpers.ib_disconnect(@ib) if @ib.isConnected()

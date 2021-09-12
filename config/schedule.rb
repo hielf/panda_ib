@@ -46,7 +46,7 @@ every 1.day, at: '6:00' do
   command "cat /dev/null > /var/www/panda_ib/current/log/puma.error.log"
 end
 
-every 1.day, at: '20:00' do
+every 1.day, at: '22:00' do
   command "god stop panda_ib-clock_1"
   command "god stop panda_ib-clock_2"
   command "god stop panda_ib-clock_3"
