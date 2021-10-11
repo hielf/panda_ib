@@ -41,7 +41,7 @@ def get_yaml_data(yaml_file):
     print("类型：", type(data))
     return data
 
-def format_data(dataframe, period='5T', localize_zone='Asia/Shanghai', convert_zone= 'US/Eastern'):
+def format_data(config_params, dataframe, period='5T', localize_zone='Asia/Shanghai', convert_zone= 'US/Eastern'):
     '''
         目前最小单位15s, 默认组合一行数据为15s+5T
     '''
@@ -108,7 +108,7 @@ def format_data(dataframe, period='5T', localize_zone='Asia/Shanghai', convert_z
     print('-'*30)
     print(df3.head(2))
     df3.dropna(inplace=True)
-    df3.to_csv('./output/df3.csv')
+    # df3.to_csv('./output/df3.csv')
 
     df3 = df3.asfreq(freq='15S', method='bfill')
 
@@ -123,21 +123,37 @@ def format_data(dataframe, period='5T', localize_zone='Asia/Shanghai', convert_z
 
     return df4
 
-#%% 初始化, 读取数据
-configfile = sys.argv[1]
-current_path = os.path.abspath(".")
-yaml_path = os.path.join(current_path, configfile)
-config_params = get_yaml_data(yaml_path)
+# csv_to_h5('/Users/hielf/workspace/projects/panda_ib/lib/python/ib/v9_15secs.yml', '/Users/hielf/workspace/projects/panda_ib/tmp/csv/hsi_15secs.csv', '/Users/hielf/workspace/projects/panda_ib/tmp/csv/hsi_15secs.h5')
+def csv_to_h5(yaml_path, csv_path, h5_path):
+    config_params = get_yaml_data(yaml_path)
+    df = pd.read_csv(csv_path, index_col=0, parse_dates=True, usecols=['date', 'open', 'high', 'low', 'close', 'volume'])
+    # %% 处理数据
+    df2 = format_data(config_params, df, period=config_params['period'])
+    # %% write hdf5
+    df2.reset_index(inplace=True)
+    df2.drop(columns='index', inplace=True)
+    df2.set_index('datetime', inplace=True)
+    df2.to_hdf(h5_path, key='df2')
+    # df2.to_csv('./output/hsi002.csv')
+    return h5_path
 
-df = pd.read_csv(config_params['data_source'], index_col=0, parse_dates=True, usecols=['date', 'open', 'high', 'low', 'close', 'volume'])
-
-
-# %% 处理数据
-df2 = format_data(df, period=config_params['period'])
-
-# %% write hdf5
-df2.reset_index(inplace=True)
-df2.drop(columns='index', inplace=True)
-df2.set_index('datetime', inplace=True)
-df2.to_hdf('./hsi.h5', key='df2')
-df2.to_csv('./output/hsi002.csv')
+# #%% 初始化, 读取数据
+# configfile = sys.argv[1]
+# csv_path = sys.argv[2]
+# h5_path = sys.argv[3]
+# current_path = os.path.abspath(".")
+# yaml_path = os.path.join(current_path, configfile)
+# config_params = get_yaml_data(yaml_path)
+#
+# df = pd.read_csv(csv_path, index_col=0, parse_dates=True, usecols=['date', 'open', 'high', 'low', 'close', 'volume'])
+#
+#
+# # %% 处理数据
+# df2 = format_data(df, period=config_params['period'])
+#
+# # %% write hdf5
+# df2.reset_index(inplace=True)
+# df2.drop(columns='index', inplace=True)
+# df2.set_index('datetime', inplace=True)
+# df2.to_hdf(h5_path, key='df2')
+# # df2.to_csv('./output/hsi002.csv')

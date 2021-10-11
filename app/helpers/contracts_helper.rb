@@ -225,7 +225,9 @@ module ContractsHelper
     order = ""
     position = TraderPosition.init("#{contract}").position
     csv = Rails.root.to_s + "/tmp/csv/#{contract}_#{version}.csv"
+    h5 = Rails.root.to_s + "/tmp/csv/#{contract}_#{version}.h5"
     json = Rails.root.to_s + "/tmp/#{contract}_#{version}_trades.json"
+    yaml_path = Rails.root.to_s + "/lib/python/ib/#{ENV["ib_version"]}_#{ENV["backtrader_version"]}.yml"
     # begin_date = Time.zone.now < (Time.parse "11:30 am") ? 1.business_day.ago.to_date : Date.today
     # end_date = 1.business_day.from_now.to_date
     skip_minute = Time.zone.now < (Time.parse "10:15 am") ? 75 : 0
@@ -238,7 +240,7 @@ module ContractsHelper
     data = Array.new()
     action = Action.today.last
     3.times do
-      system( "cd #{Rails.root.to_s + '/lib/python/ib'} && python3 #{ENV["ib_version"]}_#{ENV["backtrader_version"]}.py '#{csv}' '#{json}' '#{begin_time}' '#{end_time}' '#{ENV["ib_version"]}_#{ENV["backtrader_version"]}.yml'" )
+      system( "cd #{Rails.root.to_s + '/lib/python/ib'} && python3 #{ENV["ib_version"]}_#{ENV["backtrader_version"]}.py '#{csv}' '#{json}' '#{begin_time}' '#{end_time}' '#{yaml_path}' '#{h5}'" )
       begin
         data = JSON.parse(File.read(json))
       rescue Exception => e

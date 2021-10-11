@@ -10,40 +10,41 @@ import time
 import uuid
 import pandas as pd
 import backtrader as bt
-import numpy as np
-from sklearn.linear_model import LinearRegression
+# import numpy as np
+# from sklearn.linear_model import LinearRegression
 import joblib
 import os
 import csv
 import yaml
 import json
-from tqdm import tqdm
+# from tqdm import tqdm
 import sys
 import talib as ta
 from backtrader.feeds import PandasData  # 用于扩展DataFeed
+from v9_15secs_preprocess import get_yaml_data, format_data, csv_to_h5
 
 import pytz
 pytz.common_timezones[-8:]
 
 tz = pytz.timezone('Asia/Shanghai')
 
-def get_yaml_data(yaml_file):
-
-    # 打开yaml文件
-    print("***获取yaml文件数据***")
-    file = open(yaml_file, 'r', encoding="utf-8")
-    file_data = file.read()
-    file.close()
-
-    print(file_data)
-    print("类型：", type(file_data))
-
-    # 将字符串转化为字典或列表
-    print("***转化yaml数据为字典或列表***")
-    data = yaml.load(file_data)
-    print(data)
-    print("类型：", type(data))
-    return data
+# def get_yaml_data(yaml_file):
+#
+#     # 打开yaml文件
+#     print("***获取yaml文件数据***")
+#     file = open(yaml_file, 'r', encoding="utf-8")
+#     file_data = file.read()
+#     file.close()
+#
+#     print(file_data)
+#     print("类型：", type(file_data))
+#
+#     # 将字符串转化为字典或列表
+#     print("***转化yaml数据为字典或列表***")
+#     data = yaml.load(file_data)
+#     print(data)
+#     print("类型：", type(data))
+#     return data
 
 
 # from_date = datetime.datetime.strptime(config_params['from_date'],'%Y-%m-%d %H:%M:%S')
@@ -293,6 +294,7 @@ if __name__ == '__main__':
     begin_time = sys.argv[3]
     end_time = sys.argv[4]
     configfile = sys.argv[5]
+    h5_path = sys.argv[6]
 
     current_path = os.path.abspath(".")
     yaml_path = os.path.join(current_path, configfile)
@@ -316,7 +318,7 @@ if __name__ == '__main__':
     # 本地数据，笔者用Wind获取的东风汽车数据以csv形式存储在本地。
     # dataframe = pd.read_csv(csv_path, index_col=0, parse_dates=True, usecols=['date', 'open', 'high', 'low', 'close', 'volume'])
     # dataframe = format_data(dataframe, period=config_params['period'])
-    dataframe = pd.read_hdf('./hsi.h5', key='df2')
+    dataframe = pd.read_hdf(h5_path, key='df2')
     dataframe.reset_index(inplace=True)
 
     data = PandasDataExtend(
@@ -337,7 +339,7 @@ if __name__ == '__main__':
     # Add the Data Feed to Cerebro
     cerebro.adddata(data)
     uuid_str = uuid.uuid4().hex
-    cerebro.addwriter(bt.WriterFile, csv = True, out="{}_{}_{}.csv".format(config_params['output_prefix'], config_params['period'], uuid_str))
+    # cerebro.addwriter(bt.WriterFile, csv = True, out="{}_{}_{}.csv".format(config_params['output_prefix'], config_params['period'], uuid_str))
     # Set our desired cash start
     cerebro.broker.setcash(250000.0)
     # 设置每笔交易交易的股票数量
