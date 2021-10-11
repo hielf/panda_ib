@@ -238,6 +238,10 @@ class MyStrategy(bt.Strategy):
                     self.log('BUY CLOSE A: -20, %4f' % (self.dataclose[0]))
                     close_sig = True
 
+                if self.overcross and self.datalow[0] < self.datas[0].hh_1[0]:
+                    self.log('BUY CLOSE A: hl, %4f' % (self.dataclose[0]))
+                    close_sig = True
+
                 if self.datas[0].hh_1[0] != self.datas[0].hh_1[-2]:
                     self.overcross = False
 
