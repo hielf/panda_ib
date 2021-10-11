@@ -18,6 +18,32 @@ contracts = [Index(symbol = "HSI", exchange = "HKFE"), Index(symbol = "SPX", exc
 # bars = ib.reqHistoricalData(contract, endDateTime='', durationStr='1 D',
 #         barSizeSetting='1 min', whatToShow='TRADES', useRTH=True)
 
+def get_index_5sec(end_datetime):
+    print("start 5sec collect %s" % str(end_datetime))
+    for contract in contracts:
+        print(str(contract))
+        conn = psycopg2.connect("host='postgres.ripple-tech.com' dbname='panda_quant' user='chesp' password='Chesp2021' port='5432'")
+        cur = conn.cursor()
+        if contract.secType == 'IND':
+            if contract.symbol == 'HSI':
+                tmp_table = 'hsi_5secs_tmp'
+                table = 'hsi_5secs'
+            bars = ib.reqHistoricalData(contract, endDateTime=end_datetime, durationStr='14400 S', barSizeSetting='5 secs', whatToShow='TRADES', useRTH=True)
+        df = util.df(bars)
+        print("got bars %s" % str(bars))
+        print("got contract %s" % str(contract))
+        engine = create_engine('postgresql+psycopg2://chesp:Chesp2021@postgres.ripple-tech.com:5432/panda_quant',echo=True,client_encoding='utf8')
+        print("waiting for collect %s" % table)
+        try:
+            df.to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');
+            sql = "insert into " + table + " select * from " + tmp_table +  " b where not exists (select 1 from " + table + " a where a.date = b.date);"
+            cur.execute(sql, (10, 1000000, False, False))
+            conn.commit()
+            conn.close()
+        except:
+            print ("Unexpected error:", sys.exc_info()[0])
+            continue
+
 def get_index_15sec(end_datetime):
     print("start 15sec collect %s" % str(end_datetime))
     for contract in contracts:
@@ -256,4 +282,5 @@ if __name__ == '__main__':
         for j in range(6):
             end_datetime = (end_date + datetime.timedelta(j/6))
             print (end_datetime)
+            get_index_5sec(end_datetime)
             get_index_15sec(end_datetime)
