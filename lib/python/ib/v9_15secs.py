@@ -293,12 +293,8 @@ if __name__ == '__main__':
     json_path = sys.argv[2]
     begin_time = sys.argv[3]
     end_time = sys.argv[4]
-    configfile = sys.argv[5]
+    yaml_path = sys.argv[5]
     h5_path = sys.argv[6]
-
-    current_path = os.path.abspath(".")
-    yaml_path = os.path.join(current_path, configfile)
-    config_params = get_yaml_data(yaml_path)
 
     begin_time = datetime.datetime.strptime(begin_time, '%Y-%m-%d %H:%M:%S +0800')
     end_time = datetime.datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S +0800')
@@ -318,6 +314,8 @@ if __name__ == '__main__':
     # 本地数据，笔者用Wind获取的东风汽车数据以csv形式存储在本地。
     # dataframe = pd.read_csv(csv_path, index_col=0, parse_dates=True, usecols=['date', 'open', 'high', 'low', 'close', 'volume'])
     # dataframe = format_data(dataframe, period=config_params['period'])
+    csv_to_h5(yaml_path, csv_path, h5_path)
+
     dataframe = pd.read_hdf(h5_path, key='df2')
     dataframe.reset_index(inplace=True)
 
