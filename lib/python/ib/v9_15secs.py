@@ -72,7 +72,7 @@ class PandasDataExtend(PandasData):
 # Create a Stratey
 class MyStrategy(bt.Strategy):
     params = (
-        ('maperiod', 4*5*3),
+        ('maperiod', 4*5*12),
         ('printlog', True),
         ('max_price', 0),
         ('min_price', 0),

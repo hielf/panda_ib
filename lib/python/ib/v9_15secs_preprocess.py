@@ -15,7 +15,6 @@ import pandas as pd
 import os
 import csv
 import yaml
-# from tqdm import tqdm
 import sys
 import talib as ta
 
@@ -108,7 +107,6 @@ def format_data(config_params, dataframe, period='5T', localize_zone='Asia/Shang
     print('-'*30)
     print(df3.head(2))
     df3.dropna(inplace=True)
-    # df3.to_csv('./output/df3.csv')
 
     df3 = df3.asfreq(freq='15S', method='bfill')
 
@@ -118,7 +116,7 @@ def format_data(config_params, dataframe, period='5T', localize_zone='Asia/Shang
 
     df4 = pd.merge(df1, df3, how='left')
     df4.fillna(method='ffill', inplace=True)#用前面的值来填充
-    df4.fillna(method='bfill', inplace=True)#用后面的值来填充
+    df4.dropna(inplace=True)
     print('df count:', df4.shape[0])
 
     return df4
@@ -136,12 +134,6 @@ def csv_to_h5(yaml_path, csv_path, h5_path):
     df2.to_hdf(h5_path, key='df2')
     # df2.to_csv('./output/hsi002.csv')
     return h5_path
-
-# #%% 初始化, 读取数据
-# configfile = sys.argv[1]
-# csv_path = sys.argv[2]
-# h5_path = sys.argv[3]
-# current_path = os.path.abspath(".")
 # yaml_path = os.path.join(current_path, configfile)
 # config_params = get_yaml_data(yaml_path)
 #
@@ -153,7 +145,3 @@ def csv_to_h5(yaml_path, csv_path, h5_path):
 #
 # # %% write hdf5
 # df2.reset_index(inplace=True)
-# df2.drop(columns='index', inplace=True)
-# df2.set_index('datetime', inplace=True)
-# df2.to_hdf(h5_path, key='df2')
-# # df2.to_csv('./output/hsi002.csv')
