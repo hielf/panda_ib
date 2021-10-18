@@ -428,7 +428,7 @@ module TradeOrdersHelper
     today_start = Time.zone.now.change({hour: 9, min: 15})
     duration = case version
     when "15secs"
-      (db_collect == "true" ? "14400" : 9000.to_s)
+      (db_collect == "true" ? "14400" : 20000.to_s)
     else
       (db_collect == "true" ? "72000" : (Time.zone.now - today_start + 86400).to_i.to_s)
     end
