@@ -134,14 +134,3 @@ def csv_to_h5(yaml_path, csv_path, h5_path):
     df2.to_hdf(h5_path, key='df2')
     # df2.to_csv('./output/hsi002.csv')
     return h5_path
-# yaml_path = os.path.join(current_path, configfile)
-# config_params = get_yaml_data(yaml_path)
-#
-# df = pd.read_csv(csv_path, index_col=0, parse_dates=True, usecols=['date', 'open', 'high', 'low', 'close', 'volume'])
-#
-#
-# # %% 处理数据
-# df2 = format_data(df, period=config_params['period'])
-#
-# # %% write hdf5
-# df2.reset_index(inplace=True)
