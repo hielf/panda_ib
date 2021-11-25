@@ -19,7 +19,7 @@ module Clockwork
       contract = ENV['contract']
       version = ENV['backtrader_version']
 
-      RisksJob.perform_later contract, version
+      # RisksJob.perform_later contract, version
     end
   end
 
