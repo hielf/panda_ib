@@ -46,22 +46,10 @@ module Clockwork
         end
       end
     end
-
-    if job == 'IB.history'
-      if ENV['his_collect'] == "true"
-        Rails.logger.warn "IB.history started.."
-        ApplicationController.helpers.csv_to_db
-        Rails.logger.warn "IB.history fut ended.."
-        system( "cd #{Rails.root.to_s + '/lib/python/ib'} && python3 ibmarket_idx_his.py" )
-        Rails.logger.warn "IB.history idx ended.."
-        Rails.logger.warn "IB.history ended.."
-      end
-    end
   end
 
   every(2.second, 'IB.realtime_bar_csv', :thread => true)
   every(1.minute, 'IB.realtime_bar_get', :thread => true)
-  every(1.day, 'IB.history', :at => '18:00', :thread => true)
 
   # every(1.minute, 'timing', :skip_first_run => true, :thread => true)
   # every(1.hour, 'hourly.job')
