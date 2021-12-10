@@ -157,12 +157,12 @@ class strategy_kam(bt.Strategy):
             if self.datahigh[0] > self.dch[-4] and self.datahigh[0] > self.dch[-self.p.period] + self.tr[-self.p.period]/2 and self.tr[-self.p.period] > 20:
                 #执行买入
                 self.order = self.buy()
-                trades.append({'order': 'buy', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
+                trades.append({'order': 'sell', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
             if self.datalow[0] < self.dcl[-4] and self.datalow[0] < self.dcl[-self.p.period] - self.tr[-self.p.period]/2 and self.tr[-self.p.period] > 20:
                 #执行买入
                 self.order = self.sell()
-                trades.append({'order': 'sell', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
+                trades.append({'order': 'buy', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
         else:
             #执行卖出条件判断：收盘价格跌破20日均线
             if self.position.size > 0:
