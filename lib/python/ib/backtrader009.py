@@ -10,7 +10,6 @@ import pandas as pd
 import os
 import sys
 import yaml
-import json
 # % matplotlib inline
 
 #正常显示画图时出现的中文和负号
@@ -19,37 +18,37 @@ import json
 
 # 初始化, 加载配置文件
 
-# def get_yaml_data(yaml_file):
-#
-#     # 打开yaml文件
-#     print("***获取yaml文件数据***")
-#     file = open(yaml_file, 'r', encoding="utf-8")
-#     file_data = file.read()
-#     file.close()
-#
-#     print(file_data)
-#     print("类型：", type(file_data))
-#
-#     # 将字符串转化为字典或列表
-#     print('\n' * 3)
-#     print("***转化yaml数据为字典或列表***")
-#     data = yaml.safe_load(file_data)
-#     print(data)
-#     print("类型：", type(data))
-#     print('\n' * 3)
-#     return data
-#
-# config_file = sys.argv[1]
-# current_path = os.path.abspath(".")
-# yaml_path = os.path.join(current_path, config_file)
-# my_config = get_yaml_data(yaml_path)
+def get_yaml_data(yaml_file):
+
+    # 打开yaml文件
+    print("***获取yaml文件数据***")
+    file = open(yaml_file, 'r', encoding="utf-8")
+    file_data = file.read()
+    file.close()
+
+    print(file_data)
+    print("类型：", type(file_data))
+
+    # 将字符串转化为字典或列表
+    print('\n' * 3)
+    print("***转化yaml数据为字典或列表***")
+    data = yaml.safe_load(file_data)
+    print(data)
+    print("类型：", type(data))
+    print('\n' * 3)
+    return data
+
+config_file = sys.argv[1]
+current_path = os.path.abspath(".")
+yaml_path = os.path.join(current_path, config_file)
+my_config = get_yaml_data(yaml_path)
 
 
 #回测期间
-# start_time = datetime.datetime.strptime(my_config['from_date'],
-#                                        '%Y-%m-%d %H:%M:%S')
-# end_time = datetime.datetime.strptime(my_config['end_date'],
-#                                      '%Y-%m-%d %H:%M:%S')
+start_time = datetime.datetime.strptime(my_config['from_date'],
+                                       '%Y-%m-%d %H:%M:%S')
+end_time = datetime.datetime.strptime(my_config['end_date'],
+                                     '%Y-%m-%d %H:%M:%S')
 
 
 # 构建基本策略
@@ -140,12 +139,10 @@ class strategy_kam(bt.Strategy):
             if self.position.size > 0:
                 self.order = self.sell()
                 self.log('BUY Close by Day end, %.4f' % self.dataclose[0])
-                trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
             if self.position.size < 0:
                 self.order = self.buy()
                 self.log('SELL Close by Day end, %.4f' % self.dataclose[0])
-                trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
             return
 
@@ -160,57 +157,42 @@ class strategy_kam(bt.Strategy):
             if self.datahigh[0] > self.dch[-start_k] + self.tr[-start_k]/2:# and self.tr[0] > 20:
                 #执行买入
                 self.order = self.buy()
-                trades.append({'order': 'buy', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
             if self.datalow[0] < self.dcl[-start_k] - self.tr[-start_k]/2:# and self.tr[0] > 20:
                 #执行买入
                 self.order = self.sell()
-                trades.append({'order': 'sell', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
         else:
-            #执行卖出条件判断：收盘价格跌破20日均线
             if self.position.size > 0:
                 if (
                     self.dataclose[0] < self.dataclose[-start_k]
                         or self.dch[0] > self.dch[-start_k] + self.tr[-start_k]
                         and self.dataclose[0] < self.dch[-start_k] + self.tr[-start_k]/2
+
                     ):
                     self.order = self.sell()
-                    trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
             if self.position.size < 0:
                 if (
                     self.dataclose[0] > self.dataclose[-start_k]
                         or self.dcl[0] < self.dcl[-start_k] - self.tr[-start_k]
                         and self.dataclose[0] > self.dcl[-start_k] - self.tr[-start_k]/2
+
                     ):
                     self.order = self.buy()
-                    trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
 
 
 if __name__ == '__main__':
-    csv_path = sys.argv[1]
-    json_path = sys.argv[2]
-    begin_time = sys.argv[3]
-    end_time = sys.argv[4]
-    yaml_path = sys.argv[5]
-    h5_path = sys.argv[6]
-
-    begin_time = datetime.datetime.strptime(begin_time, '%Y-%m-%d %H:%M:%S +0800')
-    end_time = datetime.datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S +0800')
-
-    trades = []
-    profits = []
 
     cerebro = bt.Cerebro()
 
     # 本地数据
-    df = pd.read_csv(csv_path, index_col=0, parse_dates=True, usecols=['date', 'open', 'high', 'low', 'close', 'volume'])
+    df = pd.read_csv(my_config['data_source'], index_col=0, parse_dates=True, usecols=['date', 'open', 'high', 'low', 'close', 'volume'])
     df.index = pd.to_datetime(df.index)
 
     data = PandasData(
             dataname=df,
-            fromdate=begin_time,
+            fromdate=start_time,
             todate=end_time,
         )
 
@@ -229,10 +211,10 @@ if __name__ == '__main__':
     cerebro.addstrategy(strategy_kam)
     cerebro.adddata(data)
 
-    # uuid_str = uuid.uuid4().hex
-    # cerebro.addwriter(bt.WriterFile,
-    #                   csv=True,
-    #                   out="./output/{}.csv".format(uuid_str))
+    uuid_str = uuid.uuid4().hex
+    cerebro.addwriter(bt.WriterFile,
+                      csv=True,
+                      out="./output/{}.csv".format(uuid_str))
 
     # 策略执行前的资金
     print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
@@ -263,7 +245,4 @@ if __name__ == '__main__':
     # for date, value in results[0].analyzers.TR.get_analysis().items():
     #     print(date, value)
 
-    # cerebro.plot()
-    print(trades)
-    with open(json_path, 'w') as f:
-        json.dump(trades, f)
+    cerebro.plot()
