@@ -59,6 +59,7 @@ module Clockwork
 
       loop do
         if Time.zone.now > stop_time
+          Rails.logger.warn "IB.market_data disconnecting #{@ib}"
           ApplicationController.helpers.ib_disconnect(@ib) if @ib.isConnected()
           break
         end

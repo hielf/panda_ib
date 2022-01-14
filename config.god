@@ -160,4 +160,20 @@ end
     # generic_monitoring(w, :cpu_limit => 100.percent, :memory_limit => 1000.megabytes)
   end
 
+  env_7 = "clock_6"
+  God.watch do |w|
+    w.name = app_name + "-" + env_7
+    w.group = app_name
+    w.start = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock_6.rb start --log -d #{app_root}/current/lib/job"
+    w.restart = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock_6.rb restart --log -d #{app_root}/current/lib/job"
+    w.stop = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock_6.rb stop"
+    w.pid_file = "#{app_root}/current/lib/job/tmp/clockworkd.clock_6.pid"
+
+    w.log = "#{app_root}/shared/log/clock_6.log"
+
+    w.behavior(:clean_pid_file)
+    w.keepalive(:memory_max => 1000.megabytes, :cpu_max => 80.percent)
+    # generic_monitoring(w, :cpu_limit => 100.percent, :memory_limit => 1000.megabytes)
+  end
+
 end
