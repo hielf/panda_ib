@@ -15,7 +15,7 @@ module Clockwork
 
   # handler receives the time when job is prepared to run in the 2nd argument
   handler do |job, time|
-    
+
     if job == 'IB.realtime_bar_csv' && ENV['backtrader_version'] == "15secs"
       contract = ENV['contract']
       version = ENV['backtrader_version']

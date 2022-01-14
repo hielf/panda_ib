@@ -345,7 +345,7 @@ module TradeOrdersHelper
     rescue Exception => e
       error_message = e
       result = false
-      Rails.logger.warn "market_data error: #{error_message}, #{Time.zone.now}"
+      Rails.logger.warn "realtime_market_data error: #{error_message}, #{Time.zone.now}"
     end
     return result
   end
