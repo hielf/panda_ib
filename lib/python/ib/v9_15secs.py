@@ -57,7 +57,7 @@ class strategy_kam(bt.Strategy):
     #全局设定交易策略的参数
     # 15s, 需要构建5分钟判断, 所以4*5=20 个bar, 考虑其他情况翻倍
     params=(
-        ('period', 4*5*3),
+        ('period', 20),
         ('maperiod',20*3),
         ('printlog', True),
            )
@@ -76,10 +76,9 @@ class strategy_kam(bt.Strategy):
         self.order = None
         self.buyprice = None
         self.buycomm = None
-        self.bar_executed = 0
 
         #添加指标，内置了talib模块
-        self.atr = bt.talib.ATR(self.data.high, self.data.low, self.data.close, self.p.period, subplot=False)
+        self.atr = bt.talib.ATR(self.data.high, self.data.low, self.data.close, timeperiod=20*3, subplot=False)
         self.dch = bt.ind.Highest(self.data.high, period=self.p.period, subplot=False)
         self.dcl = bt.ind.Lowest(self.data.low, period=self.p.period, subplot=False)
         self.tr = self.dch - self.dcl
@@ -136,7 +135,7 @@ class strategy_kam(bt.Strategy):
 
         # ? 交易时段判断
         if self.data.datetime.time() > datetime.time(
-                16, 15) or self.data.datetime.time() < datetime.time(9, 15):
+                16, 20) or self.data.datetime.time() < datetime.time(9, 15):
             if self.position.size > 0:
                 self.order = self.sell()
                 self.log('BUY Close by Day end, %.4f' % self.dataclose[0])
@@ -149,20 +148,18 @@ class strategy_kam(bt.Strategy):
 
             return
 
-        start_k = (len(self) - self.bar_executed + 1) % 20
-
         if self.order: # 检查是否有指令等待执行,
             return
 
         # 检查是否持仓
         if not self.position: # 没有持仓
             #执行买入条件判断：收盘价格上涨突破20日均线
-            if self.datahigh[0] > self.dch[-start_k] + self.tr[-start_k]/2:# and self.tr[0] > 20:
+            if self.datahigh[0] > self.dch[-4] and self.datahigh[0] > self.dch[-self.p.period] + self.tr[-self.p.period]/2 and self.tr[-self.p.period] > 20:
                 #执行买入
                 self.order = self.buy()
                 trades.append({'order': 'buy', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
-            if self.datalow[0] < self.dcl[-start_k] - self.tr[-start_k]/2:# and self.tr[0] > 20:
+            if self.datalow[0] < self.dcl[-4] and self.datalow[0] < self.dcl[-self.p.period] - self.tr[-self.p.period]/2 and self.tr[-self.p.period] > 20:
                 #执行买入
                 self.order = self.sell()
                 trades.append({'order': 'sell', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
@@ -170,18 +167,20 @@ class strategy_kam(bt.Strategy):
             #执行卖出条件判断：收盘价格跌破20日均线
             if self.position.size > 0:
                 if (
-                    self.dataclose[0] < self.dataclose[-start_k]
-                        or self.dch[0] > self.dch[-start_k] + self.tr[-start_k]
-                        and self.dataclose[0] < self.dch[-start_k] + self.tr[-start_k]/2
+                    self.dataclose[0] < self.dcl[-1] + self.tr[-1]/3
+                        or self.dch[-1] > self.dch[-self.p.period] + self.tr[-self.p.period]*1.3
+                        and self.dataclose[0] < self.dch[-self.p.period] + self.tr[-self.p.period]/3
+                        and self.tr[-1] > 10
                     ):
                     self.order = self.sell()
                     trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
             if self.position.size < 0:
                 if (
-                    self.dataclose[0] > self.dataclose[-start_k]
-                        or self.dcl[0] < self.dcl[-start_k] - self.tr[-start_k]
-                        and self.dataclose[0] > self.dcl[-start_k] - self.tr[-start_k]/2
+                    self.dataclose[0] > self.dch[-1] - self.tr[-1]/3
+                        or self.dcl[-1] < self.dcl[-self.p.period] - self.tr[-self.p.period]*1.3
+                        and self.dataclose[0] > self.dcl[-self.p.period] - self.tr[-self.p.period]/3
+                        and self.tr[-1] > 10
                     ):
                     self.order = self.buy()
                     trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
