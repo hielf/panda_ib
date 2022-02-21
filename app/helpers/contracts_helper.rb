@@ -239,8 +239,15 @@ module ContractsHelper
     begin_time = 10.days.before(end_time)
     data = Array.new()
     action = Action.today.last
+    first_trade = Trade.today.where("realized_pnl != 0").first
+    reverse_flag = (first_trade && first_trade.realized_pnl < 0) ? true : false
     3.times do
-      system( "cd #{Rails.root.to_s + '/lib/python/ib'} && python3 #{ENV["ib_version"]}_#{ENV["backtrader_version"]}.py '#{csv}' '#{json}' '#{begin_time}' '#{end_time}' '#{yaml_path}' '#{h5}'" )
+      if reverse_flag
+        system( "cd #{Rails.root.to_s + '/lib/python/ib'} && python3 #{ENV["ib_version"]}_#{ENV["backtrader_version"]}_reverse.py '#{csv}' '#{json}' '#{begin_time}' '#{end_time}' '#{yaml_path}' '#{h5}'" )
+      else
+        system( "cd #{Rails.root.to_s + '/lib/python/ib'} && python3 #{ENV["ib_version"]}_#{ENV["backtrader_version"]}.py '#{csv}' '#{json}' '#{begin_time}' '#{end_time}' '#{yaml_path}' '#{h5}'" )
+      end
+
       begin
         data = JSON.parse(File.read(json))
       rescue Exception => e
