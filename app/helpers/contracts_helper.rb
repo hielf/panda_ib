@@ -243,6 +243,7 @@ module ContractsHelper
     reverse_flag = (first_trade && first_trade.realized_pnl < 0) ? true : false
     3.times do
       if reverse_flag
+        Rails.logger.warn "ib py_check_position reversed!"
         system( "cd #{Rails.root.to_s + '/lib/python/ib'} && python3 #{ENV["ib_version"]}_#{ENV["backtrader_version"]}_reverse.py '#{csv}' '#{json}' '#{begin_time}' '#{end_time}' '#{yaml_path}' '#{h5}'" )
       else
         system( "cd #{Rails.root.to_s + '/lib/python/ib'} && python3 #{ENV["ib_version"]}_#{ENV["backtrader_version"]}.py '#{csv}' '#{json}' '#{begin_time}' '#{end_time}' '#{yaml_path}' '#{h5}'" )
