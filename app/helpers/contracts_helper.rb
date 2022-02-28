@@ -239,8 +239,15 @@ module ContractsHelper
     begin_time = 10.days.before(end_time)
     data = Array.new()
     action = Action.today.last
-    first_trade = Trade.today.where("realized_pnl != 0").first
-    reverse_flag = (first_trade && first_trade.realized_pnl < 0) ? true : false
+    # first_trade = Trade.today.where("realized_pnl != 0").first
+    reverse_flag = false
+    pnls_flag = Trade.today.where("realized_pnl != 0").map{|t| t.realized_pnl > 0 ? 1 : 0}
+    pnls_flag.each do |t|
+      n = n + 1 if t == 0
+      n = 0 if t == 1
+      reverse_flag = true if n == 3
+    end
+    # reverse_flag = (first_trade && first_trade.realized_pnl < 0) ? true : false
     3.times do
       if reverse_flag
         Rails.logger.warn "ib py_check_position reversed!"
