@@ -241,6 +241,7 @@ module ContractsHelper
     action = Action.today.last
     # first_trade = Trade.today.where("realized_pnl != 0").first
     reverse_flag = false
+    n = 0
     pnls_flag = Trade.today.where("realized_pnl != 0").map{|t| t.realized_pnl > 0 ? 1 : 0}
     pnls_flag.each do |t|
       n = n + 1 if t == 0
