@@ -21,7 +21,7 @@ module Clockwork
 
       case version
       when '15secs'
-        await = 60
+        await = 6
       when "1min"
         await = 6
       when "2min"
@@ -33,7 +33,7 @@ module Clockwork
       when "5min"
         await = 20
       end
-      stop_time = Time.zone.now + 60.minutes - await.seconds
+      stop_time = Time.zone.now + 2.minutes - await.seconds
       req_times = 0
 
       # file = Rails.root.to_s + "/tmp/csv/#{contract}_#{version}.csv"
@@ -97,7 +97,7 @@ module Clockwork
     end
   end
 
-  every(60.minute, 'IB.market_data', :thread => true)
+  every(1.minute, 'IB.market_data', :thread => true)
   # every(5.minute, 'IB.trades_data', :thread => true)
 
   # every(1.minute, 'timing', :skip_first_run => true, :thread => true)
