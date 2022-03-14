@@ -1,6 +1,6 @@
-data_source: ./data/hsi_fut.csv
-from_date: '2021-01-25 09:30:00'
-end_date: '2021-09-30 09:31:00'
+data_source: /var/www/panda_ib/shared/tmp/csv/hsi_15secs.csv
+from_date: '2022-03-14 09:30:00'
+end_date: '2022-03-14 15:31:00'
 output_prefix: './output/'
 period: 10T
 base_line: 0.25
