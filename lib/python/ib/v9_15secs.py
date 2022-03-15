@@ -57,7 +57,7 @@ class strategy_kam(bt.Strategy):
     #全局设定交易策略的参数
     # 15s, 需要构建5分钟判断, 所以4*5=20 个bar, 考虑其他情况翻倍
     params=(
-        ('period', 4*5),
+        ('period', 4*5*2),
         ('BBandsperiod', 4*5*6),
 
         ('maperiod',4*5*6),

@@ -1,8 +1,9 @@
 data_source: /var/www/panda_ib/shared/tmp/csv/hsi_15secs.csv
 from_date: '2022-03-14 09:30:00'
 end_date: '2022-03-14 15:31:00'
-output_prefix: './output/'
+output_prefix: '/var/www/panda_ib/shared/tmp/'
 period: 10T
 base_line: 0.25
 break_line: 0.25
+cash: 1000000
 memo: 5分钟周期 0.5 0.5
