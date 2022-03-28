@@ -511,7 +511,7 @@ module ContractsHelper
       a << path
     end
 
-    retrun a.last(n)
+    return a.last(n)
   end
 
   def daily_last_csv(date)
