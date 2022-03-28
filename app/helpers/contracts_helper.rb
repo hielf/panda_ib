@@ -501,20 +501,42 @@ module ContractsHelper
     end
   end
 
-  def merge_csv(stock_code, duration)
-    file = Rails.root.to_s + "/tmp/data/#{stock_code}_#{duration}.csv"
-    tmp_file = Rails.root.to_s + "/tmp/data/tmp/#{stock_code}_#{duration}_tmp.csv"
-    table = CSV.parse(File.read(file), headers: true)
-    tmp_table = CSV.parse(File.read(tmp_file), headers: true)
-    last_date = table[-1]["date"]
-    table.delete_if do |row|
-      row["date"].to_time == last_date.to_time
+  def last_n_csv_dirs(n)
+    a = Array.new
+    Dir.entries(dir).sort.each do |d|
+      next if d == '.' or d == '..'
+      path = dir + d
+      next if File.file?(path)
+      next if path.include? Date.today.strftime("%Y%m%d")
+      a << path
     end
-    tmp_table.each do |row|
-      table.push(row)
+
+    retrun a.last(n)
+  end
+
+  def daily_last_csv(date)
+    dir = Rails.root.to_s + "/tmp/csv/#{date}/"
+    path = dir + Dir.entries(dir).sort.last
+
+    return path
+  end
+
+  def merge_csv(contract, version, file_1, file_2, merged_file)
+    merged_file = Rails.root.to_s + "/tmp/csv/#{contract}_#{version}_combined.csv"
+    file_2 = Rails.root.to_s + "/tmp/csv/#{contract}_#{version}.csv"
+    file_1 = Rails.root.to_s + "/tmp/csv/20220316/#{contract}_#{version}_202203161550.csv"
+    file_1 = Rails.root.to_s + "/tmp/csv/20220315/#{contract}_#{version}_202203151550.csv"
+    table = CSV.parse(File.read(file_2), headers: true)
+    tmp_table = CSV.parse(File.read(file_1), headers: true)
+    start_date = table[0]["date"]
+    tmp_table.delete_if do |row|
+      row["date"].to_time >= start_date.to_time
     end
-    File.open(file, 'w') do |f|
-      f.write(table.to_csv)
+    table.each do |row|
+      tmp_table.push(row)
+    end
+    File.open(merged_file, 'w') do |f|
+      f.write(tmp_table.to_csv)
     end
     return file
   end
