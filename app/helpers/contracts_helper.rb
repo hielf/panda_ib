@@ -526,7 +526,7 @@ module ContractsHelper
       next if d == '.' or d == '..'
       path = dir + d
       next if File.file?(path)
-      next if path.include? Date.today.strftime("%Y%m%d")
+      next if (Pathname.new path).basename.to_s == Date.today.strftime("%Y%m%d")
       a << path
     end
 
