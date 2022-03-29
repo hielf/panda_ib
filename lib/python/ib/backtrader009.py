@@ -56,8 +56,10 @@ class strategy_kam(bt.Strategy):
     #全局设定交易策略的参数
     # 15s, 需要构建5分钟判断, 所以4*5=20 个bar, 考虑其他情况翻倍
     params=(
-        ('period', 4*5*3),
-        ('maperiod',20*3),
+        ('period', 4*5),
+        ('BBandsperiod', 4*5*6),
+
+        ('maperiod',4*5*6),
         ('printlog', True),
            )
     def log(self, txt, dt=None, doprint=False):
@@ -75,13 +77,22 @@ class strategy_kam(bt.Strategy):
         self.order = None
         self.buyprice = None
         self.buycomm = None
+        self.minprice= None
+        self.maxprice=None
         self.bar_executed = 0
+        self.close_bar_executed = 0
 
         #添加指标，内置了talib模块
-        self.atr = bt.talib.ATR(self.data.high, self.data.low, self.data.close, self.p.period, subplot=False)
+
         self.dch = bt.ind.Highest(self.data.high, period=self.p.period, subplot=False)
         self.dcl = bt.ind.Lowest(self.data.low, period=self.p.period, subplot=False)
+
+        self.atr = bt.talib.ATR(self.dch, self.dcl, self.data.close, self.p.period*4, subplot=False)
+        self.bband = bt.indicators.BBands(self.datas[0], period=self.params.BBandsperiod, devfactor=2)
+
         self.tr = self.dch - self.dcl
+        self.ema = bt.ind.SMA(self.data.close, period=self.p.period*8, subplot=False)
+
 
 
     def start(self):
@@ -115,6 +126,9 @@ class strategy_kam(bt.Strategy):
 
             self.bar_executed = len(self)
 
+            if self.position.size == 0:
+                self.close_bar_executed = len(self)
+
         elif order.status in [order.Canceled, order.Margin, order.Rejected]:
             pass
             # self.log('Order Canceled/Margin/Rejected')
@@ -146,39 +160,59 @@ class strategy_kam(bt.Strategy):
 
             return
 
-        start_k = (len(self) - self.bar_executed + 1) % 20
+        start_k = (len(self) - self.close_bar_executed ) % self.params.period + 1
+
 
         if self.order: # 检查是否有指令等待执行,
             return
 
         # 检查是否持仓
         if not self.position: # 没有持仓
-            #执行买入条件判断：收盘价格上涨突破20日均线
-            if self.datahigh[0] > self.dch[-start_k] + self.tr[-start_k]/2:# and self.tr[0] > 20:
-                #执行买入
-                self.order = self.buy()
 
-            if self.datalow[0] < self.dcl[-start_k] - self.tr[-start_k]/2:# and self.tr[0] > 20:
+            if self.dataclose[0] > (self.dch[-start_k] + self.atr[-start_k]) and (self.ema[-1] > self.ema[-self.params.period]+ self.atr[-start_k]/2):
                 #执行买入
+                # pass
                 self.order = self.sell()
+
+            if self.dataclose[0] < (self.dcl[-start_k] - self.atr[-start_k]) and (self.ema[-1] < self.ema[-self.params.period]- self.atr[-start_k]/2):
+                #执行买入
+                # pass
+                self.order = self.buy()
         else:
-            if self.position.size > 0:
+            if self.maxprice is None:
+                self.maxprice = self.dataclose[-start_k]
+
+            self.maxprice = max(self.dataclose[-start_k], self.maxprice)
+
+            if self.minprice is None:
+                self.minprice = self.dataclose[-start_k]
+
+            self.minprice = min(self.dataclose[-start_k], self.minprice)
+
+            if self.position.size < 0 and start_k > self.p.period -2:
                 if (
-                    self.dataclose[0] < self.dataclose[-start_k]
-                        or self.dch[0] > self.dch[-start_k] + self.tr[-start_k]
-                        and self.dataclose[0] < self.dch[-start_k] + self.tr[-start_k]/2
-
-                    ):
-                    self.order = self.sell()
-
-            if self.position.size < 0:
-                if (
-                    self.dataclose[0] > self.dataclose[-start_k]
-                        or self.dcl[0] < self.dcl[-start_k] - self.tr[-start_k]
-                        and self.dataclose[0] > self.dcl[-start_k] - self.tr[-start_k]/2
-
+                    self.dataclose[0] < self.maxprice  - self.atr[-start_k]*2
+                    or self.maxprice - self.atr[-start_k] > self.sellprice
+                    # or self.dataclose[0] > self.minprice + self.atr[-start_k]*4
+                        # or (self.dch[0] > self.dch[-start_k] + self.tr[-start_k]
+                        # and self.dataclose[0] < self.dch[-start_k] + self.tr[-start_k]/2 )
                     ):
                     self.order = self.buy()
+                    self.maxprice = None
+                    self.minprice = None
+
+            if self.position.size > 0 and start_k > self.p.period -2:
+
+                if (
+                    self.dataclose[0] > self.minprice + self.atr[-start_k]*2
+                    or self.minprice + self.atr[-start_k] < self.buyprice
+                    # or self.dataclose[0] < self.maxprice  - self.atr[-start_k]*4
+                        # or (self.dcl[0] < self.dcl[-start_k] - self.tr[-start_k]
+                        # and self.dataclose[0] > self.dcl[-start_k] - self.tr[-start_k]/2 )
+                    ):
+                    self.order = self.sell()
+                    self.maxprice = None
+                    self.minprice = None
 
 
 
@@ -196,9 +230,9 @@ if __name__ == '__main__':
             todate=end_time,
         )
 
-    cerebro.broker.setcash(250000.0)
+    cerebro.broker.setcash(my_config['cash'])
     # 设置每笔交易交易的股票数量
-    cerebro.addsizer(bt.sizers.FixedSize, stake=1)
+    cerebro.addsizer(bt.sizers.FixedSize, stake=4)
     # Set the commission
     cerebro.broker.setcommission(
         commission=30,
@@ -219,17 +253,17 @@ if __name__ == '__main__':
     # 策略执行前的资金
     print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
 
-    # cerebro.addanalyzer(bt.analyzers.SharpeRatio,
-    #                     _name='SharpeRatio',
-    #                     timeframe=bt.TimeFrame.Months)
+    cerebro.addanalyzer(bt.analyzers.SharpeRatio,
+                        _name='SharpeRatio',
+                        timeframe=bt.TimeFrame.Months)
 
-    # cerebro.addanalyzer(bt.analyzers.DrawDown, _name='DW')
+    cerebro.addanalyzer(bt.analyzers.DrawDown, _name='DW')
 
-    # cerebro.addanalyzer(bt.analyzers.AnnualReturn, _name='myannual')
+    cerebro.addanalyzer(bt.analyzers.AnnualReturn, _name='myannual')
 
-    # cerebro.addanalyzer(bt.analyzers.TimeReturn,
-    #                     _name='TR',
-    #                     timeframe=bt.TimeFrame.Months)
+    cerebro.addanalyzer(bt.analyzers.TimeReturn,
+                        _name='TR',
+                        timeframe=bt.TimeFrame.Months)
 
 
     results = cerebro.run()
@@ -237,12 +271,12 @@ if __name__ == '__main__':
     # 策略执行后的资金
     print('Final Portfolio Value: %.2f' % cerebro.broker.getvalue())
 
-    # strat = results[0]
-    # print('SR:', strat.analyzers.SharpeRatio.get_analysis())
-    # print('DW:', strat.analyzers.DW.get_analysis())
-    # print('AN:', strat.analyzers.myannual.get_analysis())
-    # print('TimeReturn')
-    # for date, value in results[0].analyzers.TR.get_analysis().items():
-    #     print(date, value)
+    strat = results[0]
+    print('SR:', strat.analyzers.SharpeRatio.get_analysis())
+    print('DW:', strat.analyzers.DW.get_analysis())
+    print('AN:', strat.analyzers.myannual.get_analysis())
+    print('TimeReturn')
+    for date, value in results[0].analyzers.TR.get_analysis().items():
+        print(date, value)
 
     cerebro.plot()
