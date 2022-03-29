@@ -224,7 +224,25 @@ module ContractsHelper
   def py_check_position(contract, version, amount = ENV["amount"])
     order = ""
     position = TraderPosition.init("#{contract}").position
-    csv = Rails.root.to_s + "/tmp/csv/#{contract}_#{version}.csv"
+    ############### merging_csvs ###############
+    dirs = ApplicationController.helpers.last_n_csv_dirs(2)
+    files = Array.new
+    dirs.each do |dir|
+      path = Pathname.new dir
+      date = path.basename.to_s
+      file = ApplicationController.helpers.daily_last_csv(date)
+      files << file
+    end
+    file_1 = files.first
+    file_2 = files.last
+    merging_file = Rails.root.to_s + "/tmp/csv/#{contract}_#{version}_merging.csv"
+    file_1 = ApplicationController.helpers.merge_csv(contract, version, file_1, file_2, merging_file)
+    file_2 = Rails.root.to_s + "/tmp/csv/#{contract}_#{version}.csv"
+    merged_file = Rails.root.to_s + "/tmp/csv/#{contract}_#{version}_merged.csv"
+    csv = ApplicationController.helpers.merge_csv(contract, version, file_1, file_2, merged_file)
+    ############### csv merged ###############
+
+    # csv = Rails.root.to_s + "/tmp/csv/#{contract}_#{version}.csv"
     h5 = Rails.root.to_s + "/tmp/csv/#{contract}_#{version}.h5"
     json = Rails.root.to_s + "/tmp/#{contract}_#{version}_trades.json"
     yaml_path = Rails.root.to_s + "/lib/python/ib/#{ENV["ib_version"]}_#{ENV["backtrader_version"]}.yml"
@@ -502,6 +520,7 @@ module ContractsHelper
   end
 
   def last_n_csv_dirs(n)
+    dir = Rails.root.to_s + "/tmp/csv/"
     a = Array.new
     Dir.entries(dir).sort.each do |d|
       next if d == '.' or d == '..'
@@ -522,10 +541,10 @@ module ContractsHelper
   end
 
   def merge_csv(contract, version, file_1, file_2, merged_file)
-    merged_file = Rails.root.to_s + "/tmp/csv/#{contract}_#{version}_combined.csv"
-    file_2 = Rails.root.to_s + "/tmp/csv/#{contract}_#{version}.csv"
-    file_1 = Rails.root.to_s + "/tmp/csv/20220316/#{contract}_#{version}_202203161550.csv"
-    file_1 = Rails.root.to_s + "/tmp/csv/20220315/#{contract}_#{version}_202203151550.csv"
+    # merged_file = Rails.root.to_s + "/tmp/csv/#{contract}_#{version}_combined.csv"
+    # file_2 = Rails.root.to_s + "/tmp/csv/#{contract}_#{version}.csv"
+    # file_1 = Rails.root.to_s + "/tmp/csv/20220316/#{contract}_#{version}_202203161550.csv"
+    # file_1 = Rails.root.to_s + "/tmp/csv/20220315/#{contract}_#{version}_202203151550.csv"
     table = CSV.parse(File.read(file_2), headers: true)
     tmp_table = CSV.parse(File.read(file_1), headers: true)
     start_date = table[0]["date"]
@@ -538,7 +557,7 @@ module ContractsHelper
     File.open(merged_file, 'w') do |f|
       f.write(tmp_table.to_csv)
     end
-    return file
+    return merged_file
   end
 
   # def merge(*csvs)
