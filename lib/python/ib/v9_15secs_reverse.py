@@ -57,7 +57,7 @@ class strategy_kam(bt.Strategy):
     #全局设定交易策略的参数
     # 15s, 需要构建5分钟判断, 所以4*5=20 个bar, 考虑其他情况翻倍
     params=(
-        ('period', 4*5*2),
+        ('period', 4*5),
         ('BBandsperiod', 4*5*6),
 
         ('maperiod',4*5*6),
@@ -88,11 +88,11 @@ class strategy_kam(bt.Strategy):
         self.dch = bt.ind.Highest(self.data.high, period=self.p.period, subplot=False)
         self.dcl = bt.ind.Lowest(self.data.low, period=self.p.period, subplot=False)
 
-        self.atr = bt.talib.ATR(self.dch, self.dcl, self.data.close, self.p.period*3, subplot=False)
+        self.atr = bt.talib.ATR(self.dch, self.dcl, self.data.close, self.p.period*4, subplot=False)
         self.bband = bt.indicators.BBands(self.datas[0], period=self.params.BBandsperiod, devfactor=2)
 
         self.tr = self.dch - self.dcl
-        self.ema = bt.ind.SMA(self.data.close, period=self.p.period*6, subplot=False)
+        self.ema = bt.ind.SMA(self.data.close, period=self.p.period*8, subplot=False)
 
 
 
@@ -197,7 +197,7 @@ class strategy_kam(bt.Strategy):
             if self.position.size < 0 and start_k > self.p.period -2:
                 if (
                     self.dataclose[0] < self.maxprice  - self.atr[-start_k]*2
-                    or self.maxprice - self.atr[-start_k]*2 > self.sellprice
+                    or self.maxprice - self.atr[-start_k] > self.sellprice
                     # or self.dataclose[0] > self.minprice + self.atr[-start_k]*4
                         # or (self.dch[0] > self.dch[-start_k] + self.tr[-start_k]
                         # and self.dataclose[0] < self.dch[-start_k] + self.tr[-start_k]/2 )
@@ -211,7 +211,7 @@ class strategy_kam(bt.Strategy):
 
                 if (
                     self.dataclose[0] > self.minprice + self.atr[-start_k]*2
-                    or self.minprice + self.atr[-start_k]*2 < self.buyprice
+                    or self.minprice + self.atr[-start_k] < self.buyprice
                     # or self.dataclose[0] < self.maxprice  - self.atr[-start_k]*4
                         # or (self.dcl[0] < self.dcl[-start_k] - self.tr[-start_k]
                         # and self.dataclose[0] > self.dcl[-start_k] - self.tr[-start_k]/2 )
@@ -277,7 +277,7 @@ if __name__ == '__main__':
     #                     timeframe=bt.TimeFrame.Months)
 
     # cerebro.addanalyzer(bt.analyzers.DrawDown, _name='DW')
-    #
+
     # cerebro.addanalyzer(bt.analyzers.AnnualReturn, _name='myannual')
 
     # cerebro.addanalyzer(bt.analyzers.TimeReturn,
@@ -288,8 +288,8 @@ if __name__ == '__main__':
     results = cerebro.run()
 
     # 策略执行后的资金
-    print('Final Portfolio Value: %.2f' % cerebro.broker.getvalue())
-
+    # print('Final Portfolio Value: %.2f' % cerebro.broker.getvalue())
+    #
     # strat = results[0]
     # print('SR:', strat.analyzers.SharpeRatio.get_analysis())
     # print('DW:', strat.analyzers.DW.get_analysis())
@@ -297,7 +297,7 @@ if __name__ == '__main__':
     # print('TimeReturn')
     # for date, value in results[0].analyzers.TR.get_analysis().items():
     #     print(date, value)
-
+    #
     # cerebro.plot()
     print(trades)
     with open(json_path, 'w') as f:
