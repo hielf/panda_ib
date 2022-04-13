@@ -282,7 +282,7 @@ module ContractsHelper
         break
       end
       break if !data.empty?
-      Rails.logger.warn "ib check no csv file"
+      Rails.logger.warn "ib check no JSON file"
       sleep 2
     end
     if data.last
