@@ -596,7 +596,7 @@ module ContractsHelper
         p "before table has: #{table.count}"
         file_path = path + "/" + tmp_file
         File.file?(file_path)
-        p file_path
+        # p file_path
         # tmp_table = CSV.parse(File.read(file_path), headers: true)
         # table.each do |tr|
         #   tmp_table.delete_if do |row|
@@ -627,9 +627,15 @@ module ContractsHelper
           final << r
         elsif n.count > 1
           n2 = final.select {|e| e["date"] == r["date"]}
-          if n2.empty? || ((n2[0]["volume"].nil? ? 0 : n2[0]["volume"]) < (r["volume"].nil? ? 0 : r["volume"]))
-            final.delete_if {|a| a["date"] == r["date"]}
-            final << r
+          begin
+            if n2.empty? || n2[0]["volume"] < r["volume"]
+              final.delete_if {|a| a["date"] == r["date"]}
+              final << r
+            end
+          rescue Exception => e
+            p e
+            p n2
+            p r
           end
         end
       end
@@ -640,7 +646,7 @@ module ContractsHelper
         sql = "insert into hsi_fut_tmp (select 0 as index, '#{h["date"]}' as date, #{h["open"]} as open,#{h["high"]} as high,#{h["low"]} as low,#{h["close"]} as close,#{h["volume"]} as volume,#{h["barCount"]} as barCount,#{h["average"]} as average);"
         postgres.exec(sql)
         count = count + 1
-        p count
+        # p count
       end
       # table.each do |row|
       #   # Moulding.create!(row.to_hash)
