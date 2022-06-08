@@ -627,7 +627,7 @@ module ContractsHelper
           final << r
         elsif n.count > 1
           n2 = final.select {|e| e["date"] == r["date"]}
-          if n2.empty? || n2[0]["volume"] < r["volume"]
+          if n2.empty? || ((n2[0]["volume"].nil? ? 0 : n2[0]["volume"]) < (r["volume"].nil? ? 0 : r["volume"]))
             final.delete_if {|a| a["date"] == r["date"]}
             final << r
           end
