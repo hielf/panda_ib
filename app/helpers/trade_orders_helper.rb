@@ -448,6 +448,7 @@ module TradeOrdersHelper
       # if ib.isConnected()
       main_contract = ApplicationController.helpers.ib_main_contract(contract)
       PyCall.exec("contract = #{main_contract}")
+      # PyCall.exec("bars = ib.reqHistoricalData(contract, endDateTime='#{end_date}', durationStr='#{duration} S', barSizeSetting='#{bar_size}', whatToShow='TRADES', useRTH=False, keepUpToDate=False)")
       PyCall.exec("bars = ib.reqHistoricalData(contract, endDateTime='', durationStr='#{duration} S', barSizeSetting='#{bar_size}', whatToShow='TRADES', useRTH=True, keepUpToDate=True)")
       # PyCall.exec("tmp_table = '#{contract}' + '_tmp'")
       # PyCall.exec("table = '#{contract}'")
@@ -497,7 +498,6 @@ module TradeOrdersHelper
           if (h["date"].to_s).to_time.strftime("%H:%M") >= "09:15" && (h["date"].to_s).to_time.strftime("%H:%M") <= "16:30"
             sql = "insert into #{tmp_table} (select 0 as index, '#{h["date"]}' as date, #{h["open"]} as open,#{h["high"]} as high,#{h["low"]} as low,#{h["close"]} as close,#{h["volume"]} as volume,#{h["barCount"]} as barCount,#{h["average"]} as average);"
             conn.exec(sql)
-            p sql
           end
         end
 
