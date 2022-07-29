@@ -487,28 +487,33 @@ module TradeOrdersHelper
 
       begin
         tmp_table = contract + '_' + version + '_tmp'
-        table = contract
+        table = 'hsi_fut'
         json = list.to_dict(orient='records')
         conn = PG.connect(host: ENV['quant_db_host'], dbname: ENV['quant_db_name'], user: ENV['quant_db_user'], password: ENV['quant_db_pwd'], port: ENV['quant_db_port'])
         conn.exec("truncate table #{tmp_table}")
-        conn.prepare('statement2', "insert into #{tmp_table} values ($1, $2, $3, $4, $5, $6, $7, $8, $9)")
-        json.each_with_index do |row, index|
-          conn.exec_prepared('statement2', [index, row['date'].strftime('%Y-%m-%d %H:%M:%S'), row['open'], row['high'], row['low'], row['close'], row['volume'], row['average'], row['barCount']])
-        end;0
+
+        json.each do |row|
+          h = row
+          if (h["date"].to_s).to_time.strftime("%H:%M") >= "09:15" && (h["date"].to_s).to_time.strftime("%H:%M") <= "16:30"
+            sql = "insert into #{tmp_table} (select 0 as index, '#{h["date"]}' as date, #{h["open"]} as open,#{h["high"]} as high,#{h["low"]} as low,#{h["close"]} as close,#{h["volume"]} as volume,#{h["barCount"]} as barCount,#{h["average"]} as average);"
+            conn.exec(sql)
+            p sql
+          end
+        end
+
         sql = "delete from " + table + " a where a.date = " + "'#{PyCall.eval("bars[-2].date").to_s}'" + ";"
         res  = conn.exec(sql)
 
         sql2 = 'insert into ' + table + ' select * from ' + tmp_table +  ' b where not exists (select 1 from ' + table + ' a where a.date = b.date);'
         res  = conn.exec(sql2)
 
-        Rails.logger.warn "market_data success: #{Time.zone.now}"
+        p "market_data success: #{Time.zone.now}"
       rescue Exception => e
         error_message = e
         result = false
       ensure
         conn.close()
       end
-    end
 
     return result
   end
