@@ -15,6 +15,7 @@ import json
 from tqdm import tqdm
 import sys
 import talib as ta
+from v9_15secs_preprocess import get_yaml_data, format_data, csv_to_h5
 
 import pytz
 pytz.common_timezones[-8:]
@@ -321,6 +322,10 @@ if __name__ == '__main__':
     profits = []
 
     cerebro = bt.Cerebro()
+    # Add a strategy
+    cerebro.addstrategy(MyStrategy)
+
+    csv_to_h5(yaml_path, csv_path, h5_path)
 
     # 本地数据
     dataframe = pd.read_hdf(h5_path, key='df2')
@@ -351,7 +356,7 @@ if __name__ == '__main__':
     )
 
 
-    cerebro.addstrategy(strategy_kam)
+    # cerebro.addstrategy(strategy_kam)
     cerebro.adddata(data)
 
     # uuid_str = uuid.uuid4().hex
