@@ -514,6 +514,7 @@ module TradeOrdersHelper
       ensure
         conn.close()
       end
+    end
 
     return result
   end
