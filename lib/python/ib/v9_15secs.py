@@ -12,6 +12,14 @@ import sys
 import yaml
 import json
 # % matplotlib inline
+from tqdm import tqdm
+import sys
+import talib as ta
+
+import pytz
+pytz.common_timezones[-8:]
+
+tz = pytz.timezone('Asia/Shanghai')
 
 #正常显示画图时出现的中文和负号
 # from pylab import mpl
@@ -52,17 +60,37 @@ import json
 #                                      '%Y-%m-%d %H:%M:%S')
 
 
-# 构建基本策略
-class strategy_kam(bt.Strategy):
-    #全局设定交易策略的参数
-    # 15s, 需要构建5分钟判断, 所以4*5=20 个bar, 考虑其他情况翻倍
-    params=(
-        ('period', 4*5),
-        ('BBandsperiod', 4*5*6),
+class PandasDataExtend(PandasData):
+    # 增加线
+    lines = ('hb', 'hh', 'lb', 'll', 'hb_1', 'hh_1', 'lb_1', 'll_1', 'high_1',
+             'low_1', 'close_1', 'atr_1')
 
-        ('maperiod',4*5*6),
+    # 第几列, 或者直接给列名
+    params = (
+        ('hb', 'hb'),
+        ('hh', 'hh'),
+        ('lb', 'lb'),
+        ('ll', 'll'),
+        ('hb_1', 'hb_1'),
+        ('hh_1', 'hh_1'),
+        ('lb_1', 'lb_1'),
+        ('ll_1', 'll_1'),
+        ('high_1', 'high_1'),
+        ('low_1', 'low_1'),
+        ('close_1', 'close_1'),
+        ('atr_1', 'atr_1'),
+    )  # 上市天数
+
+
+# Create a Stratey
+class MyStrategy(bt.Strategy):
+    params = (
+        ('maperiod', 4 * 5 * 12),
         ('printlog', True),
-           )
+        ('max_price', 0),
+        ('min_price', 0),
+    )
+
     def log(self, txt, dt=None, doprint=False):
         ''' Logging function fot this strategy'''
         if self.params.printlog or doprint:
@@ -70,31 +98,27 @@ class strategy_kam(bt.Strategy):
             print('%s, %s' % (dt.isoformat(), txt))
 
     def __init__(self):
-        #指定价格序列
-        self.dataclose=self.data.close
-        self.datahigh=self.data.high
-        self.datalow=self.data.low
-        # 初始化交易指令、买卖价格和手续费
+        # Keep a reference to the "close" line in the data[0] dataseries
+        self.dataopen = self.datas[0].open
+        self.dataclose = self.datas[0].close
+        self.datahigh = self.datas[0].high
+        self.datalow = self.datas[0].low
+        self.dataatr = self.datas[0].atr_1
+
+        # To keep track of pending orders and buy price/commission
         self.order = None
         self.buyprice = None
         self.buycomm = None
-        self.minprice= None
-        self.maxprice=None
-        self.bar_executed = 0
-        self.close_bar_executed = 0
+        self.sellprice = None
+        self.sellcomm = None
 
-        #添加指标，内置了talib模块
-
-        self.dch = bt.ind.Highest(self.data.high, period=self.p.period, subplot=False)
-        self.dcl = bt.ind.Lowest(self.data.low, period=self.p.period, subplot=False)
-
-        self.atr = bt.talib.ATR(self.dch, self.dcl, self.data.close, self.p.period*4, subplot=False)
-        self.bband = bt.indicators.BBands(self.datas[0], period=self.params.BBandsperiod, devfactor=2)
-
-        self.tr = self.dch - self.dcl
-        self.ema = bt.ind.SMA(self.data.close, period=self.p.period*8, subplot=False)
-
-
+        self.overcross = False
+        self.overcross2 = False
+        self.overcross_price = None
+        self.win_loss = 0
+        self.tr = self.datas[0].high - self.datas[0].low_1
+        # self.buy_sig = bt.indicators.CrossOver(self.datas[0].high_1, self.dataopen)
+        # self.sell_sig = bt.indicators.CrossOver(self.datas[0].low_1, self.dataopen)
 
     def start(self):
         print("the world call me!")
@@ -127,12 +151,9 @@ class strategy_kam(bt.Strategy):
 
             self.bar_executed = len(self)
 
-            if self.position.size == 0:
-                self.close_bar_executed = len(self)
-
         elif order.status in [order.Canceled, order.Margin, order.Rejected]:
             pass
-            # self.log('Order Canceled/Margin/Rejected')
+            #self.log('Order Canceled/Margin/Rejected')
 
         self.order = None
 
@@ -144,13 +165,14 @@ class strategy_kam(bt.Strategy):
                  (trade.commission, trade.pnl, trade.pnlcomm))
 
         if trade.pnlcomm < 0:
-            pass
+            self.win_loss += 1
 
     def next(self):
 
-        # ? 交易时段判断
+        # 9:45 - 15:45
         if self.data.datetime.time() > datetime.time(
-                16, 15) or self.data.datetime.time() < datetime.time(9, 15):
+                16, 20) or self.data.datetime.time() < datetime.time(9, 15):
+            self.win_loss = 0
             if self.position.size > 0:
                 self.order = self.sell()
                 self.log('BUY Close by Day end, %.4f' % self.dataclose[0])
@@ -163,64 +185,125 @@ class strategy_kam(bt.Strategy):
 
             return
 
-        start_k = (len(self) - self.close_bar_executed ) % self.params.period + 1
-
-
-        if self.order: # 检查是否有指令等待执行,
+        if self.order:
             return
 
-        # 检查是否持仓
-        if not self.position: # 没有持仓
+        # Check if we are in the market
 
-            if self.dataclose[0] > (self.dch[-start_k] + self.atr[-start_k]) and (self.ema[-1] > self.ema[-self.params.period]+ self.atr[-start_k]/2):
-                #执行买入
-                # pass
-                self.order = self.sell()
-                trades.append({'order': 'sell', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
+        if not self.position:
 
-            if self.dataclose[0] < (self.dcl[-start_k] - self.atr[-start_k]) and (self.ema[-1] < self.ema[-self.params.period]- self.atr[-start_k]/2):
-                #执行买入
-                # pass
+            c1 = self.datas[0].atr_1[0] > self.datas[0].atr_1[-25]
+            c2 = self.datas[0].atr_1[0] > self.datas[0].atr_1[-45]
+
+            if self.datahigh[0] > self.datas[0].hb_1[0] and (c1 and c2):
+                self.log('BUY CREATE, %.4f, %.4f' %
+                         (self.dataclose[0], self.datas[0].hb_1[0]))
                 self.order = self.buy()
                 trades.append({'order': 'buy', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
-        else:
-            if self.maxprice is None:
-                self.maxprice = self.dataclose[-start_k]
+                self.max_price = self.dataclose[0]
+                self.overcross = False
+                self.overcross_price = None
 
-            self.maxprice = max(self.dataclose[-start_k], self.maxprice)
+            elif self.datalow[0] < self.datas[0].lb_1[0] and (c1 and c2):
+                self.log('SELL CREATE, %.4f, %.4f' %
+                         (self.dataclose[0], self.datas[0].lb_1[0]))
+                self.order = self.sell()
+                trades.append({'order': 'sell', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
+                self.min_price = self.dataclose[0]
+                self.overcross = False
+                self.overcross_price = None
 
-            if self.minprice is None:
-                self.minprice = self.dataclose[-start_k]
-
-            self.minprice = min(self.dataclose[-start_k], self.minprice)
-
-            if self.position.size < 0 and start_k > self.p.period -2:
-                if (
-                    self.dataclose[0] < self.maxprice  - self.atr[-start_k]*2
-                    or self.maxprice - self.atr[-start_k] > self.sellprice
-                    # or self.dataclose[0] > self.minprice + self.atr[-start_k]*4
-                        # or (self.dch[0] > self.dch[-start_k] + self.tr[-start_k]
-                        # and self.dataclose[0] < self.dch[-start_k] + self.tr[-start_k]/2 )
-                    ):
-                    self.order = self.buy()
-                    self.maxprice = None
-                    self.minprice = None
-                    trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
-
-            if self.position.size > 0 and start_k > self.p.period -2:
-
-                if (
-                    self.dataclose[0] > self.minprice + self.atr[-start_k]*2
-                    or self.minprice + self.atr[-start_k] < self.buyprice
-                    # or self.dataclose[0] < self.maxprice  - self.atr[-start_k]*4
-                        # or (self.dcl[0] < self.dcl[-start_k] - self.tr[-start_k]
-                        # and self.dataclose[0] > self.dcl[-start_k] - self.tr[-start_k]/2 )
-                    ):
+            # # 波动收敛策略
+            if not c1 and not c2:
+                if self.datahigh[
+                        0] > self.datas[0].hh_1[0] + self.datas[0].atr_1[0]:
+                    self.log('SELL CREATE, %.4f, %.4f' %
+                             (self.dataclose[0], self.datas[0].lb_1[0]))
                     self.order = self.sell()
-                    self.maxprice = None
-                    self.minprice = None
-                    trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
+                    trades.append({'order': 'sell', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
+                    self.min_price = self.dataclose[0]
+                    self.overcross = False
+                    self.overcross_price = None
 
+                if self.datalow[
+                        0] < self.datas[0].ll_1[0] - self.datas[0].atr_1[0]:
+                    self.log('BUY CREATE, %.4f, %.4f' %
+                             (self.dataclose[0], self.datas[0].hb_1[0]))
+                    self.order = self.buy()
+                    trades.append({'order': 'buy', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
+                    self.max_price = self.dataclose[0]
+                    self.overcross = False
+                    self.overcross_price = None
+
+        else:
+            if self.position.size > 0:
+                # 冲高回落
+
+                close_sig = False
+                self.max_price = max(self.max_price, self.datahigh[0])
+
+                # # 冲高20点开始计算回落
+                if self.max_price > self.datas[0].hh_1[0] + self.dataatr[0] / 2:
+                    self.overcross = True
+
+                if self.datahigh[0] < self.max_price - self.dataatr[0]:
+                    self.log('BUY CLOSE A: -20, %4f' % (self.dataclose[0]))
+                    close_sig = True
+
+                if self.overcross and self.datalow[0] < self.datas[0].hh_1[0]:
+                    self.log('BUY CLOSE A: hl, %4f' % (self.dataclose[0]))
+                    close_sig = True
+
+                if self.datas[0].hh_1[0] != self.datas[0].hh_1[-2]:
+                    self.overcross = False
+
+                # 移动平仓
+
+                if self.dataclose[
+                        0] < self.datas[0].close_1[0] - self.dataatr[0] / 2:
+                    self.log('BUY CLOSE B: move , %4f' % (self.dataclose[0]))
+                    close_sig = True
+
+                if close_sig:
+                    self.order = self.sell()
+                    trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
+                    self.max_price = None
+                    self.overcross = False
+
+            if self.position.size < 0:
+                close_sig = False
+                self.min_price = min(self.min_price, self.datalow[0])
+
+                # 冲高20点开始计算回落
+                if self.min_price < self.datas[0].ll_1[0] - self.dataatr[0] / 2:
+                    self.overcross = True
+
+                if self.datalow[0] > self.min_price + self.dataatr[0]:
+                    self.log('SELL CLOSE A: -20, %4f' % (self.dataclose[0]))
+                    close_sig = True
+
+                if self.overcross and self.datahigh[0] > self.datas[0].ll_1[0]:
+                    self.log('SELL CLOSE A: ll, %4f' % (self.dataclose[0]))
+                    close_sig = True
+
+                if self.datas[0].ll_1[0] != self.datas[0].ll_1[-2]:
+                    self.overcross = False
+
+                # 移动平仓
+
+                if self.dataclose[
+                        0] > self.datas[0].close_1[0] + self.dataatr[0] / 2:
+                    self.log('SELL CLOSE B: move , %4f' % (self.dataclose[0]))
+                    close_sig = True
+
+                if close_sig:
+                    self.order = self.buy()
+                    trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
+                    self.min_price = None
+                    self.overcross = False
+
+    def stop(self):
+        print("death")
 
 
 if __name__ == '__main__':
@@ -240,14 +323,21 @@ if __name__ == '__main__':
     cerebro = bt.Cerebro()
 
     # 本地数据
-    df = pd.read_csv(csv_path, index_col=0, parse_dates=True, usecols=['date', 'open', 'high', 'low', 'close', 'volume'])
-    df.index = pd.to_datetime(df.index)
+    dataframe = pd.read_hdf(h5_path, key='df2')
+    dataframe.reset_index(inplace=True)
 
-    data = PandasData(
-            dataname=df,
-            fromdate=begin_time,
-            todate=end_time,
-        )
+    data = PandasDataExtend(
+        dataname=dataframe,
+        datetime=-1,  # 日期列
+        open=-1,  # 开盘价所在列
+        high=-1,  # 最高价所在列
+        low=-1,  # 最低价所在列
+        close=-1,  # 收盘价价所在列
+        volume=-1,  # 成交量所在列
+        openinterest=-1,
+        fromdate=begin_time,  # 起始日2002, 4, 1
+        todate=end_time,  # 结束日 2015, 12, 31
+        plot=False)
 
     cerebro.broker.setcash(250000.0)
     # 设置每笔交易交易的股票数量
