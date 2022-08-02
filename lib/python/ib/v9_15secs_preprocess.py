@@ -44,7 +44,7 @@ def format_data(dataframe, period='5T', localize_zone='Asia/Shanghai', convert_z
     '''
         目前最小单位15s, 默认组合一行数据为15s+5T
     '''
-
+    config_params = get_yaml_data(yaml_path)
     # 设置日期索引后才能做resample
     dataframe.reset_index(inplace=True)
     dataframe.rename(columns={'date':'datetime'}, inplace=True)
