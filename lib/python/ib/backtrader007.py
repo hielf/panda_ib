@@ -26,6 +26,7 @@ pytz.common_timezones[-8:]
 
 tz = pytz.timezone('Asia/Shanghai')
 
+
 def get_yaml_data(yaml_file):
 
     # 打开yaml文件
@@ -44,6 +45,7 @@ def get_yaml_data(yaml_file):
     print("类型：", type(data))
     return data
 
+
 configfile = sys.argv[1]
 current_path = os.path.abspath(".")
 yaml_path = os.path.join(current_path, configfile)
@@ -51,32 +53,38 @@ config_params = get_yaml_data(yaml_path)
 
 starttime = time.time()
 
-from_date = datetime.datetime.strptime(config_params['from_date'],'%Y-%m-%d %H:%M:%S')
-to_date = datetime.datetime.strptime(config_params['end_date'],'%Y-%m-%d %H:%M:%S')
+from_date = datetime.datetime.strptime(config_params['from_date'],
+                                       '%Y-%m-%d %H:%M:%S')
+to_date = datetime.datetime.strptime(config_params['end_date'],
+                                     '%Y-%m-%d %H:%M:%S')
+
 
 class PandasDataExtend(PandasData):
     # 增加线
-    lines = ('hb', 'hh', 'lb', 'll', 'hb_1', 'hh_1', 'lb_1', 'll_1','high_1', 'low_1', 'close_1','atr_1')
+    lines = ('hb', 'hh', 'lb', 'll', 'hb_1', 'hh_1', 'lb_1', 'll_1', 'high_1',
+             'low_1', 'close_1', 'atr_1')
 
     # 第几列, 或者直接给列名
-    params = (   ( 'hb', 'hb'),
-                 ( 'hh',  'hh'),
-                 ( 'lb',  'lb'),
-                 ( 'll',  'll'),
-                 ( 'hb_1',  'hb_1'),
-                 ( 'hh_1',  'hh_1'),
-                 ( 'lb_1',  'lb_1'),
-                 ( 'll_1',  'll_1'),
-                 ( 'high_1',  'high_1'),
-                 ( 'low_1',  'low_1'),
-                 ('close_1',  'close_1'),
-                 ('atr_1',  'atr_1'),
-                   )  # 上市天数
+    params = (
+        ('hb', 'hb'),
+        ('hh', 'hh'),
+        ('lb', 'lb'),
+        ('ll', 'll'),
+        ('hb_1', 'hb_1'),
+        ('hh_1', 'hh_1'),
+        ('lb_1', 'lb_1'),
+        ('ll_1', 'll_1'),
+        ('high_1', 'high_1'),
+        ('low_1', 'low_1'),
+        ('close_1', 'close_1'),
+        ('atr_1', 'atr_1'),
+    )  # 上市天数
+
 
 # Create a Stratey
 class MyStrategy(bt.Strategy):
     params = (
-        ('maperiod', 4*5*12),
+        ('maperiod', 4 * 5 * 12),
         ('printlog', True),
         ('max_price', 0),
         ('min_price', 0),
@@ -94,7 +102,7 @@ class MyStrategy(bt.Strategy):
         self.dataclose = self.datas[0].close
         self.datahigh = self.datas[0].high
         self.datalow = self.datas[0].low
-        self.dataatr= self.datas[0].atr_1
+        self.dataatr = self.datas[0].atr_1
 
         # To keep track of pending orders and buy price/commission
         self.order = None
@@ -126,26 +134,21 @@ class MyStrategy(bt.Strategy):
         # Attention: broker could reject order if not enougth cash
         if order.status in [order.Completed]:
             if order.isbuy():
-                self.log(
-                    'BUY EXECUTED, Price: %.2f, Cost: %.2f, Comm %.2f' %
-                    (order.executed.price,
-                     order.executed.value,
-                     order.executed.comm))
+                self.log('BUY EXECUTED, Price: %.2f, Cost: %.2f, Comm %.2f' %
+                         (order.executed.price, order.executed.value,
+                          order.executed.comm))
 
                 self.buyprice = order.executed.price
                 self.buycomm = order.executed.comm
 
             else:  # Sell
                 self.log('SELL EXECUTED, Price: %.2f, Cost: %.2f, Comm %.2f' %
-                         (order.executed.price,
-                          order.executed.value,
+                         (order.executed.price, order.executed.value,
                           order.executed.comm))
                 self.sellprice = order.executed.price
                 self.sellcomm = order.executed.comm
 
-
             self.bar_executed = len(self)
-
 
         elif order.status in [order.Canceled, order.Margin, order.Rejected]:
             pass
@@ -166,71 +169,74 @@ class MyStrategy(bt.Strategy):
     def next(self):
 
         # 9:45 - 15:45
-        if self.data.datetime.time() > datetime.time(16, 20) or self.data.datetime.time() < datetime.time(9, 15) :
+        if self.data.datetime.time() > datetime.time(
+                16, 20) or self.data.datetime.time() < datetime.time(9, 15):
             self.win_loss = 0
-            if self. position.size > 0:
+            if self.position.size > 0:
                 self.order = self.sell()
                 self.log('BUY Close by Day end, %.4f' % self.dataclose[0])
 
-            if self. position.size < 0:
+            if self.position.size < 0:
                 self.order = self.buy()
                 self.log('SELL Close by Day end, %.4f' % self.dataclose[0])
 
             return
-
 
         if self.order:
             return
 
         # Check if we are in the market
 
-        if not self.position :
+        if not self.position:
 
             c1 = self.datas[0].atr_1[0] > self.datas[0].atr_1[-25]
             c2 = self.datas[0].atr_1[0] > self.datas[0].atr_1[-45]
 
-            if  self.datahigh[0] > self.datas[0].hb_1[0] and (c1 and c2):
-                 self.log('BUY CREATE, %.4f, %.4f' % (self.dataclose[0], self.datas[0].hb_1[0]))
-                 self.order = self.buy()
-                 self.max_price = self.dataclose[0]
-                 self.overcross = False
-                 self.overcross_price = None
-
+            if self.datahigh[0] > self.datas[0].hb_1[0] and (c1 and c2):
+                self.log('BUY CREATE, %.4f, %.4f' %
+                         (self.dataclose[0], self.datas[0].hb_1[0]))
+                self.order = self.buy()
+                self.max_price = self.dataclose[0]
+                self.overcross = False
+                self.overcross_price = None
 
             elif self.datalow[0] < self.datas[0].lb_1[0] and (c1 and c2):
-                 self.log('SELL CREATE, %.4f, %.4f' % (self.dataclose[0],self.datas[0].lb_1[0]))
-                 self.order = self.sell()
-                 self.min_price = self.dataclose[0]
-                 self.overcross = False
-                 self.overcross_price = None
-
+                self.log('SELL CREATE, %.4f, %.4f' %
+                         (self.dataclose[0], self.datas[0].lb_1[0]))
+                self.order = self.sell()
+                self.min_price = self.dataclose[0]
+                self.overcross = False
+                self.overcross_price = None
 
             # # 波动收敛策略
             if not c1 and not c2:
-                if  self.datahigh[0] > self.datas[0].hh_1[0] + self.datas[0].atr_1[0]:
-                    self.log('SELL CREATE, %.4f, %.4f' % (self.dataclose[0],self.datas[0].lb_1[0]))
+                if self.datahigh[
+                        0] > self.datas[0].hh_1[0] + self.datas[0].atr_1[0]:
+                    self.log('SELL CREATE, %.4f, %.4f' %
+                             (self.dataclose[0], self.datas[0].lb_1[0]))
                     self.order = self.sell()
                     self.min_price = self.dataclose[0]
                     self.overcross = False
                     self.overcross_price = None
 
-                if  self.datalow[0] < self.datas[0].ll_1[0] - self.datas[0].atr_1[0]:
-                    self.log('BUY CREATE, %.4f, %.4f' % (self.dataclose[0], self.datas[0].hb_1[0]))
+                if self.datalow[
+                        0] < self.datas[0].ll_1[0] - self.datas[0].atr_1[0]:
+                    self.log('BUY CREATE, %.4f, %.4f' %
+                             (self.dataclose[0], self.datas[0].hb_1[0]))
                     self.order = self.buy()
                     self.max_price = self.dataclose[0]
                     self.overcross = False
                     self.overcross_price = None
 
-
         else:
-            if self. position.size > 0:
+            if self.position.size > 0:
                 # 冲高回落
 
                 close_sig = False
                 self.max_price = max(self.max_price, self.datahigh[0])
 
                 # # 冲高20点开始计算回落
-                if self.max_price > self.datas[0].hh_1[0] + self.dataatr[0]/2:
+                if self.max_price > self.datas[0].hh_1[0] + self.dataatr[0] / 2:
                     self.overcross = True
 
                 if self.datahigh[0] < self.max_price - self.dataatr[0]:
@@ -246,7 +252,8 @@ class MyStrategy(bt.Strategy):
 
                 # 移动平仓
 
-                if self.dataclose[0] < self.datas[0].close_1[0] - self.dataatr[0]/2:
+                if self.dataclose[
+                        0] < self.datas[0].close_1[0] - self.dataatr[0] / 2:
                     self.log('BUY CLOSE B: move , %4f' % (self.dataclose[0]))
                     close_sig = True
 
@@ -255,12 +262,12 @@ class MyStrategy(bt.Strategy):
                     self.max_price = None
                     self.overcross = False
 
-            if self. position.size < 0:
+            if self.position.size < 0:
                 close_sig = False
                 self.min_price = min(self.min_price, self.datalow[0])
 
                 # 冲高20点开始计算回落
-                if self.min_price < self.datas[0].ll_1[0] - self.dataatr[0]/2:
+                if self.min_price < self.datas[0].ll_1[0] - self.dataatr[0] / 2:
                     self.overcross = True
 
                 if self.datalow[0] > self.min_price + self.dataatr[0]:
@@ -276,7 +283,8 @@ class MyStrategy(bt.Strategy):
 
                 # 移动平仓
 
-                if self.dataclose[0] > self.datas[0].close_1[0] + self.dataatr[0]/2:
+                if self.dataclose[
+                        0] > self.datas[0].close_1[0] + self.dataatr[0] / 2:
                     self.log('SELL CLOSE B: move , %4f' % (self.dataclose[0]))
                     close_sig = True
 
@@ -285,9 +293,9 @@ class MyStrategy(bt.Strategy):
                     self.min_price = None
                     self.overcross = False
 
-
     def stop(self):
         print("death")
+
 
 if __name__ == '__main__':
     # Create a cerebro entity
@@ -299,26 +307,27 @@ if __name__ == '__main__':
     dataframe.reset_index(inplace=True)
 
     data = PandasDataExtend(
-            dataname=dataframe,
-            datetime=-1,  # 日期列
-            open=-1,  # 开盘价所在列
-            high=-1,  # 最高价所在列
-            low=-1,  # 最低价所在列
-            close=-1,  # 收盘价价所在列
-            volume=-1,  # 成交量所在列
-            openinterest=-1,
-            fromdate=from_date,  # 起始日2002, 4, 1
-            todate=to_date,  # 结束日 2015, 12, 31
-            plot=False
-        )
-
+        dataname=dataframe,
+        datetime=-1,  # 日期列
+        open=-1,  # 开盘价所在列
+        high=-1,  # 最高价所在列
+        low=-1,  # 最低价所在列
+        close=-1,  # 收盘价价所在列
+        volume=-1,  # 成交量所在列
+        openinterest=-1,
+        fromdate=from_date,  # 起始日2002, 4, 1
+        todate=to_date,  # 结束日 2015, 12, 31
+        plot=False)
 
     # Add the Data Feed to Cerebro
     cerebro.adddata(data)
 
-
     uuid_str = uuid.uuid4().hex
-    cerebro.addwriter(bt.WriterFile, csv = True, out="{}_{}_{}.csv".format(config_params['output_prefix'], config_params['period'], uuid_str))
+    cerebro.addwriter(bt.WriterFile,
+                      csv=True,
+                      out="{}_{}_{}.csv".format(config_params['output_prefix'],
+                                                config_params['period'],
+                                                uuid_str))
     # Set our desired cash start
     cerebro.broker.setcash(250000.0)
     # 设置每笔交易交易的股票数量
@@ -326,26 +335,29 @@ if __name__ == '__main__':
     # Set the commission
     cerebro.broker.setcommission(
         commission=30,
-        commtype = bt.CommInfoBase.COMM_FIXED, # 固定手续费
-        automargin = 5, # 保证金10% , 这里5是因为hsi 指数 一个点50元, 10%保证金, 交易一次30元
-        mult = 50 # 利润乘数, hsi 是1个点50
-        )
+        commtype=bt.CommInfoBase.COMM_FIXED,  # 固定手续费
+        automargin=5,  # 保证金10% , 这里5是因为hsi 指数 一个点50元, 10%保证金, 交易一次30元
+        mult=50  # 利润乘数, hsi 是1个点50
+    )
     # Print out the starting conditions
     print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
 
-    cerebro.addanalyzer(bt.analyzers.SharpeRatio, _name = 'SharpeRatio', timeframe=bt.TimeFrame.Months)
+    cerebro.addanalyzer(bt.analyzers.SharpeRatio,
+                        _name='SharpeRatio',
+                        timeframe=bt.TimeFrame.Months)
     cerebro.addanalyzer(bt.analyzers.DrawDown, _name='DW')
     cerebro.addanalyzer(bt.analyzers.AnnualReturn, _name='myannual')
-    cerebro.addanalyzer(bt.analyzers.TimeReturn, _name = 'TR', timeframe=bt.TimeFrame.Months)
+    cerebro.addanalyzer(bt.analyzers.TimeReturn,
+                        _name='TR',
+                        timeframe=bt.TimeFrame.Months)
 
     results = cerebro.run()
 
     endtime = time.time()
-    print('='*5, 'program running time', '='*5)
+    print('=' * 5, 'program running time', '=' * 5)
     print('==== 2 bar ====')
-    print ('time:', (endtime - starttime), 'seconds')
-    print('='*5, 'program running time', '='*5)
-
+    print('time:', (endtime - starttime), 'seconds')
+    print('=' * 5, 'program running time', '=' * 5)
 
     strat = results[0]
     print('Final Portfolio Value: %.2f' % cerebro.broker.getvalue())
@@ -353,9 +365,9 @@ if __name__ == '__main__':
     print('DW:', strat.analyzers.DW.get_analysis())
     print('AN:', strat.analyzers.myannual.get_analysis())
     print('TimeReturn')
-    for date, value in  results[0].analyzers.TR.get_analysis().items():
-     print(date, value)
-
+    for date, value in results[0].analyzers.TR.get_analysis().items():
+        print(date, value)
 
     figure = cerebro.plot()[0][0]
-    figure.savefig("{}_{}_{}.png".format(config_params['output_prefix'], config_params['period'], uuid_str))
+    figure.savefig("{}_{}_{}.png".format(config_params['output_prefix'],
+                                         config_params['period'], uuid_str))

@@ -1,4 +1,4 @@
-data_source: /var/www/panda_ib/shared/tmp/csv/hsi_15secs.csv
+data_source: /var/www/panda_ib/shared/tmp/csv/hsi_15secs_merged.csv
 from_date: '2022-03-14 09:30:00'
 end_date: '2022-03-14 15:31:00'
 output_prefix: '/var/www/panda_ib/shared/tmp/'
