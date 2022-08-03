@@ -40,11 +40,10 @@ def get_yaml_data(yaml_file):
     print("类型：", type(data))
     return data
 
-def format_data(dataframe, period='5T', localize_zone='Asia/Shanghai', convert_zone= 'US/Eastern'):
+def format_data(config_params, dataframe, period='5T', localize_zone='Asia/Shanghai', convert_zone= 'US/Eastern'):
     '''
         目前最小单位15s, 默认组合一行数据为15s+5T
     '''
-    config_params = get_yaml_data(yaml_path)
     # 设置日期索引后才能做resample
     dataframe.reset_index(inplace=True)
     dataframe.rename(columns={'date':'datetime'}, inplace=True)
@@ -130,7 +129,7 @@ def csv_to_h5(yaml_path, csv_path, h5_path):
 
 
     # %% 处理数据
-    df2 = format_data(df, period=config_params['period'])
+    df2 = format_data(config_params, df, period=config_params['period'])
 
     # %% write hdf5
     df2.reset_index(inplace=True)
