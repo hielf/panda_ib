@@ -240,10 +240,11 @@ module ContractsHelper
     file_2 = Rails.root.to_s + "/tmp/csv/#{contract}_#{version}.csv"
     merged_file = Rails.root.to_s + "/tmp/csv/#{contract}_#{version}_merged.csv"
     csv = ApplicationController.helpers.merge_csv(contract, version, file_1, file_2, merged_file)
+    target = Rails.root.to_s + "/tmp/csv/#{contract}_#{version}_merg_5T_10T.csv"
     ############### csv merged ###############
 
     # csv = Rails.root.to_s + "/tmp/csv/#{contract}_#{version}.csv"
-    h5 = Rails.root.to_s + "/tmp/csv/#{contract}_#{version}.h5"
+    middle_file = Rails.root.to_s + "/tmp/csv/#{contract}_#{version}.h5"
     json = Rails.root.to_s + "/tmp/#{contract}_#{version}_trades.json"
     yaml_path = Rails.root.to_s + "/lib/python/ib/#{ENV["ib_version"]}_#{ENV["backtrader_version"]}.yml"
     # begin_date = Time.zone.now < (Time.parse "11:30 am") ? 1.business_day.ago.to_date : Date.today
@@ -272,7 +273,9 @@ module ContractsHelper
       #   Rails.logger.warn "ib py_check_position reversed!"
       #   system( "cd #{Rails.root.to_s + '/lib/python/ib'} && python3 #{ENV["ib_version"]}_#{ENV["backtrader_version"]}_reverse.py '#{csv}' '#{json}' '#{begin_time}' '#{end_time}' '#{yaml_path}' '#{h5}'" )
       # else
-      system( "cd #{Rails.root.to_s + '/lib/python/ib'} && python3 #{ENV["ib_version"]}_#{ENV["backtrader_version"]}.py '#{csv}' '#{json}' '#{begin_time}' '#{end_time}' '#{yaml_path}' '#{h5}'" )
+      hash = "{'5T': {'KAM': [0.5,0.5], 'ATR': [6]}, '10T': {'KAM': [0.5,0.5], 'ATR': [4]}}"
+      `cd #{Rails.root.to_s + '/lib/python/ib'} && python3 #{ENV["ib_version"]}_resample_data.py --source '#{csv}' --target '#{target}' --indicators "#{hash}"`
+      `cd #{Rails.root.to_s + '/lib/python/ib'} && python3 #{ENV["ib_version"]}_#{ENV["backtrader_version"]}.py '#{csv}' '#{json}' '#{begin_time}' '#{end_time}' '#{yaml_path}' '#{middle_file}'`
       # end
 
       begin

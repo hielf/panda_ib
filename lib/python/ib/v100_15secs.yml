@@ -1,0 +1,10 @@
+source: output/merg_20220101_5T_10T.csv
+from_date: '2021-02-01 09:15:00'
+end_date: '2023-12-30 16:20:45'
+output_prefix: './output/'
+period: 5T
+base_line: 0.5
+break_line: 0.5
+cash: 1000000
+condition: "  self.data.tr_10T[0] in range(0,40)"
+memo: 5分钟周期 0.5 0.5
