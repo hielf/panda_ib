@@ -84,7 +84,6 @@ def read_data(source):
         fromdate=start_time,
         todate=end_time,
     )
-
     return data
 
 
