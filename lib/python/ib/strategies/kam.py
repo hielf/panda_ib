@@ -17,9 +17,6 @@ class kam002(bt.Strategy):
             dt = dt or self.datas[0].datetime.datetime(0)
             print('%s, %s' % (dt.isoformat(), txt))
 
-            with open('/Users/hielf/workspace/projects/panda_ib/tmp/hsi_15secs_trades.json', 'w') as f:
-                json.dump(txt, f)
-
     def __init__(self):
         #指定价格序列
         self.dataclose=self.data.close
@@ -187,3 +184,6 @@ class kam002(bt.Strategy):
 
         if self.old_close5T != self.data.close_5T[0]:
             self.old_close5T = self.data.close_5T[0]
+
+        with open('/Users/hielf/workspace/projects/panda_ib/tmp/hsi_15secs_trades.json', 'w') as f:
+            json.dump(self.trades, f)
