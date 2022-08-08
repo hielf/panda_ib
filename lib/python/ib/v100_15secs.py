@@ -71,19 +71,19 @@ class PandasData(bt.feeds.PandasData):
 
 
 # 构建基本策略
-def read_data(source):
-    start_time = datetime.datetime.strptime(my_config['from_date'],
-                                            '%Y-%m-%d %H:%M:%S')
-    end_time = datetime.datetime.strptime(my_config['end_date'],
-                                          '%Y-%m-%d %H:%M:%S')
+def read_data(source, begin_time, end_time):
+    # start_time = datetime.datetime.strptime(my_config['from_date'],
+    #                                         '%Y-%m-%d %H:%M:%S')
+    # end_time = datetime.datetime.strptime(my_config['end_date'],
+    #                                       '%Y-%m-%d %H:%M:%S')
     df = pd.read_csv(source, parse_dates=True)
     df['date'] = pd.to_datetime(df['date'])
     df.set_index('date', inplace=True)
-    print(list(df.columns))
-    print(df.head())
+    # print(list(df.columns))
+    # print(df.head())
     data = PandasData(
         dataname=df,
-        fromdate=start_time,
+        fromdate=begin_time,
         todate=end_time,
     )
     return data
@@ -122,10 +122,11 @@ if __name__ == '__main__':
     # s01 = online.kam999
     s01 = kam.kam002
     s01.config = my_config
+    s01.json_path = json_path
     cerebro.addstrategy(s01)
 
     # 读取数据
-    data = read_data(middle_path)
+    data = read_data(middle_path, begin_time, end_time)
     cerebro.adddata(data)
 
     # uuid_str = uuid.uuid4().hex
