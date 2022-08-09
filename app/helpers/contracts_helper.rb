@@ -221,6 +221,8 @@ module ContractsHelper
     return data
   end
 
+  # contract = 'hsi'
+  # version = '15secs'
   def py_check_position(contract, version, amount = ENV["amount"])
     order = ""
     position = TraderPosition.init("#{contract}").position
