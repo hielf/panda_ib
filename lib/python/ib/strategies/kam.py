@@ -63,16 +63,12 @@ class kam002(bt.Strategy):
                 self.buyprice = order.executed.price
                 self.buycomm = order.executed.comm
 
-                self.trades.append({'order': 'buy', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
-
             else:  # Sell
                 self.log('SELL EXECUTED, Price: %.2f, Cost: %.2f, Comm %.2f' %
                          (order.executed.price, order.executed.value,
                           order.executed.comm))
                 self.sellprice = order.executed.price
                 self.sellcomm = order.executed.comm
-
-                self.trades.append({'order': 'sell', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
             self.bar_executed = len(self)
 
@@ -86,11 +82,18 @@ class kam002(bt.Strategy):
         self.order = None
 
     def notify_trade(self, trade):
+        if trade.justopened:
+            if trade.size > 0:
+                self.trades.append({'order': 'buy', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
+            if trade.size < 0:
+                self.trades.append({'order': 'sell', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
+
         if not trade.isclosed:
             return
 
         self.log('OPERATION PROFIT, COMM %.2f, GROSS %.2f, NET %.2f \n\n' %
                  (trade.commission, trade.pnl, trade.pnlcomm))
+        self.trades.append({'order': 'close', 'time': self.data.datetime.time().strftime('%H:%M:%S')})
 
         if trade.pnlcomm < 0:
             pass

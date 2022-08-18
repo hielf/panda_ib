@@ -36,8 +36,8 @@ class OrdersJob < ApplicationJob
 
   private
   def event_log
-    EventLog.create(log_type: "ORDER", order_type: @order, content: "#{@order} #{@amount.to_s} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}") if @order != "" && @amount != 0
-    EventLog.create(log_type: "MOVE", order_type: @move_order, content: "#{@move_order} #{@move_price.to_s} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}") if @move_order != "" && @move_price != 0
+    EventLog.create(log_type: "ORDER", order_type: @order, content: "#{@order} #{@amount.to_s} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}") if !@order.nil? && @order != "" && @amount != 0
+    EventLog.create(log_type: "MOVE", order_type: @move_order, content: "#{@move_order} #{@move_price.to_s} at #{Time.zone.now.strftime('%Y-%m-%d %H:%M')}") if !@move_order.nil? && @move_order != "" && @move_price != 0
 
     job1 = PositionsJob.set(wait: 2.seconds).perform_later(@contract, @version)
     job2 = TradesJob.set(wait: 6.seconds).perform_later(@contract, @version)
