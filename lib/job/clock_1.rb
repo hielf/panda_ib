@@ -17,17 +17,24 @@ module Clockwork
   handler do |job, time|
     contract = ENV['contract']
     version = ENV['backtrader_version']
+    run_flag = true
     # puts "ib.trader started at #{Time.zone.now}"
-    begin
-      j = TradersJob.perform_later contract, version
-      100.times do
-        status = ActiveJob::Status.get(j)
-        break if status.completed?
-        sleep 0.2
-      end
-    rescue Exception => e
-      error_message = e.message
-    end if job == 'ib.trader'
+    if ENV['ib_version'] == "v100"
+      run_flag = false if Time.zone.now.friday?
+    end
+
+    if run_flag
+      begin
+        j = TradersJob.perform_later contract, version
+        100.times do
+          status = ActiveJob::Status.get(j)
+          break if status.completed?
+          sleep 0.2
+        end
+      rescue Exception => e
+        error_message = e.message
+      end if job == 'ib.trader'
+    end
   end
 
   # -----------------------------------temp -----------------------------------
