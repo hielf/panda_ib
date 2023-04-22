@@ -1,4 +1,4 @@
-# source 'https://rubygems.org'
+source 'https://rubygems.org'
 # source 'https://ruby.taobao.org'
 # source 'https://gems.ruby-china.com'
 
@@ -11,7 +11,7 @@ end
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '~> 5.2.3'
 gem 'mysql2'
-gem 'pg'
+gem 'pg', '~> 1.4.6'
 
 # Use Puma as the app server
 gem 'puma', '~> 4.0'

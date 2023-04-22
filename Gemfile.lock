@@ -8,6 +8,7 @@ GIT
       puma (~> 4.0)
 
 GEM
+  remote: https://rubygems.org/
   specs:
     actioncable (5.2.3)
       actionpack (= 5.2.3)
@@ -156,7 +157,7 @@ GEM
     nokogiri (1.10.4)
       mini_portile2 (~> 2.4.0)
     parallel (1.17.0)
-    pg (1.1.4)
+    pg (1.4.6)
     polyamorous (2.3.0)
       activerecord (>= 5.0)
     puma (4.3.1)
@@ -310,7 +311,7 @@ DEPENDENCIES
   mysql2
   net-ping
   parallel
-  pg
+  pg (~> 1.4.6)
   puma (~> 4.0)
   pycall
   rack-cors
