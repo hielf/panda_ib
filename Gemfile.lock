@@ -8,7 +8,6 @@ GIT
       puma (~> 4.0)
 
 GEM
-  remote: https://gems.ruby-china.com/
   specs:
     actioncable (5.2.3)
       actionpack (= 5.2.3)
