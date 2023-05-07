@@ -5,16 +5,29 @@ import psycopg2
 import sched, time
 import datetime
 import random
-# util.startLoop()  # uncomment this line when in a notebook
+import yaml
+
+def production_config(yaml_file):
+    with open(yaml_file) as f:
+        config = yaml.safe_load(f)
+
+        production_config = config['production']
+    return production_config
+
+# yaml_file = "/Users/hielf/workspace/projects/panda_ib/config/application.yml"
+config_file = "config/application.yml"
+current_path = os.path.abspath("../../../")
+yaml_path = os.path.join(current_path, config_file)
+conf = production_config(yaml_path)
 
 ib = IB()
 # ib.connect('127.0.0.1', 7496, clientId=100)
 # ib.connect('129.226.51.237', 7497, clientId=101)
-ib.connect(host='150.109.148.150', port=7497, clientId=random.randint(1,50), timeout=10, readonly=False)
+ib.connect(host=conf["tws_ip"], port=int(conf["tws_port"]), clientId=random.randint(1,50), timeout=10, readonly=False)
 
-contracts = [Index(symbol = "HSI", exchange = "HKFE"), Index(symbol = "SPX", exchange = "CBOE"), Forex('USDJPY'), Forex('EURUSD'), Contract(exchange = "ECBOT", secType = "CONTFUT", symbol = "YM")]
+# contracts = [Index(symbol = "HSI", exchange = "HKFE"), Index(symbol = "SPX", exchange = "CBOE"), Forex('USDJPY'), Forex('EURUSD'), Contract(exchange = "ECBOT", secType = "CONTFUT", symbol = "YM")]
 # contracts = [Contract(exchange = "ECBOT", secType = "CONTFUT", symbol = "YM")]
-# contracts = [Index(symbol = "HSI", exchange = "HKFE")]
+contracts = [Index(symbol = "HSI", exchange = "HKFE")]
 # bars = ib.reqHistoricalData(contract, endDateTime='', durationStr='1 D',
 #         barSizeSetting='1 min', whatToShow='TRADES', useRTH=True)
 
@@ -22,7 +35,9 @@ def get_index_5sec(end_datetime):
     print("start 5sec collect %s" % str(end_datetime))
     for contract in contracts:
         print(str(contract))
-        conn = psycopg2.connect("host='postgres.ripple-tech.com' dbname='panda_quant' user='chesp' password='Chesp2021' port='5432'")
+        conn_str = "host='{}' dbname='{}' user='{}' password='{}' port='{}'"
+        conn_str = conn_str.format(conf['quant_db_host'], conf['quant_db_name'], conf['quant_db_user'], conf['quant_db_pwd'], conf['quant_db_port'])
+        conn = psycopg2.connect(conn_str)
         cur = conn.cursor()
         if contract.secType == 'IND':
             if contract.symbol == 'HSI':
@@ -32,7 +47,9 @@ def get_index_5sec(end_datetime):
         df = util.df(bars)
         print("got bars %s" % str(bars))
         print("got contract %s" % str(contract))
-        engine = create_engine('postgresql+psycopg2://chesp:Chesp2021@postgres.ripple-tech.com:5432/panda_quant',echo=True,client_encoding='utf8')
+        engine_str = "postgresql+psycopg2://{}:{}@{}:{}/{}"
+        engine_str = engine_str.format(conf['quant_db_user'], conf['quant_db_pwd'], conf['quant_db_host'], conf['quant_db_port'], conf['quant_db_name'])
+        engine = create_engine(engine_str,echo=True,client_encoding='utf8')
         print("waiting for collect %s" % table)
         try:
             df.to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');
@@ -48,7 +65,9 @@ def get_index_15sec(end_datetime):
     print("start 15sec collect %s" % str(end_datetime))
     for contract in contracts:
         print(str(contract))
-        conn = psycopg2.connect("host='postgres.ripple-tech.com' dbname='panda_quant' user='chesp' password='Chesp2021' port='5432'")
+        conn_str = "host='{}' dbname='{}' user='{}' password='{}' port='{}'"
+        conn_str = conn_str.format(conf['quant_db_host'], conf['quant_db_name'], conf['quant_db_user'], conf['quant_db_pwd'], conf['quant_db_port'])
+        conn = psycopg2.connect(conn_str)
         cur = conn.cursor()
         if contract.secType == 'CASH':
             if contract.symbol == 'USD' and contract.currency == 'JPY':
@@ -74,7 +93,9 @@ def get_index_15sec(end_datetime):
         df = util.df(bars)
         print("got bars %s" % str(bars))
         print("got contract %s" % str(contract))
-        engine = create_engine('postgresql+psycopg2://chesp:Chesp2021@postgres.ripple-tech.com:5432/panda_quant',echo=True,client_encoding='utf8')
+        engine_str = "postgresql+psycopg2://{}:{}@{}:{}/{}"
+        engine_str = engine_str.format(conf['quant_db_user'], conf['quant_db_pwd'], conf['quant_db_host'], conf['quant_db_port'], conf['quant_db_name'])
+        engine = create_engine(engine_str,echo=True,client_encoding='utf8')
         print("waiting for collect %s" % table)
         try:
             df.to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');
@@ -90,7 +111,9 @@ def get_index_30sec(end_date):
     print("start 30sec collect %s" % str(end_date))
     for contract in contracts:
         print(str(contract))
-        conn = psycopg2.connect("host='postgres.ripple-tech.com' dbname='panda_quant' user='chesp' password='Chesp2021' port='5432'")
+        conn_str = "host='{}' dbname='{}' user='{}' password='{}' port='{}'"
+        conn_str = conn_str.format(conf['quant_db_host'], conf['quant_db_name'], conf['quant_db_user'], conf['quant_db_pwd'], conf['quant_db_port'])
+        conn = psycopg2.connect(conn_str)
         cur = conn.cursor()
         if contract.secType == 'CASH':
             if contract.symbol == 'USD' and contract.currency == 'JPY':
@@ -116,7 +139,9 @@ def get_index_30sec(end_date):
         df = util.df(bars)
         print("got bars %s" % str(bars))
         print("got contract %s" % str(contract))
-        engine = create_engine('postgresql+psycopg2://chesp:Chesp2021@postgres.ripple-tech.com:5432/panda_quant',echo=True,client_encoding='utf8')
+        engine_str = "postgresql+psycopg2://{}:{}@{}:{}/{}"
+        engine_str = engine_str.format(conf['quant_db_user'], conf['quant_db_pwd'], conf['quant_db_host'], conf['quant_db_port'], conf['quant_db_name'])
+        engine = create_engine(engine_str,echo=True,client_encoding='utf8')
         print("waiting for collect %s" % table)
         try:
             df.to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');
@@ -132,7 +157,9 @@ def get_index_1min(end_date):
     print("start 1min collect %s" % str(end_date))
     for contract in contracts:
         print(str(contract))
-        conn = psycopg2.connect("host='postgres.ripple-tech.com' dbname='panda_quant' user='chesp' password='Chesp2021' port='5432'")
+        conn_str = "host='{}' dbname='{}' user='{}' password='{}' port='{}'"
+        conn_str = conn_str.format(conf['quant_db_host'], conf['quant_db_name'], conf['quant_db_user'], conf['quant_db_pwd'], conf['quant_db_port'])
+        conn = psycopg2.connect(conn_str)
         cur = conn.cursor()
         if contract.secType == 'CASH':
             if contract.symbol == 'USD' and contract.currency == 'JPY':
@@ -158,7 +185,9 @@ def get_index_1min(end_date):
         df = util.df(bars)
         print("got bars %s" % str(bars))
         print("got contract %s" % str(contract))
-        engine = create_engine('postgresql+psycopg2://chesp:Chesp2021@postgres.ripple-tech.com:5432/panda_quant',echo=True,client_encoding='utf8')
+        engine_str = "postgresql+psycopg2://{}:{}@{}:{}/{}"
+        engine_str = engine_str.format(conf['quant_db_user'], conf['quant_db_pwd'], conf['quant_db_host'], conf['quant_db_port'], conf['quant_db_name'])
+        engine = create_engine(engine_str,echo=True,client_encoding='utf8')
         print("waiting for collect %s" % table)
         try:
             df.to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');
@@ -175,7 +204,9 @@ def get_index_5min(end_date):
     print("start 5min collect %s" % str(end_date))
     for contract in contracts:
         print(str(contract))
-        conn = psycopg2.connect("host='postgres.ripple-tech.com' dbname='panda_quant' user='chesp' password='Chesp2021' port='5432'")
+        conn_str = "host='{}' dbname='{}' user='{}' password='{}' port='{}'"
+        conn_str = conn_str.format(conf['quant_db_host'], conf['quant_db_name'], conf['quant_db_user'], conf['quant_db_pwd'], conf['quant_db_port'])
+        conn = psycopg2.connect(conn_str)
         cur = conn.cursor()
         if contract.secType == 'CASH':
             if contract.symbol == 'USD' and contract.currency == 'JPY':
@@ -201,7 +232,9 @@ def get_index_5min(end_date):
         df = util.df(bars)
         print("got bars %s" % str(bars))
         print("got contract %s" % str(contract))
-        engine = create_engine('postgresql+psycopg2://chesp:Chesp2021@postgres.ripple-tech.com:5432/panda_quant',echo=True,client_encoding='utf8')
+        engine_str = "postgresql+psycopg2://{}:{}@{}:{}/{}"
+        engine_str = engine_str.format(conf['quant_db_user'], conf['quant_db_pwd'], conf['quant_db_host'], conf['quant_db_port'], conf['quant_db_name'])
+        engine = create_engine(engine_str,echo=True,client_encoding='utf8')
         print("waiting for collect %s" % table)
         try:
             df.to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');
@@ -216,7 +249,9 @@ def get_index_5min(end_date):
 
 # def get_index_30min(date_time):
 #     for contract in contracts:
-#         conn = psycopg2.connect("host='postgres.ripple-tech.com' dbname='panda_quant' user='chesp' password='Chesp2021' port='5432'")
+#         conn_str = "host='{}' dbname='{}' user='{}' password='{}' port='{}'"
+        # conn_str = conn_str.format(conf['quant_db_host'], conf['quant_db_name'], conf['quant_db_user'], conf['quant_db_pwd'], conf['quant_db_port'])
+        # conn = psycopg2.connect(conn_str)
 #         cur = conn.cursor()
 #         if contract.secType == 'CASH':
 #             bars = ib.reqHistoricalData(contract, endDateTime='', durationStr='45 D', barSizeSetting='30 mins', whatToShow='MIDPOINT', useRTH=True)
@@ -240,7 +275,9 @@ def get_index_5min(end_date):
 #         df = util.df(bars)
 #         # print(df[['date', 'open', 'high', 'low', 'close']])
 #
-#         engine = create_engine('postgresql+psycopg2://chesp:Chesp2021@postgres.ripple-tech.com:5432/panda_quant',echo=True,client_encoding='utf8')
+#         engine_str = "postgresql+psycopg2://{}:{}@{}:{}/{}"
+        # engine_str = engine_str.format(conf['quant_db_user'], conf['quant_db_pwd'], conf['quant_db_host'], conf['quant_db_port'], conf['quant_db_name'])
+        # engine = create_engine(engine_str,echo=True,client_encoding='utf8')
 #
 #         print("collecting %s" % table)
 #         # get last 2000 bars
@@ -260,7 +297,9 @@ def get_index_5min(end_date):
 if __name__ == '__main__':
     now = datetime.datetime.now()
     # d1 = datetime.datetime(2020,12,16,0,0)
-    conn = psycopg2.connect("host='postgres.ripple-tech.com' dbname='panda_quant' user='chesp' password='Chesp2021' port='5432'")
+    conn_str = "host='{}' dbname='{}' user='{}' password='{}' port='{}'"
+    conn_str = conn_str.format(conf['quant_db_host'], conf['quant_db_name'], conf['quant_db_user'], conf['quant_db_pwd'], conf['quant_db_port'])
+    conn = psycopg2.connect(conn_str)
     cur = conn.cursor()
     sql = "select max(date) from hsi;"
     cur.execute(sql)
@@ -270,6 +309,11 @@ if __name__ == '__main__':
     conn.close()
 
     d1 = result[0]
+    if d1:
+        pass
+    else:
+        d1 = (datetime.datetime.now() - datetime.timedelta(days=180)).replace(hour=23, minute=59, second=59, microsecond=000000)
+
     d2 = now.replace(hour=23, minute=59, second=59, microsecond=000000)
     diff = d2 - d1
     for i in range(diff.days + 1):
@@ -277,10 +321,10 @@ if __name__ == '__main__':
         print (end_date)
         print ("=========================")
         get_index_1min(end_date)
-        get_index_5min(end_date)
-        get_index_30sec(end_date)
+        # get_index_5min(end_date)
+        # get_index_30sec(end_date)
         for j in range(6):
             end_datetime = (end_date + datetime.timedelta(j/6))
             print (end_datetime)
-            get_index_5sec(end_datetime)
+            # get_index_5sec(end_datetime)
             get_index_15sec(end_datetime)

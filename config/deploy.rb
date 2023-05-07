@@ -115,7 +115,7 @@ namespace :deploy do
   after :finishing, :cleanup
   # after :finishing, :restart
 end
-
+#
 # namespace :god do
 #   def god_is_running
 #     capture(:bundle, "exec god status > /dev/null 2>&1 || echo 'god not running'") != 'god not running'
@@ -170,4 +170,4 @@ end
 #   end
 # end
 
-after "deploy:finished", "god:restart"
+# after "deploy:finished", "god:restart"
