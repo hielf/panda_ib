@@ -3,14 +3,13 @@ from sqlalchemy import create_engine
 import os, sys
 import psycopg2
 import sched, time
-import datetime
+import datetime, pytz
 import random
 import yaml
 
 def production_config(yaml_file):
     with open(yaml_file) as f:
         config = yaml.safe_load(f)
-
         production_config = config['production']
     return production_config
 
@@ -44,6 +43,8 @@ def get_index_5sec(end_datetime):
                 tmp_table = 'hsi_5secs_tmp'
                 table = 'hsi_5secs'
             bars = ib.reqHistoricalData(contract, endDateTime=end_datetime, durationStr='14400 S', barSizeSetting='5 secs', whatToShow='TRADES', useRTH=True)
+            for i in range(len(bars)):
+                bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
         df = util.df(bars)
         print("got bars %s" % str(bars))
         print("got contract %s" % str(contract))
@@ -52,7 +53,7 @@ def get_index_5sec(end_datetime):
         engine = create_engine(engine_str,echo=True,client_encoding='utf8')
         print("waiting for collect %s" % table)
         try:
-            df.to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');
+            df.to_sql(tmp_table,engine,chunksize=1000,if_exists='replace')
             sql = "insert into " + table + " select * from " + tmp_table +  " b where not exists (select 1 from " + table + " a where a.date = b.date);"
             cur.execute(sql, (10, 1000000, False, False))
             conn.commit()
@@ -77,6 +78,8 @@ def get_index_15sec(end_datetime):
                 tmp_table = 'eur_usd_15secs_tmp'
                 table = 'eur_usd_15secs'
             bars = ib.reqHistoricalData(contract, endDateTime=end_datetime, durationStr='14400 S', barSizeSetting='15 secs', whatToShow='MIDPOINT', useRTH=True)
+            for i in range(len(bars)):
+                bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
         elif contract.secType == 'IND':
             if contract.symbol == 'HSI':
                 tmp_table = 'hsi_15secs_tmp'
@@ -85,11 +88,15 @@ def get_index_15sec(end_datetime):
                 tmp_table = 'spx_15secs_tmp'
                 table = 'spx_15secs'
             bars = ib.reqHistoricalData(contract, endDateTime=end_datetime, durationStr='14400 S', barSizeSetting='15 secs', whatToShow='TRADES', useRTH=True)
+            for i in range(len(bars)):
+                bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
         elif contract.secType == 'CONTFUT':
             if contract.symbol == 'YM':
                 tmp_table = 'ym_15secs_tmp'
                 table = 'ym_15secs'
             bars = ib.reqHistoricalData(contract, endDateTime=end_datetime, durationStr='14400 S', barSizeSetting='15 secs', whatToShow='TRADES', useRTH=True)
+            for i in range(len(bars)):
+                bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
         df = util.df(bars)
         print("got bars %s" % str(bars))
         print("got contract %s" % str(contract))
@@ -98,7 +105,7 @@ def get_index_15sec(end_datetime):
         engine = create_engine(engine_str,echo=True,client_encoding='utf8')
         print("waiting for collect %s" % table)
         try:
-            df.to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');
+            df.to_sql(tmp_table,engine,chunksize=1000,if_exists='replace')
             sql = "insert into " + table + " select * from " + tmp_table +  " b where not exists (select 1 from " + table + " a where a.date = b.date);"
             cur.execute(sql, (10, 1000000, False, False))
             conn.commit()
@@ -123,6 +130,8 @@ def get_index_30sec(end_date):
                 tmp_table = 'eur_usd_30secs_tmp'
                 table = 'eur_usd_30secs'
             bars = ib.reqHistoricalData(contract, endDateTime=end_date, durationStr='1 D', barSizeSetting='30 secs', whatToShow='MIDPOINT', useRTH=True)
+            for i in range(len(bars)):
+                bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
         elif contract.secType == 'IND':
             if contract.symbol == 'HSI':
                 tmp_table = 'hsi_30secs_tmp'
@@ -131,11 +140,17 @@ def get_index_30sec(end_date):
                 tmp_table = 'spx_30secs_tmp'
                 table = 'spx_30secs'
             bars = ib.reqHistoricalData(contract, endDateTime=end_date, durationStr='1 D', barSizeSetting='30 secs', whatToShow='TRADES', useRTH=True)
+            for i in range(len(bars)):
+                bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
         elif contract.secType == 'CONTFUT':
             if contract.symbol == 'YM':
                 tmp_table = 'ym_30secs_tmp'
                 table = 'ym_30secs'
             bars = ib.reqHistoricalData(contract, endDateTime=end_date, durationStr='1 D', barSizeSetting='30 secs', whatToShow='TRADES', useRTH=True)
+            for i in range(len(bars)):
+                bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
+                for i in range(len(bars)):
+                    bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
         df = util.df(bars)
         print("got bars %s" % str(bars))
         print("got contract %s" % str(contract))
@@ -144,7 +159,7 @@ def get_index_30sec(end_date):
         engine = create_engine(engine_str,echo=True,client_encoding='utf8')
         print("waiting for collect %s" % table)
         try:
-            df.to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');
+            df.to_sql(tmp_table,engine,chunksize=1000,if_exists='replace')
             sql = "insert into " + table + " select * from " + tmp_table +  " b where not exists (select 1 from " + table + " a where a.date = b.date);"
             cur.execute(sql, (10, 1000000, False, False))
             conn.commit()
@@ -169,6 +184,8 @@ def get_index_1min(end_date):
                 tmp_table = 'eur_usd_tmp'
                 table = 'eur_usd'
             bars = ib.reqHistoricalData(contract, endDateTime=end_date, durationStr='1 D', barSizeSetting='1 min', whatToShow='MIDPOINT', useRTH=True)
+            for i in range(len(bars)):
+                bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
         elif contract.secType == 'IND':
             if contract.symbol == 'HSI':
                 tmp_table = 'hsi_tmp'
@@ -177,11 +194,15 @@ def get_index_1min(end_date):
                 tmp_table = 'spx_tmp'
                 table = 'spx'
             bars = ib.reqHistoricalData(contract, endDateTime=end_date, durationStr='1 D', barSizeSetting='1 min', whatToShow='TRADES', useRTH=True)
+            for i in range(len(bars)):
+                bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
         elif contract.secType == 'CONTFUT':
             if contract.symbol == 'YM':
                 tmp_table = 'ym_tmp'
                 table = 'ym'
             bars = ib.reqHistoricalData(contract, endDateTime=end_date, durationStr='1 D', barSizeSetting='1 min', whatToShow='TRADES', useRTH=True)
+            for i in range(len(bars)):
+                bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
         df = util.df(bars)
         print("got bars %s" % str(bars))
         print("got contract %s" % str(contract))
@@ -190,7 +211,7 @@ def get_index_1min(end_date):
         engine = create_engine(engine_str,echo=True,client_encoding='utf8')
         print("waiting for collect %s" % table)
         try:
-            df.to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');
+            df.to_sql(tmp_table,engine,chunksize=1000,if_exists='replace')
             sql = "insert into " + table + " select * from " + tmp_table +  " b where not exists (select 1 from " + table + " a where a.date = b.date);"
             cur.execute(sql, (10, 1000000, False, False))
             conn.commit()
@@ -216,6 +237,8 @@ def get_index_5min(end_date):
                 tmp_table = 'eur_usd_5mins_tmp'
                 table = 'eur_usd_5mins'
             bars = ib.reqHistoricalData(contract, endDateTime=end_date, durationStr='1 D', barSizeSetting='5 mins', whatToShow='MIDPOINT', useRTH=True)
+            for i in range(len(bars)):
+                bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
         elif contract.secType == 'IND':
             if contract.symbol == 'HSI':
                 tmp_table = 'hsi_5mins_tmp'
@@ -224,11 +247,15 @@ def get_index_5min(end_date):
                 tmp_table = 'spx_5mins_tmp'
                 table = 'spx_5mins'
             bars = ib.reqHistoricalData(contract, endDateTime=end_date, durationStr='1 D', barSizeSetting='5 mins', whatToShow='TRADES', useRTH=True)
+            for i in range(len(bars)):
+                bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
         elif contract.secType == 'CONTFUT':
             if contract.symbol == 'YM':
                 tmp_table = 'ym_5mins_tmp'
                 table = 'ym_5mins'
             bars = ib.reqHistoricalData(contract, endDateTime=end_date, durationStr='1 D', barSizeSetting='5 mins', whatToShow='TRADES', useRTH=True)
+            for i in range(len(bars)):
+                bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
         df = util.df(bars)
         print("got bars %s" % str(bars))
         print("got contract %s" % str(contract))
@@ -237,7 +264,7 @@ def get_index_5min(end_date):
         engine = create_engine(engine_str,echo=True,client_encoding='utf8')
         print("waiting for collect %s" % table)
         try:
-            df.to_sql(tmp_table,engine,chunksize=1000,if_exists='replace');
+            df.to_sql(tmp_table,engine,chunksize=1000,if_exists='replace')
             sql = "insert into " + table + " select * from " + tmp_table +  " b where not exists (select 1 from " + table + " a where a.date = b.date);"
             cur.execute(sql, (10, 1000000, False, False))
             conn.commit()
@@ -295,7 +322,8 @@ def get_index_5min(end_date):
 #         s.enter(60, 1, get_index_1min, (date_time,))
 
 if __name__ == '__main__':
-    now = datetime.datetime.now()
+    t_z=pytz.timezone('Asia/Hong_Kong')
+    now = datetime.datetime.now(tz=t_z)
     # d1 = datetime.datetime(2020,12,16,0,0)
     conn_str = "host='{}' dbname='{}' user='{}' password='{}' port='{}'"
     conn_str = conn_str.format(conf['quant_db_host'], conf['quant_db_name'], conf['quant_db_user'], conf['quant_db_pwd'], conf['quant_db_port'])
@@ -308,11 +336,11 @@ if __name__ == '__main__':
     conn.commit()
     conn.close()
 
-    d1 = result[0]
+    d1 = t_z.localize(result[0])
     if d1:
         pass
     else:
-        d1 = (datetime.datetime.now() - datetime.timedelta(days=180)).replace(hour=23, minute=59, second=59, microsecond=000000)
+        d1 = (datetime.datetime.now(tz=t_z) - datetime.timedelta(days=180)).replace(hour=23, minute=59, second=59, microsecond=000000)
 
     d2 = now.replace(hour=23, minute=59, second=59, microsecond=000000)
     diff = d2 - d1
