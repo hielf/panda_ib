@@ -75,13 +75,13 @@ namespace :puma do
 end
 
 namespace :deploy do
-  # desc "stops god"
-  # task :stop_god do
-  #   on roles(:app) do
-  #     execute "sudo -H -u deploy /bin/bash -l -c 'god stop'"
-  #   end
-  # end
-  # before 'deploy', 'deploy:stop_god'
+  desc "stops god"
+  task :stop_god do
+    on roles(:app) do
+      execute "sudo -H -u deploy /bin/bash -l -c 'god stop'"
+    end
+  end
+  before 'deploy', 'deploy:stop_god'
 
   desc "Make sure local git is in sync with remote."
   task :check_revision do
@@ -113,61 +113,61 @@ namespace :deploy do
   before :starting, :check_revision
   after :finishing, :compile_assets
   after :finishing, :cleanup
-  # after :finishing, :restart
+  after :finishing, :restart
 end
-#
-# namespace :god do
-#   def god_is_running
-#     capture(:bundle, "exec god status > /dev/null 2>&1 || echo 'god not running'") != 'god not running'
-#   end
-#
-#   # Must be executed within SSHKit context
-#   def config_file
-#     "#{release_path}/config.god"
-#   end
-#
-#   # Must be executed within SSHKit context
-#   def start_god
-#     execute :bundle, "exec god -c #{config_file}"
-#   end
-#
-#   desc "Start god and his processes"
-#   task :start do
-#     on roles(:app) do
-#       within release_path do
-#         with RAILS_ENV: fetch(:rails_env) do
-#           start_god
-#         end
-#       end
-#     end
-#   end
-#
-#   desc "Terminate god and his processes"
-#   task :stop do
-#     on roles(:app) do
-#       within release_path do
-#         if god_is_running
-#           execute :bundle, "exec god terminate"
-#         end
-#       end
-#     end
-#   end
-#
-#   desc "Restart god's child processes"
-#   task :restart do
-#     on roles(:app) do
-#       within release_path do
-#         with RAILS_ENV: fetch(:rails_env) do
-#           if god_is_running
-#             execute :bundle, "exec god load #{config_file}"
-#             execute :bundle, "exec god restart"
-#           else
-#             start_god
-#           end
-#         end
-#       end
-#     end
-#   end
-# end
 
-# after "deploy:finished", "god:restart"
+namespace :god do
+  def god_is_running
+    capture(:bundle, "exec god status > /dev/null 2>&1 || echo 'god not running'") != 'god not running'
+  end
+
+  # Must be executed within SSHKit context
+  def config_file
+    "#{release_path}/config.god"
+  end
+
+  # Must be executed within SSHKit context
+  def start_god
+    execute :bundle, "exec god -c #{config_file}"
+  end
+
+  desc "Start god and his processes"
+  task :start do
+    on roles(:app) do
+      within release_path do
+        with RAILS_ENV: fetch(:rails_env) do
+          start_god
+        end
+      end
+    end
+  end
+
+  desc "Terminate god and his processes"
+  task :stop do
+    on roles(:app) do
+      within release_path do
+        if god_is_running
+          execute :bundle, "exec god terminate"
+        end
+      end
+    end
+  end
+
+  desc "Restart god's child processes"
+  task :restart do
+    on roles(:app) do
+      within release_path do
+        with RAILS_ENV: fetch(:rails_env) do
+          if god_is_running
+            execute :bundle, "exec god load #{config_file}"
+            execute :bundle, "exec god restart"
+          else
+            start_god
+          end
+        end
+      end
+    end
+  end
+end
+
+after "deploy:finished", "god:restart"

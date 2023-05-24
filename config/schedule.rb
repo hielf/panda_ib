@@ -31,9 +31,9 @@
 #   rake "scan:onus"
 # end
 
-# every :reboot do
-#  command "cd /var/www/panda_ib && god -c config.god"
-# end
+every :reboot do
+ command "cd /var/www/panda_ib && god -c config.god"
+end
 
 # every 1.minute do
 #   # rake "ib:hsi"
