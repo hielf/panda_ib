@@ -584,7 +584,12 @@ module ContractsHelper
 
     sql = "select max(date) as date from hsi_fut;"
     res = postgres.exec(sql)
-    begin_date = res.first["date"].to_date.strftime('%Y%m%d')
+    case res.first["date"]
+    when nil
+      begin_date = (Date.today - 365).strftime('%Y%m%d')
+    else
+      begin_date = res.first["date"].to_date.strftime('%Y%m%d')
+    end
 
     Dir.entries(dir).sort.each do |d|
       next if d == '.' or d == '..'
