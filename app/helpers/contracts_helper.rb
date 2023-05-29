@@ -654,7 +654,7 @@ module ContractsHelper
       p "now table has: #{final.count}"
       final.each do |row|
         h = row
-        sql = "insert into hsi_fut_tmp (select 0 as index, '#{h["date"]}' as date, #{h["open"]} as open,#{h["high"]} as high,#{h["low"]} as low,#{h["close"]} as close,#{h["volume"]} as volume,#{h["barCount"]} as barCount,#{h["average"]} as average);"
+        sql = "insert into hsi_fut_tmp (select 0 as index, '#{h["date"]}' as date, #{h["open"]} as open,#{h["high"]} as high,#{h["low"]} as low,#{h["close"]} as close,#{h["volume"]} as volume,#{h["average"]} as average,#{h["barCount"]} as barCount);"
         postgres.exec(sql)
         count = count + 1
         # p count
