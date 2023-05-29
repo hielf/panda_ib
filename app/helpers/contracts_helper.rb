@@ -619,7 +619,8 @@ module ContractsHelper
         #   table.push(row)
         # end
         # p "now table has: #{table.count}"
-        tmp_table = CSV.open(file_path, headers: :first_row).map(&:to_h)
+        tmp_table = CSV.open(file_path, headers: true).map(&:to_h)
+        # tmp_table = CSV.open(file_path, headers: :first_row).map(&:to_h)
         tmp_table.each do |r|
           table << r
         end
