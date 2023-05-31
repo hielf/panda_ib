@@ -32,7 +32,7 @@
 # end
 
 every :reboot do
- command "cd /var/www/panda_ib && god -c config.god"
+ command "cd /var/www/panda_ib/current && god -c config.god"
 end
 
 # every 1.minute do
