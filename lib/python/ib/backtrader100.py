@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*- 
 # ? bt009.py
 import backtrader as bt
 from backtrader.feeds import PandasData  # 用于扩展DataFeed

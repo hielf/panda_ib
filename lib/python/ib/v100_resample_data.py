@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 # from turtle import end_fill
 import pandas as pd
 import sys
