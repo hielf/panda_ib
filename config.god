@@ -128,21 +128,21 @@ end
     generic_monitoring(w, :cpu_limit => 100.percent, :memory_limit => 1000.megabytes)
   end
 
-  env_5 = "clock_4"
-  God.watch do |w|
-    w.name = app_name + "-" + env_5
-    w.group = app_name
-    w.start = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock_4.rb start --log -d #{app_root}/current/lib/job"
-    w.restart = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock_4.rb restart --log -d #{app_root}/current/lib/job"
-    w.stop = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock_4.rb stop"
-    w.pid_file = "#{app_root}/current/lib/job/tmp/clockworkd.clock_4.pid"
-
-    w.log = "#{app_root}/shared/log/clock_4.log"
-
-    w.behavior(:clean_pid_file)
-    w.keepalive(:memory_max => 1000.megabytes, :cpu_max => 100.percent)
-    # generic_monitoring(w, :cpu_limit => 100.percent, :memory_limit => 1000.megabytes)
-  end
+  # env_5 = "clock_4"
+  # God.watch do |w|
+  #   w.name = app_name + "-" + env_5
+  #   w.group = app_name
+  #   w.start = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock_4.rb start --log -d #{app_root}/current/lib/job"
+  #   w.restart = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock_4.rb restart --log -d #{app_root}/current/lib/job"
+  #   w.stop = "cd #{app_root}/current/lib/job && RAILS_ENV=production bundle exec clockworkd -c clock_4.rb stop"
+  #   w.pid_file = "#{app_root}/current/lib/job/tmp/clockworkd.clock_4.pid"
+  #
+  #   w.log = "#{app_root}/shared/log/clock_4.log"
+  #
+  #   w.behavior(:clean_pid_file)
+  #   w.keepalive(:memory_max => 1000.megabytes, :cpu_max => 100.percent)
+  #   # generic_monitoring(w, :cpu_limit => 100.percent, :memory_limit => 1000.megabytes)
+  # end
 
   env_6 = "clock_5"
   God.watch do |w|
