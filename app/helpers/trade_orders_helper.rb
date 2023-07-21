@@ -31,6 +31,7 @@ module TradeOrdersHelper
       end
       PyCall.exec("ib_status = ''")
       PyCall.exec("ib = IB()")
+      PyCall.exec("ib.TimezoneTWS = pytz.timezone('Asia/Hong_Kong')")
       # PyCall.exec("ib.connect('#{ip}', #{port}, clientId=#{clientId}), 5")
       PyCall.exec("try: ib.connect(host='#{ip}', port=#{port}, clientId=#{clientId}, timeout=10, readonly=False)\nexcept Exception as e: ib_status = str(e)")
     rescue Exception => e

@@ -58,5 +58,6 @@ every 1.day, at: '9:00' do
   command "god start panda_ib-clock_2"
   command "god start panda_ib-clock_3"
   command "god start panda_ib-clock_4"
+  command "god start panda_ib-clock_5"
 end
 #
