@@ -43,8 +43,8 @@ def get_index_5sec(end_datetime):
                 tmp_table = 'hsi_5secs_tmp'
                 table = 'hsi_5secs'
             bars = ib.reqHistoricalData(contract, endDateTime=end_datetime, durationStr='14400 S', barSizeSetting='5 secs', whatToShow='TRADES', useRTH=True)
-            for i in range(len(bars)):
-                bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
+            # for i in range(len(bars)):
+            #     bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
         df = util.df(bars)
         print("got bars %s" % str(bars))
         print("got contract %s" % str(contract))
@@ -78,8 +78,8 @@ def get_index_15sec(end_datetime):
                 tmp_table = 'eur_usd_15secs_tmp'
                 table = 'eur_usd_15secs'
             bars = ib.reqHistoricalData(contract, endDateTime=end_datetime, durationStr='14400 S', barSizeSetting='15 secs', whatToShow='MIDPOINT', useRTH=True)
-            for i in range(len(bars)):
-                bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
+            # for i in range(len(bars)):
+            #     bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
         elif contract.secType == 'IND':
             if contract.symbol == 'HSI':
                 tmp_table = 'hsi_15secs_tmp'
@@ -88,15 +88,15 @@ def get_index_15sec(end_datetime):
                 tmp_table = 'spx_15secs_tmp'
                 table = 'spx_15secs'
             bars = ib.reqHistoricalData(contract, endDateTime=end_datetime, durationStr='14400 S', barSizeSetting='15 secs', whatToShow='TRADES', useRTH=True)
-            for i in range(len(bars)):
-                bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
+            # for i in range(len(bars)):
+            #     bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
         elif contract.secType == 'CONTFUT':
             if contract.symbol == 'YM':
                 tmp_table = 'ym_15secs_tmp'
                 table = 'ym_15secs'
             bars = ib.reqHistoricalData(contract, endDateTime=end_datetime, durationStr='14400 S', barSizeSetting='15 secs', whatToShow='TRADES', useRTH=True)
-            for i in range(len(bars)):
-                bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
+            # for i in range(len(bars)):
+            #     bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
         df = util.df(bars)
         print("got bars %s" % str(bars))
         print("got contract %s" % str(contract))
@@ -130,8 +130,8 @@ def get_index_30sec(end_date):
                 tmp_table = 'eur_usd_30secs_tmp'
                 table = 'eur_usd_30secs'
             bars = ib.reqHistoricalData(contract, endDateTime=end_date, durationStr='1 D', barSizeSetting='30 secs', whatToShow='MIDPOINT', useRTH=True)
-            for i in range(len(bars)):
-                bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
+            # for i in range(len(bars)):
+            #     bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
         elif contract.secType == 'IND':
             if contract.symbol == 'HSI':
                 tmp_table = 'hsi_30secs_tmp'
@@ -140,17 +140,15 @@ def get_index_30sec(end_date):
                 tmp_table = 'spx_30secs_tmp'
                 table = 'spx_30secs'
             bars = ib.reqHistoricalData(contract, endDateTime=end_date, durationStr='1 D', barSizeSetting='30 secs', whatToShow='TRADES', useRTH=True)
-            for i in range(len(bars)):
-                bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
+            # for i in range(len(bars)):
+            #     bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
         elif contract.secType == 'CONTFUT':
             if contract.symbol == 'YM':
                 tmp_table = 'ym_30secs_tmp'
                 table = 'ym_30secs'
             bars = ib.reqHistoricalData(contract, endDateTime=end_date, durationStr='1 D', barSizeSetting='30 secs', whatToShow='TRADES', useRTH=True)
-            for i in range(len(bars)):
-                bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
-                for i in range(len(bars)):
-                    bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
+            # for i in range(len(bars)):
+            #     bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
         df = util.df(bars)
         print("got bars %s" % str(bars))
         print("got contract %s" % str(contract))
@@ -184,8 +182,8 @@ def get_index_1min(end_date):
                 tmp_table = 'eur_usd_tmp'
                 table = 'eur_usd'
             bars = ib.reqHistoricalData(contract, endDateTime=end_date, durationStr='1 D', barSizeSetting='1 min', whatToShow='MIDPOINT', useRTH=True)
-            for i in range(len(bars)):
-                bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
+            # for i in range(len(bars)):
+            #     bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
         elif contract.secType == 'IND':
             if contract.symbol == 'HSI':
                 tmp_table = 'hsi_tmp'
@@ -194,15 +192,15 @@ def get_index_1min(end_date):
                 tmp_table = 'spx_tmp'
                 table = 'spx'
             bars = ib.reqHistoricalData(contract, endDateTime=end_date, durationStr='1 D', barSizeSetting='1 min', whatToShow='TRADES', useRTH=True)
-            for i in range(len(bars)):
-                bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
+            # for i in range(len(bars)):
+            #     bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
         elif contract.secType == 'CONTFUT':
             if contract.symbol == 'YM':
                 tmp_table = 'ym_tmp'
                 table = 'ym'
             bars = ib.reqHistoricalData(contract, endDateTime=end_date, durationStr='1 D', barSizeSetting='1 min', whatToShow='TRADES', useRTH=True)
-            for i in range(len(bars)):
-                bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
+            # for i in range(len(bars)):
+            #     bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
         df = util.df(bars)
         print("got bars %s" % str(bars))
         print("got contract %s" % str(contract))
@@ -237,8 +235,8 @@ def get_index_5min(end_date):
                 tmp_table = 'eur_usd_5mins_tmp'
                 table = 'eur_usd_5mins'
             bars = ib.reqHistoricalData(contract, endDateTime=end_date, durationStr='1 D', barSizeSetting='5 mins', whatToShow='MIDPOINT', useRTH=True)
-            for i in range(len(bars)):
-                bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
+            # for i in range(len(bars)):
+            #     bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
         elif contract.secType == 'IND':
             if contract.symbol == 'HSI':
                 tmp_table = 'hsi_5mins_tmp'
@@ -247,15 +245,15 @@ def get_index_5min(end_date):
                 tmp_table = 'spx_5mins_tmp'
                 table = 'spx_5mins'
             bars = ib.reqHistoricalData(contract, endDateTime=end_date, durationStr='1 D', barSizeSetting='5 mins', whatToShow='TRADES', useRTH=True)
-            for i in range(len(bars)):
-                bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
+            # for i in range(len(bars)):
+            #     bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
         elif contract.secType == 'CONTFUT':
             if contract.symbol == 'YM':
                 tmp_table = 'ym_5mins_tmp'
                 table = 'ym_5mins'
             bars = ib.reqHistoricalData(contract, endDateTime=end_date, durationStr='1 D', barSizeSetting='5 mins', whatToShow='TRADES', useRTH=True)
-            for i in range(len(bars)):
-                bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
+            # for i in range(len(bars)):
+            #     bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)
         df = util.df(bars)
         print("got bars %s" % str(bars))
         print("got contract %s" % str(contract))

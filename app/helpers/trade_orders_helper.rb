@@ -31,7 +31,7 @@ module TradeOrdersHelper
       end
       PyCall.exec("ib_status = ''")
       PyCall.exec("ib = IB()")
-      PyCall.exec("ib.TimezoneTWS = pytz.timezone('Asia/Hong_Kong')")
+      # PyCall.exec("ib.TimezoneTWS = pytz.timezone('Asia/Hong_Kong')")
       # PyCall.exec("ib.connect('#{ip}', #{port}, clientId=#{clientId}), 5")
       PyCall.exec("try: ib.connect(host='#{ip}', port=#{port}, clientId=#{clientId}, timeout=10, readonly=False)\nexcept Exception as e: ib_status = str(e)")
     rescue Exception => e
@@ -452,7 +452,7 @@ module TradeOrdersHelper
       PyCall.exec("t_z=pytz.timezone('Asia/Hong_Kong')")
       # PyCall.exec("bars = ib.reqHistoricalData(contract, endDateTime='#{end_date}', durationStr='#{duration} S', barSizeSetting='#{bar_size}', whatToShow='TRADES', useRTH=False, keepUpToDate=False)")
       PyCall.exec("bars = ib.reqHistoricalData(contract, endDateTime='', durationStr='#{duration} S', barSizeSetting='#{bar_size}', whatToShow='TRADES', useRTH=True, keepUpToDate=True)")
-      PyCall.exec("for i in range(len(bars)): bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)")
+      # PyCall.exec("for i in range(len(bars)): bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)")
       # PyCall.exec("tmp_table = '#{contract}' + '_tmp'")
       # PyCall.exec("table = '#{contract}'")
       result = PyCall.eval("bars[-1].date == datetime.datetime.now().replace(second=0, microsecond=0)") unless contract == "hsi"
