@@ -449,7 +449,7 @@ module TradeOrdersHelper
       # if ib.isConnected()
       main_contract = ApplicationController.helpers.ib_main_contract(contract)
       PyCall.exec("contract = #{main_contract}")
-      PyCall.exec("t_z=pytz.timezone('Asia/Hong_Kong')")
+      # PyCall.exec("t_z=pytz.timezone('Asia/Hong_Kong')")
       # PyCall.exec("bars = ib.reqHistoricalData(contract, endDateTime='#{end_date}', durationStr='#{duration} S', barSizeSetting='#{bar_size}', whatToShow='TRADES', useRTH=False, keepUpToDate=False)")
       PyCall.exec("bars = ib.reqHistoricalData(contract, endDateTime='', durationStr='#{duration} S', barSizeSetting='#{bar_size}', whatToShow='TRADES', useRTH=True, keepUpToDate=True)")
       # PyCall.exec("for i in range(len(bars)): bars[i].date = bars[i].date.astimezone(t_z).replace(tzinfo=None)")
