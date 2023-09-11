@@ -332,16 +332,18 @@ module TradeOrdersHelper
     begin
       main_contract = ApplicationController.helpers.ib_main_contract(contract)
       # PyCall.exec("import json")
-      PyCall.exec("def onBarUpdate(bars, hasNewBar):
-          df = util.df(bars[-100:])
-          df.to_csv('#{file}', sep=',', encoding='utf-8', index=False)")
-          # with open('#{file}', 'w') as f:
-          #     json.dump(df.to_json(orient='records', lines=True), f)")
-      PyCall.exec("contract = #{main_contract}")
-      PyCall.exec("bars = ib.reqRealTimeBars(contract, 5, 'TRADES', False)")
-      PyCall.exec("bars.updateEvent += onBarUpdate")
-      PyCall.exec("ib.sleep(10800)")
-      PyCall.exec("ib.cancelRealTimeBars(bars)")
+      if main_contract
+        PyCall.exec("def onBarUpdate(bars, hasNewBar):
+            df = util.df(bars[-100:])
+            df.to_csv('#{file}', sep=',', encoding='utf-8', index=False)")
+            # with open('#{file}', 'w') as f:
+            #     json.dump(df.to_json(orient='records', lines=True), f)")
+        PyCall.exec("contract = #{main_contract}")
+        PyCall.exec("bars = ib.reqRealTimeBars(contract, 5, 'TRADES', False)")
+        PyCall.exec("bars.updateEvent += onBarUpdate")
+        PyCall.exec("ib.sleep(10800)")
+        PyCall.exec("ib.cancelRealTimeBars(bars)")
+      end
       # Rails.logger.warn "market_data_latest: #{PyCall.eval("bars[-1].date").to_s} force_collect: #{force_collect.to_s}"
     rescue Exception => e
       error_message = e
