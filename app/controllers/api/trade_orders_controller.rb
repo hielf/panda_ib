@@ -69,7 +69,8 @@ class Api::TradeOrdersController < Api::ApplicationController
       send_data(File.read(file), type: "application/csv", disposition:  "attachment", filename: "trades_#{contract}.csv")
     else
       result = [1, 'failed']
-      data = ib_trades(contract)
+      @ib = ApplicationController.helpers.ib_connect
+      data = ApplicationController.helpers.ib_trades(contract) if @ib
       if !data.empty?
         data.sort_by { |h| -h[:time] }.reverse.each do |d|
           trade = Trade.find_or_initialize_by(exec_id: d[:exec_id])
