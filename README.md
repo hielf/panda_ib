@@ -12,3 +12,10 @@
 * 资金管理
 
 ## 近期待上线功能清单
+
+## HSI Futures Trading Hours
+* 9:30 a.m. - 12:00 p.m.
+* 1:00 p.m. - 4:00 p.m.
+
+## HSI Futures After Hours Trading Hours
+* 5:15 p.m. - 03:00 a.m.

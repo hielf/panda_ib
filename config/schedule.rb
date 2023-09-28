@@ -46,18 +46,24 @@ every 1.day, at: '6:00' do
   command "cat /dev/null > /var/www/panda_ib/current/log/puma.error.log"
 end
 
-# every 1.day, at: '22:00' do
-#   command "god stop panda_ib-clock_1"
-#   command "god stop panda_ib-clock_2"
-#   command "god stop panda_ib-clock_3"
-#   command "god stop panda_ib-clock_4"
-# end
+every 1.day, at: ['9:00', '12:50', '17:00'] do
+  command "god start panda_ib-clock_1" #trader
+  command "god start panda_ib-clock_2" #market_data
+  # command "god start panda_ib-clock_3" #risk
+  command "god start panda_ib-clock_4" #realtime_market_data
+end
 
-every 1.day, at: '9:00' do
-  command "god start panda_ib-clock_1"
-  command "god start panda_ib-clock_2"
-  command "god start panda_ib-clock_3"
-  command "god start panda_ib-clock_4"
-  command "god start panda_ib-clock_5"
+every 1.day, at: ['3:30', '12:10', '16:30'] do
+  command "god stop panda_ib-clock_1"
+  command "god stop panda_ib-clock_2"
+  command "god stop panda_ib-clock_4"
+end
+
+every 1.day, at: ['3:00'] do
+  command "god start panda_ib-clock_5" #history
+end
+
+every 1.day, at: ['7:00'] do
+  command "god stop panda_ib-clock_5" #history
 end
 #
