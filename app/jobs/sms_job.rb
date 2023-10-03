@@ -19,13 +19,21 @@ class SmsJob < ApplicationJob
       run_time = Time.zone.now
       current_time = run_time.strftime('%H:%M')
       if current_time >= "09:15" && current_time <= "16:45"
-        uri             = URI.parse("https://api.mysubmail.com/message/xsend.json")
-        sms_appid       = ENV['sms_appid']
-        sms_signature   = ENV['sms_signature']
-        sms_project     = ENV['sms_project']
-        res             = Net::HTTP.post_form(uri, appid: sms_appid, to: cell, project: sms_project, signature: sms_signature, vars: @var.to_json)
+        begin
+          uri             = URI.parse("https://api.mysubmail.com/message/xsend.json")
+          sms_appid       = ENV['sms_appid']
+          sms_signature   = ENV['sms_signature']
+          sms_project     = ENV['sms_project']
+          res             = Net::HTTP.post_form(uri, appid: sms_appid, to: cell, project: sms_project, signature: sms_signature, vars: @var.to_json)
 
-        @status      = JSON.parse(res.body)["status"]
+          # res = HTTParty.post("https://api.mysubmail.com/message/xsend.json",
+          #   headers: {"Content-Type" => "application/json"},
+          #   body: {:appid => sms_appid, :to => cell, :project => sms_project, :signature => sms_signature, :vars => @var.to_json}.to_json)
+
+          @status      = JSON.parse(res.body)["status"]
+        rescue Exception => e
+          error_message = e.message
+        end
       end unless run_time.saturday? || run_time.sunday?
     end
   end
@@ -33,6 +41,6 @@ class SmsJob < ApplicationJob
 
   private
   def around_check
-    Sm.create!(message: @backtrader_version + @message, message_type: "alert") if @status
+    Sm.create!(message: @backtrader_version + @message, message_type: "alert")# if @status
   end
 end
