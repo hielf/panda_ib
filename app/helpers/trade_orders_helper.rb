@@ -41,6 +41,7 @@ module TradeOrdersHelper
       ib_status = PyCall.eval("ib_status")
       Rails.logger.warn "ib_connect failed: #{ib_status}" if !ib_status.empty?
       ib = PyCall.eval("ib")
+      Rails.logger.warn "ib new connection: #{ib}" if ib
     end
 
     return ib
