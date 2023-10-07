@@ -98,7 +98,8 @@ module TradeOrdersHelper
 
       main_contract = PyCall.eval("contract")
     rescue Exception => e
-      error_message = e
+      Rails.logger.warn "ib_main_contract failed: #{e}, restarting panda_ib-clock_2"
+      system( "god restart panda_ib-clock_2" )
     end
 
     return main_contract
