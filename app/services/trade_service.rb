@@ -16,7 +16,7 @@ class TradeService
     #   data = ApplicationController.helpers.online_data(file)
     #   if data && !data.empty?
     #     current_time = Time.zone.now.strftime('%H:%M')
-    #     if (current_time > "09:15" && current_time < "12:00") || (current_time > "13:00" && current_time < "15:30")
+    #     if ((current_time >= "09:15" && current_time <= "12:00") || (current_time >= "13:00" && current_time <= "16:30") || (current_time >= "17:15" && current_time <= "00:00") || (current_time >= "00:00" && current_time <= "03:00"))
     #       ApplicationController.helpers.check_position(data)
     #     else
     #       ApplicationController.helpers.close_position

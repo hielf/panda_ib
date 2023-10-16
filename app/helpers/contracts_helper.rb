@@ -600,7 +600,7 @@ module ContractsHelper
       csv_file = Dir.glob(File.join(path, '*.*')).min { |a,b| File.ctime(a) <=> File.ctime(b) }
       # table = CSV.parse(File.read(csv_file), headers: true)
       table = []
-      total_count = (("12:00".to_time - "09:15".to_time) / 60 * 4) + (("15:51".to_time - "13:00".to_time) / 60 * 4)
+      # total_count = (("12:00".to_time - "09:15".to_time) / 60 * 4) + (("15:51".to_time - "13:00".to_time) / 60 * 4)
       Dir.entries(path).sort.each do |tmp_file|
         next if tmp_file == '.' or tmp_file == '..'
         p "before table has: #{table.count}"

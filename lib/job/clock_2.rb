@@ -49,7 +49,7 @@ module Clockwork
       #   if table && table.count > 0
       #     current_time = Time.zone.now
       #     if current_time - table[-1]["date"].in_time_zone > 60
-      #       if (current_time >= "09:15" && current_time <= "12:00") || (current_time >= "13:00" && current_time <= "16:30")
+      #       if ((current_time >= "09:15" && current_time <= "12:00") || (current_time >= "13:00" && current_time <= "16:30") || (current_time >= "17:15" && current_time <= "00:00") || (current_time >= "00:00" && current_time <= "03:00"))
       #         system( "god restart panda_ib-clock_2" )
       #         break
       #       end
@@ -91,7 +91,7 @@ module Clockwork
       @version = ENV['backtrader_version']
       run_time = Time.zone.now
       current_time = run_time.strftime('%H:%M')
-      if ((current_time >= "09:15" && current_time <= "12:00") || (current_time >= "13:00" && current_time <= "15:55"))
+      if ((current_time >= "09:15" && current_time <= "12:00") || (current_time >= "13:00" && current_time <= "16:30") || (current_time >= "17:15" && current_time <= "00:00") || (current_time >= "00:00" && current_time <= "03:00"))
         job = PositionsJob.set(wait: 2.seconds).perform_later(@contract, @version)
       end
     end
