@@ -41,29 +41,29 @@ end
 #   # runner 'TradersJob.perform_later'
 # end
 
-every 1.day, at: '6:00' do
+every 1.day, at: '6:00 am' do
   command "cat /dev/null > /var/www/panda_ib/current/log/puma.access.log"
   command "cat /dev/null > /var/www/panda_ib/current/log/puma.error.log"
 end
 
-every 1.day, at: ['9:00', '12:50', '17:00'] do
+every 1.day, at: ['9:00 am', '12:50 pm', '17:00 pm'] do
   command "god start panda_ib-clock_1" #trader
   command "god start panda_ib-clock_2" #market_data
   # command "god start panda_ib-clock_3" #risk
   command "god start panda_ib-clock_4" #realtime_market_data
 end
 
-every 1.day, at: ['3:30', '12:10', '16:30'] do
+every 1.day, at: ['3:30 am', '12:10 pm', '16:30 pm'] do
   command "god stop panda_ib-clock_1"
   command "god stop panda_ib-clock_2"
   command "god stop panda_ib-clock_4"
 end
 
-every 1.day, at: ['3:00'] do
+every 1.day, at: ['3:00 am'] do
   command "god start panda_ib-clock_5" #history
 end
 
-every 1.day, at: ['7:00'] do
+every 1.day, at: ['7:00 am'] do
   command "god stop panda_ib-clock_5" #history
 end
 #
