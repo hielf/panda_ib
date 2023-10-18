@@ -33,7 +33,7 @@ module Clockwork
           if current_time - table[-1]["date"].in_time_zone > 30
             # Rails.logger.warn "IB.realtime_bar_get start"
             @ib = ApplicationController.helpers.ib_connect
-            ApplicationController.helpers.realtime_market_data(contract, version) if @ib
+            ApplicationController.helpers.realtime_market_data(contract, version) if (!@ib.nil? && @ib.isConnected() && !(@ib.to_s == "<IB not connected>"))
           else
             break
           end

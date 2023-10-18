@@ -22,7 +22,7 @@ class MarketDataJob < ApplicationJob
       begin
         table = CSV.parse(File.read(file), headers: true)
       rescue Exception => e
-        Rails.logger.warn "IB.realtime_bar_get failed: #{e}"
+        Rails.logger.warn "IB.market_data_job failed: #{e}"
       end
       if table && table.count > 0
         current_time = Time.zone.now
