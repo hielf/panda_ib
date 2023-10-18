@@ -66,6 +66,8 @@ module Clockwork
         @ib = ApplicationController.helpers.ib_connect if @ib.nil?
         @ib = ApplicationController.helpers.ib_connect if !@ib.nil? && !@ib.isConnected()
 
+        sleep await if @ib.to_s == "<IB not connected>"
+
         begin
           job = MarketDataJob.perform_later('@ib', contract, version)
           100.times do
