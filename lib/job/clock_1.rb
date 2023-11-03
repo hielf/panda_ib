@@ -19,9 +19,9 @@ module Clockwork
     version = ENV['backtrader_version']
     run_flag = true
     # puts "ib.trader started at #{Time.zone.now}"
-    if ENV['ib_version'] == "v100"
-      run_flag = false if Time.zone.now.friday?
-    end
+    # if ENV['ib_version'] == "v100"
+    #   run_flag = false if Time.zone.now.friday?
+    # end
 
     if run_flag
       begin
