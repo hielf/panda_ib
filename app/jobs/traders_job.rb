@@ -94,7 +94,7 @@ class TradersJob < ApplicationJob
     end
 
     # trade
-    if ((current_time >= "09:15" && current_time <= "12:00") || (current_time >= "13:00" && current_time <= "16:30") || (current_time >= "17:15" && current_time <= "00:00") || (current_time >= "00:00" && current_time <= "03:00"))
+    if ((current_time >= "09:15" && current_time <= "12:00") || (current_time >= "13:00" && current_time <= "16:30") || (current_time >= "17:15" && current_time <= "23:59") || (current_time >= "00:00" && current_time <= "03:00"))
       begin
         @order, @amount, @move_order, @move_price = ApplicationController.helpers.py_check_position(contract, version) if file
       rescue Exception => e

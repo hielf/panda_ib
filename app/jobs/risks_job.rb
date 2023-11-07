@@ -27,7 +27,7 @@ class RisksJob < ApplicationJob
 
     current_time = Time.zone.now.strftime('%H:%M')
     @order = ""
-    if ((current_time >= "09:15" && current_time <= "12:00") || (current_time >= "13:00" && current_time <= "16:30") || (current_time >= "17:15" && current_time <= "00:00") || (current_time >= "00:00" && current_time <= "03:00"))
+    if ((current_time >= "09:15" && current_time <= "12:00") || (current_time >= "13:00" && current_time <= "16:30") || (current_time >= "17:15" && current_time <= "23:59") || (current_time >= "00:00" && current_time <= "03:00"))
       csv = Rails.root.to_s + "/tmp/csv/#{@contract}_#{@version}.csv"
       @market_data = []
       CSV.foreach(csv, headers: true) do |row|
