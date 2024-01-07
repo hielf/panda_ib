@@ -63,7 +63,7 @@ every 1.day, at: ['3:00 am'] do
   command "god start panda_ib-clock_5" #history
 end
 
-every 1.day, at: ['7:00 am'] do
+every 1.day, at: ['11:00 am'] do
   command "god stop panda_ib-clock_5" #history
 end
 #

@@ -580,7 +580,11 @@ module ContractsHelper
     dir = Rails.root.to_s + "/tmp/csv/"
     dump_file = dir + "/" + "dump_sql.sql"
 
+    Rails.logger.warn "IB.history fut dump_file: #{dump_file}"
+
     postgres = PG.connect :host => ENV['quant_db_host'], :port => ENV['quant_db_port'], :dbname => ENV['quant_db_name'], :user => ENV['quant_db_user'], :password => ENV['quant_db_pwd']
+
+    Rails.logger.warn "IB.history fut postgres: #{postgres}"
 
     sql = "select max(date) as date from hsi_fut;"
     res = postgres.exec(sql)
@@ -604,6 +608,7 @@ module ContractsHelper
       Dir.entries(path).sort.each do |tmp_file|
         next if tmp_file == '.' or tmp_file == '..'
         p "before table has: #{table.count}"
+        Rails.logger.warn "IB.history fut before table has: #{table.count}"
         file_path = path + "/" + tmp_file
         File.file?(file_path)
         # p file_path
@@ -647,11 +652,13 @@ module ContractsHelper
             p e
             p n2
             p r
+            Rails.logger.warn "IB.history fut error: #{e} #{n2} #{r}"
           end
         end
       end
 
       p "now table has: #{final.count}"
+      Rails.logger.warn "IB.history fut now table has: #{final.count}"
       final.each do |row|
         h = row
         sql = "insert into hsi_fut_tmp (select 0 as index, '#{h["date"]}' as date, #{h["open"]} as open,#{h["high"]} as high,#{h["low"]} as low,#{h["close"]} as close,#{h["volume"]} as volume,#{h["average"]} as average,#{h["barCount"]} as barCount);"
