@@ -608,7 +608,7 @@ module ContractsHelper
       Dir.entries(path).sort.each do |tmp_file|
         next if tmp_file == '.' or tmp_file == '..'
         p "before table has: #{table.count}"
-        Rails.logger.warn "IB.history fut before table has: #{table.count}"
+        # Rails.logger.warn "IB.history fut before table has: #{table.count}"
         file_path = path + "/" + tmp_file
         File.file?(file_path)
         # p file_path
@@ -665,6 +665,7 @@ module ContractsHelper
         postgres.exec(sql)
         count = count + 1
         # p count
+        Rails.logger.warn "IB.history fut_tmp inserted: #{count} rows"
       end
       # table.each do |row|
       #   # Moulding.create!(row.to_hash)
@@ -675,6 +676,7 @@ module ContractsHelper
       #   p count
       # end
       sql = "insert into hsi_fut select * from hsi_fut_tmp b where not exists (select 1 from hsi_fut a where a.date = b.date);"
+      Rails.logger.warn "IB.history fut insert finished"
       postgres.exec(sql)
       sql = "truncate table hsi_fut_tmp;"
       postgres.exec(sql)
