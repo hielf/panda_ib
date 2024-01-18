@@ -39,6 +39,15 @@ class MarketDataJob < ApplicationJob
   private
   def around_check
     file = ApplicationController.helpers.index_to_csv(@contract, @version, @market_data, true) if @market_data
+
+    if ENV["ib_version"] == "v10"
+      csv_file = case Rails.env
+      when "development"
+        "#{Pathname.getwd.parent.to_s + '/signal_factory'  + '/data/HSI.HK/' + 'HSI.HK_1T.csv'}"
+      when "production"
+        '/var/www' + '/signal_factory' + '/data/HSI.HK/' + 'HSI.HK_1T.csv'
+      end
+    end
   end
 
 end

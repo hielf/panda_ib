@@ -247,8 +247,14 @@ module ContractsHelper
 
     # csv = Rails.root.to_s + "/tmp/csv/#{contract}_#{version}.csv"
     middle_file = Rails.root.to_s + "/tmp/csv/#{contract}_#{version}_merg_5T_10T.csv"
-    json = Rails.root.to_s + "/tmp/#{contract}_#{version}_trades.json"
-    yaml_path = Rails.root.to_s + "/lib/python/ib/#{ENV["ib_version"]}_#{ENV["backtrader_version"]}.yml"
+    # json = Rails.root.to_s + "/tmp/#{contract}_#{version}_trades.json"
+    json = case Rails.env
+    when "development"
+      "#{Pathname.getwd.parent.to_s + '/signal_factory'  + '/data/' + 'hsi_trades.json'}"
+    when "production"
+      '/var/www' + '/signal_factory' + '/data/' + 'hsi_trades.json'
+    end
+    # yaml_path = Rails.root.to_s + "/lib/python/ib/#{ENV["ib_version"]}_#{ENV["backtrader_version"]}.yml"
     # begin_date = Time.zone.now < (Time.parse "11:30 am") ? 1.business_day.ago.to_date : Date.today
     # end_date = 1.business_day.from_now.to_date
     skip_minute = Time.zone.now < (Time.parse "10:15 am") ? 75 : 0
@@ -275,9 +281,16 @@ module ContractsHelper
       #   Rails.logger.warn "ib py_check_position reversed!"
       #   system( "cd #{Rails.root.to_s + '/lib/python/ib'} && python3 #{ENV["ib_version"]}_#{ENV["backtrader_version"]}_reverse.py '#{csv}' '#{json}' '#{begin_time}' '#{end_time}' '#{yaml_path}' '#{h5}'" )
       # else
-      hash = "{'5T': {'KAM': [0.5,0.5], 'ATR': [6]}, '10T': {'KAM': [0.5,0.5], 'ATR': [4]}}"
-      `cd #{Rails.root.to_s + '/lib/python/ib'} && python3 #{ENV["ib_version"]}_resample_data.py --source '#{csv}' --target '#{middle_file}' --indicators "#{hash}"`
-      `cd #{Rails.root.to_s + '/lib/python/ib'} && python3 #{ENV["ib_version"]}_#{ENV["backtrader_version"]}.py '#{csv}' '#{json}' '#{begin_time}' '#{end_time}' '#{yaml_path}' '#{middle_file}' '#{config_file}'`
+      # hash = "{'5T': {'KAM': [0.5,0.5], 'ATR': [6]}, '10T': {'KAM': [0.5,0.5], 'ATR': [4]}}"
+      # `cd #{Rails.root.to_s + '/lib/python/ib'} && python3 #{ENV["ib_version"]}_resample_data.py --source '#{csv}' --target '#{middle_file}' --indicators "#{hash}"`
+      # `cd #{Rails.root.to_s + '/lib/python/ib'} && python3 #{ENV["ib_version"]}_#{ENV["backtrader_version"]}.py '#{csv}' '#{json}' '#{begin_time}' '#{end_time}' '#{yaml_path}' '#{middle_file}' '#{config_file}'`
+
+      case Rails.env
+      when "development"
+        `cd #{Pathname.getwd.parent.to_s + '/signal_factory/'} && python3 main.py`
+      when "production"
+        `cd '/var/www' + '/signal_factory/' && python3 main.py`
+      end
       # end
 
       begin
