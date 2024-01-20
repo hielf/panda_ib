@@ -689,10 +689,11 @@ module ContractsHelper
       #   p count
       # end
       sql = "insert into hsi_fut select * from hsi_fut_tmp b where not exists (select 1 from hsi_fut a where a.date = b.date);"
-      Rails.logger.warn "IB.history fut insert finished"
       postgres.exec(sql)
+      Rails.logger.warn "IB.history fut insert finished"
       sql = "truncate table hsi_fut_tmp;"
       postgres.exec(sql)
+      Rails.logger.warn "IB.history fut_tmp delete finished"
       # sleep 0.2
     end
   end
