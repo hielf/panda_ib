@@ -140,8 +140,8 @@ end
     w.log = "#{app_root}/shared/log/clock_4.log"
 
     w.behavior(:clean_pid_file)
-    w.keepalive(:memory_max => 1000.megabytes, :cpu_max => 100.percent)
-    # generic_monitoring(w, :cpu_limit => 100.percent, :memory_limit => 1000.megabytes)
+    # w.keepalive(:memory_max => 1000.megabytes, :cpu_max => 100.percent)
+    generic_monitoring(w, :cpu_limit => 100.percent, :memory_limit => 1000.megabytes)
   end
 
   env_6 = "clock_5"
@@ -156,8 +156,8 @@ end
     w.log = "#{app_root}/shared/log/clock_5.log"
 
     w.behavior(:clean_pid_file)
-    w.keepalive(:memory_max => 1000.megabytes, :cpu_max => 80.percent)
-    # generic_monitoring(w, :cpu_limit => 100.percent, :memory_limit => 1000.megabytes)
+    # w.keepalive(:memory_max => 1000.megabytes, :cpu_max => 80.percent)
+    generic_monitoring(w, :cpu_limit => 100.percent, :memory_limit => 2000.megabytes)
   end
 
   # env_7 = "clock_6"
