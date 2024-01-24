@@ -17,10 +17,20 @@ module Clockwork
   handler do |job, time|
     if job == 'IB.history'
       if ENV['his_collect'] == "true"
+
         Rails.logger.warn "IB.history started.."
-        ApplicationController.helpers.csv_to_db
+        begin
+          ApplicationController.helpers.csv_to_db
+        rescue Exception => e
+          error_message = e.message
+          Rails.logger.warn "IB.history csv_to_db error: #{error_message}"
+        end
         Rails.logger.warn "IB.history fut ended.."
-        system( "cd #{Rails.root.to_s + '/lib/python/ib'} && python3 ibmarket_idx_his.py" )
+
+        unless system( "cd #{Rails.root.to_s + '/lib/python/ib'} && python3 ibmarket_idx_his.py" )
+          Rails.logger.warn "IB.history idx_his error #{$?}"
+        end
+
         Rails.logger.warn "IB.history idx ended.."
         Rails.logger.warn "IB.history ended.."
       end
