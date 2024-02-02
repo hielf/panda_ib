@@ -18,6 +18,8 @@ class PositionsJob < ApplicationJob
   def around_check
     position = ApplicationController.helpers.position_update(@contract)
 
+    Rails.logger.warn "ib position job amount unnormal: #{@position}, #{Time.zone.now}" if (position.abs != ENV["amount"].to_i && position != 0)
+
     ApplicationController.helpers.ib_disconnect(@ib) if @ib.isConnected()
   end
 
