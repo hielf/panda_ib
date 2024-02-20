@@ -289,7 +289,7 @@ module ContractsHelper
       when "development"
         `cd #{Pathname.getwd.parent.to_s + '/signal_factory/'} && python3 main.py`
       when "production"
-        `cd '/var/www' + '/signal_factory/' && python3 main.py`
+        `cd #{'/var/www' + '/signal_factory/'} && python3 main.py`
       end
       # end
 
