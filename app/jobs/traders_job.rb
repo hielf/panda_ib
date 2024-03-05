@@ -51,21 +51,22 @@ class TradersJob < ApplicationJob
 
     current_time = run_time.strftime('%H:%M')
     # close
-    if (current_time > "09:00" && current_time < "09:50") || (current_time > "15:50" && current_time < "16:30")
-      position = TraderPosition.init(contract).position
-      begin
-        job = OrdersJob.perform_later("CLOSE", position.abs, "", 0)
-        100.times do
-          status = ActiveJob::Status.get(job)
-          break if status.completed?
-          sleep 0.2
-        end
-      rescue Exception => e
-        error_message = e.message
-      ensure
-        return
-      end
-    end
+    # no more open market close since V10
+    # if (current_time > "09:00" && current_time < "09:50") || (current_time > "15:50" && current_time < "16:30")
+    #   position = TraderPosition.init(contract).position
+    #   begin
+    #     job = OrdersJob.perform_later("CLOSE", position.abs, "", 0)
+    #     100.times do
+    #       status = ActiveJob::Status.get(job)
+    #       break if status.completed?
+    #       sleep 0.2
+    #     end
+    #   rescue Exception => e
+    #     error_message = e.message
+    #   ensure
+    #     return
+    #   end
+    # end
 
     if ENV["superme_user"] != "test"
       # risk
