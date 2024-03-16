@@ -21,6 +21,10 @@ class PositionsJob < ApplicationJob
     Rails.logger.warn "ib position job amount unnormal: #{position}, #{Time.zone.now}" if (position.abs != ENV["amount"].to_i && position != 0)
 
     ApplicationController.helpers.ib_disconnect(@ib) if @ib.isConnected()
+
+    if position.abs > ENV["amount"].to_i
+      SmsJob.perform_later ENV["admin_phone"], ENV["superme_user"] + " " + ENV["backtrader_version"], "持仓#{position.to_s}大于预设"
+    end
   end
 
 end
